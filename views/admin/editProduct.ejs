@@ -1,0 +1,113 @@
+<%- include("../layouts/admin_header.ejs") %>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Product</title>
+</head>
+<body>
+<section class="content-main">
+    <div class="row">
+        <div class="col-6">
+            <div class="content-header">
+                <h2 class="content-title">Edit Product</h2>
+                
+            </div>
+        </div>
+    </div>
+    <form action="/admin/editProduct/<%= product._id %>" method="POST" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>1. General info</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Product title</label>
+                                    <input type="text" placeholder="Type here" class="form-control" name="name" value="<%= product.name %>" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Description</label>
+                                    <textarea placeholder="Type here" class="form-control" rows="4" name="description" required><%= product.description %></textarea>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Brand name</label>
+                                    <select class="form-select" name="brand">
+                                        <option <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
+                                        <option <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
+                                        <option <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="mb-4 mt-0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>2. Pricing</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Cost in USD</label>
+                                    <input type="text" placeholder="$00.0" class="form-control" name="price" value="<%= product.price %>" required>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="mb-4 mt-0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>3. Category</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
+                                        <input class="form-check-input" name="category" type="radio" value="Clothes" <%= product.category === 'Clothes' ? 'checked' : '' %>>
+                                        <span class="form-check-label">football</span>
+                                    </label>
+                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
+                                        <input class="form-check-input" name="category" type="radio" value="Electronics" <%= product.category === 'Electronics' ? 'checked' : '' %>>
+                                        <span class="form-check-label">Cricket</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="mb-4 mt-0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>4. Media</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Images</label>
+                                    <input class="form-control" type="file" name="images" multiple>
+                                    <% if (product.images && product.images.length > 0) { %>
+                                        <div>
+                                            <% product.images.forEach(image => { %>
+                                                <img src="/user_assets/imgs/shop/<%= image %>" alt="Product Image" width="100">
+                                            <% }) %>
+                                        </div>
+                                        <br>
+                                        <div>
+                                            <button class="btn btn-md rounded font-sm hover-up">Update</button>
+                                        </div>
+                                    <% } %>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+</body>
+</html>
+
+<%- include("../layouts/admin_footer.ejs") %>
+
+

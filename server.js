@@ -2,7 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
+const session = require('express-session');
 require('dotenv').config();
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true
+}));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {

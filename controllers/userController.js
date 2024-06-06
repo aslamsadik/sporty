@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
+
 // Helper function to generate a numeric OTP
 const generateNumericOtp = (length) => {
     let otp = '';
@@ -52,30 +53,23 @@ const HomePage = async (req, res) => {
 };
 
 
-// const HomePage = async (req, res) => {
-//     try {
-//         return res.render('home'); // Ensure this matches the view file name
-//     } catch (error) {
-//         console.log(error.message);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
+
 
 const signUp = async (req, res) => {
     try {
         const { username, email, password, confirmPassword } = req.body;
-        
-       // Input validation
+
+        // Input validation
         if (!username || !email || !password || !confirmPassword) {
             return res.status(400).send('All fields are required');
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
+
         if (!emailRegex.test(email)) {
             return res.status(400).send('Invalid email format');
         }
-        
+
         // Check if passwords match
         if (password !== confirmPassword) {
             return res.status(400).send('Passwords do not match');
@@ -87,20 +81,16 @@ const signUp = async (req, res) => {
             return res.status(400).send('User already exists');
         }
 
-        // Hash the password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Create new user
-        const newUser = new User({ username, email, password: hashedPassword });
-        await newUser.save();
-
         // Generate numeric OTP
         const otpCode = generateNumericOtp(6); // Generate a 6-digit numeric OTP
 
-        // Save OTP to the database
-        await Otp.create({ email, otp: otpCode });
+        // Save user info to session
+        req.session.signupData = { username, email, password: bcrypt.hashSync(password, 10) };
 
+        // Save OTP to the database
+        const otp = new Otp({ email, otp: otpCode });
+        await otp.save();
+        console.log('OTP saved to database:', otp);
         // Send OTP via email
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -124,6 +114,44 @@ const signUp = async (req, res) => {
 };
 
 
+const verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const signupData = req.session.signupData;
+
+        if (!signupData || signupData.email !== email) {
+            return res.status(400).send('Invalid session or email');
+        }
+
+        // Find OTP record in the database
+        const otpRecord = await Otp.findOne({ email });
+        console.log('OTP record found:', otpRecord);
+        if (!otpRecord || otpRecord.otp !== otp) {
+            return res.status(400).send('Invalid or expired OTP');
+        }
+
+        // OTP verified, create new user in the database
+        const newUser = new User({
+            username: signupData.username,
+            email: signupData.email,
+            password: signupData.password
+        });
+        await newUser.save();
+
+        // Clear signup data from session and delete OTP record after successful OTP verification
+        req.session.signupData = null;
+        await Otp.deleteOne({ email });
+
+        // Redirect to login page
+        res.redirect('/login');
+    } catch (error) {
+        console.error('Error during OTP verification:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -138,7 +166,6 @@ const login = async (req, res) => {
             return res.status(400).send('Invalid email format');
         }
 
-
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -151,7 +178,10 @@ const login = async (req, res) => {
             return res.status(400).send('Invalid email or password');
         }
 
-        // Handle successful login (e.g., create a session)
+        // Handle successful login by storing user data in session
+        req.session.user = { userId: user._id, email: user.email, username: user.username };
+
+        // Redirect to home page or any other desired page after login
         res.redirect('/home');
     } catch (error) {
         console.log(error.message);
@@ -159,23 +189,6 @@ const login = async (req, res) => {
     }
 };
 
-const verifyOtp = async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-        const otpRecord = await Otp.findOne({ email });
-
-        if (!otpRecord || otpRecord.otp !== otp) {
-            return res.status(400).send('Invalid or expired OTP');
-        }
-
-        // OTP verified, redirect to login page
-        await Otp.deleteOne({ email });
-        res.redirect('/login');
-    } catch (error) {
-        console.error('Error during OTP verification:', error.message);
-        res.status(500).send('Internal Server Error');
-    }
-};
 
 module.exports = {
     signUpPage,

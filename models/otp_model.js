@@ -1,4 +1,3 @@
-// models/Otp.js
 const mongoose = require('mongoose');
 
 const otpSchema = new mongoose.Schema({
@@ -13,12 +12,9 @@ const otpSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 30 // OTP expires in 5 minutes
+        expires: 30 // OTP expires in 30 seconds
     }
 });
-
-// Create TTL index on createdAt
-otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 });
 
 
 const Otp = mongoose.model('Otp', otpSchema);

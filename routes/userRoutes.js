@@ -11,6 +11,7 @@ router.post('/login', userController.login);
 router.get('/shop', userController.shopPage);
 router.post('/verifyotp', userController.verifyOtp);
 router.get('/home', userController.HomePage);
+router.post('/resend-otp', userController.resendOtp);  // New route for resending OTP
 
 
 module.exports = router;

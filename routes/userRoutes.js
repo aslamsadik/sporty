@@ -8,6 +8,7 @@ router.get('/', userController.signUpPage);
 router.post('/signup', userController. signUp);
 router.get('/login', userController.loginPage);
 router.post('/login', userController.login);
+router.get('/shop', userController.shopPage);
 router.post('/verifyotp', userController.verifyOtp);
 router.get('/home', userController.HomePage);
 

@@ -5,7 +5,6 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
-
 // Helper function to generate a numeric OTP
 const generateNumericOtp = (length) => {
     let otp = '';
@@ -26,41 +25,50 @@ const transporter = nodemailer.createTransport({
 
 const signUpPage = async (req, res) => {
     try {
-        return res.render('signupage'); // Ensure this matches the view file name
+        return res.render('signupage', { message: null, messageType: null });
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
 
 const loginPage = async (req, res) => {
     try {
-        return res.render('login'); // Ensure this matches the view file name
+        return res.render('login', { message: null, messageType: null });
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
 
 const HomePage = async (req, res) => {
     try {
         const products = await Product.find();
-        return res.render('home', { products }); // Ensure this matches the view file name
+        return res.render('home', { products, message: null, messageType: null });
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
 
-
-const shopPage = async (req, res) => {
+const getShopPage = async (req, res) => {
     try {
-        return res.render('shop'); // Ensure this matches the view file name
+        const products = await Product.find();
+        res.render('shop', { products });
     } catch (error) {
-        console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        console.error(error);
+        res.status(500).send('Server Error');
     }
 };
+
+// const shopPage = async (req, res) => {
+//     try {
+//         return res.render('shop', { message: null, messageType: null });
+//     } catch (error) {
+//         console.log(error.message);
+//         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+//     }
+// };
 
 const signUp = async (req, res) => {
     try {
@@ -68,27 +76,27 @@ const signUp = async (req, res) => {
 
         // Input validation
         if (!username || !email || !password || !confirmPassword) {
-            return res.status(400).send('All fields are required');
+            return res.render('signupage', { message: 'All fields are required', messageType: 'error' });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).send('Invalid email format');
+            return res.render('signupage', { message: 'Invalid email format', messageType: 'error' });
         }
 
         // Check if passwords match
         if (password !== confirmPassword) {
-            return res.status(400).send('Passwords do not match');
+            return res.render('signupage', { message: 'Passwords do not match', messageType: 'error' });
         }
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).send('User already exists');
+            return res.render('signupage', { message: 'User already exists', messageType: 'error' });
         }
 
         // Generate numeric OTP
-        const otpCode = generateNumericOtp(6); // Generate a 6-digit numeric OTP
+        const otpCode = generateNumericOtp(6);
 
         // Save user info to session
         req.session.signupData = { username, email, password: await bcrypt.hash(password, 10) };
@@ -107,30 +115,73 @@ const signUp = async (req, res) => {
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Error sending OTP email:', error);
-                return res.status(500).send('Error sending OTP email');
+                return res.render('signupage', { message: 'Error sending OTP email', messageType: 'error' });
             }
             // Render OTP page with a success message
-            res.render('otp_page', { email, message: 'An OTP has been sent to your email. Please check your inbox.' });
+            res.render('otp_page', { email, message: 'An OTP has been sent to your email. Please check your inbox.', messageType: 'success' });
         });
     } catch (error) {
         console.error('Error during sign-up process:', error.message);
-        res.status(500).send('Internal Server Error');
+        res.render('signupage', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
-
 
 
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
+
+        if (!email) {
+            return res.render('otp_page', {
+                email: '',
+                message: 'Email is required',
+                messageType: 'error'
+            });
+        }
+
         const otpRecord = await Otp.findOne({ email });
 
-        if (!otpRecord || otpRecord.otp !== otp) {
-            return res.status(400).send('Invalid or expired OTP');
+        if (!otpRecord) {
+            console.error('No OTP record found for email:', email);
+            return res.render('otp_page', {
+                email,
+                message: 'Invalid or expired OTP',
+                messageType: 'error'
+            });
+        }
+
+        if (otpRecord.otp !== otp) {
+            console.error('OTP mismatch for email:', email);
+            return res.render('otp_page', {
+                email,
+                message: 'Invalid or expired OTP',
+                messageType: 'error'
+            });
+        }
+
+        // Check if OTP is expired
+        const now = new Date();
+        const otpAge = (now - otpRecord.createdAt) / 1000; // Age in seconds
+        if (otpAge > 30) { // 30 seconds TTL
+            console.error('OTP expired for email:', email);
+            return res.render('otp_page', {
+                email,
+                message: 'Invalid or expired OTP',
+                messageType: 'error'
+            });
         }
 
         // Retrieve signup data from session
         const { username, password } = req.session.signupData;
+
+        if (!username || !password) {
+            console.error('Signup data missing from session for email:', email);
+            return res.render('otp_page', {
+                email,
+                message: 'Signup data is missing. Please sign up again.',
+                messageType: 'error'
+            });
+        }
 
         // Save the new user to the database
         const newUser = new User({ username, email, password, isVerified: true });
@@ -142,24 +193,32 @@ const verifyOtp = async (req, res) => {
         // Clear signup data from session
         req.session.signupData = null;
 
-        // Redirect to login page
+        // Redirect to login page with success message
         res.redirect('/login');
     } catch (error) {
         console.error('Error during OTP verification:', error.message);
-        res.status(500).send('Internal Server Error');
+        res.render('otp_page', {
+            email: req.body.email || '', // Ensure email is passed even in case of error
+            message: 'Internal Server Error',
+            messageType: 'error'
+        });
     }
 };
 
-// Resend OTP function
 const resendOtp = async (req, res) => {
     try {
         const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
         const otpCode = generateNumericOtp(6);
 
         await Otp.findOneAndUpdate(
             { email },
             { otp: otpCode, createdAt: new Date() },
-            { upsert: true }
+            { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
         const mailOptions = {
@@ -174,6 +233,7 @@ const resendOtp = async (req, res) => {
                 console.error('Error sending OTP email:', error);
                 return res.status(500).json({ success: false, message: 'Error sending OTP email' });
             }
+            console.log('OTP email sent: ', info.response);
             res.status(200).json({ success: true, message: 'A new OTP has been sent to your email.' });
         });
     } catch (error) {
@@ -189,25 +249,25 @@ const login = async (req, res) => {
 
         // Input validation
         if (!email || !password) {
-            return res.status(400).send('Email and password are required');
+            return res.render('login', { message: 'Email and password are required', messageType: 'error' });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).send('Invalid email format');
+            return res.render('login', { message: 'Invalid email format', messageType: 'error' });
         }
 
         // Find the user by email
         const user = await User.findOne({ email });
 
         if (!user || !user.isVerified) {
-            return res.status(400).send('Invalid email or password');
+            return res.render('login', { message: 'Invalid email or password', messageType: 'error' });
         }
 
         // Compare the provided password with the stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).send('Invalid email or password');
+            return res.render('login', { message: 'Invalid email or password', messageType: 'error' });
         }
 
         // Store user data in session
@@ -217,18 +277,17 @@ const login = async (req, res) => {
         res.redirect('/home');
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        res.render('login', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
-
 
 module.exports = {
     signUpPage,
     loginPage,
-    shopPage,
     signUp,
     login,
     HomePage,
     verifyOtp,
-    resendOtp
+    resendOtp,
+    getShopPage
 };

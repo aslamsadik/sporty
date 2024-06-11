@@ -1,12 +1,17 @@
 <%- include("../layouts/admin_header.ejs") %>
 
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+   
+</head>
+<body>
     <section class="content-main">
         <div class="content-header">
             <h2 class="content-title">User list</h2>
-            <div>
-                <a href="#" class="btn btn-primary"><i class="material-icons md-plus"></i> Create new</a>
-            </div>
         </div>
         <div class="card mb-4">
             <header class="card-header">
@@ -30,7 +35,7 @@
                         </select>
                     </div>
                 </div>
-            </header> <!-- card-header end// -->
+            </header>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover">
@@ -40,205 +45,44 @@
                                 <th>Email</th>
                                 <th>Status</th>
                                 <th>Registered</th>
-                                <th class="text-end"> Action </th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar2.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Eleanor Pena</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>eleanor2022@example.com</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar2.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Mary Monasa</h6>
-                                            <small class="text-muted">Seller ID: #129</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>monalisa@example.com</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>11.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar3.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Jonatan Ive</h6>
-                                            <small class="text-muted">Seller ID: #400</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>mrjohn@example.com</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar4.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Eleanor Pena</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>eleanor2022@example.com</td>
-                                <td><span class="badge rounded-pill alert-danger">Inactive</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar1.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Albert Pushkin</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>someone@mymail.com</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>20.11.2019</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar2.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Alexandra Pena</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>eleanor2022@example.com</td>
-                                <td><span class="badge rounded-pill alert-danger">Inactive</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar3.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Eleanor Pena</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>eleanor2022@example.com</td>
-                                <td><span class="badge rounded-pill alert-danger">Inactive</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar4.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Alex Pushkina</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>alex@gmail.org</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar1.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Eleanor Pena</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>eleanor2022@example.com</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="40%">
-                                    <a href="#" class="itemside">
-                                        <div class="left">
-                                            <img src="admin_assets/imgs/people/avatar2.jpg" class="img-sm img-avatar" alt="Userpic">
-                                        </div>
-                                        <div class="info pl-3">
-                                            <h6 class="mb-0 title">Eleanor Pena</h6>
-                                            <small class="text-muted">Seller ID: #439</small>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>eleanor2022@example.com</td>
-                                <td><span class="badge rounded-pill alert-success">Active</span></td>
-                                <td>08.07.2022</td>
-                                <td class="text-end">
-                                    <a href="#" class="btn btn-sm btn-brand rounded font-sm mt-15">View details</a>
-                                </td>
-                            </tr>
+                            <% users.forEach(user => { %>
+                                <tr>
+                                    <td width="40%">
+                                        <a href="#" class="itemside">
+                                            <div class="left">
+                                                <img src="admin_assets/imgs/people/avatar2.jpg" class="img-sm img-avatar" alt="Userpic">
+                                            </div>
+                                            <div class="info pl-3">
+                                                <h6 class="mb-0 title"><%= user.username %></h6>
+                                                <small class="text-muted">User ID: <%= user._id %></small>
+                                            </div>
+                                        </a>
+                                    </td>
+                                    <td><%= user.email %></td>
+                                    <td>
+                                        <span class="badge rounded-pill alert-<%= user.isBlocked ? 'danger' : 'success' %>">
+                                            <%= user.isBlocked ? 'Inactive' : 'Active' %>
+                                        </span>
+                                    </td>
+                                    <td>08.07.2022</td>
+                                    <td class="text-end">
+                                        <form action="/admin/toggleBlockUser/<%= user._id %>" method="POST" class="d-inline block-form">
+                                            <button type="submit" class="btn btn-sm btn-brand rounded font-sm mt-15">
+                                                <%= user.isBlocked ? 'Unblock' : 'Block' %>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
                         </tbody>
-                    </table> <!-- table-responsive.// -->
+                    </table>
                 </div>
-            </div> <!-- card-body end// -->
-        </div> <!-- card end// -->
+            </div>
+        </div>
         <div class="pagination-area mt-15 mb-50">
             <nav aria-label="Page navigation example">
                 <ul class="pagination justify-content-start">
@@ -251,7 +95,38 @@
                 </ul>
             </nav>
         </div>
-    </section> <!-- content-main end// -->
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        console.log("SweetAlert script loaded"); // Debugging line
 
-    <%- include("../layouts/admin_footer.ejs") %>
+        document.querySelectorAll('form.block-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const action = this.querySelector('button').textContent.trim();
+                console.log(`Form submitted: ${action}`); // Debugging line
+
+                Swal.fire({
+                    title: `Are you sure you want to ${action.toLowerCase()} this user?`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        console.log(`Proceeding with ${action}`); // Debugging line
+                        this.submit();
+                    } else {
+                        console.log(`Cancelled ${action}`); // Debugging line
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+<%- include("../layouts/admin_footer.ejs") %>
    

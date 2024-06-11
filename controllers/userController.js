@@ -262,7 +262,10 @@ const login = async (req, res) => {
 
         if (!user || !user.isVerified) {
             return res.render('login', { message: 'Invalid email or password', messageType: 'error' });
+        }else if (!user || user.isBlocked) {
+            return res.render('login', { message: 'account is blocked', messageType: 'error' });
         }
+
 
         // Compare the provided password with the stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);
@@ -271,7 +274,13 @@ const login = async (req, res) => {
         }
 
         // Store user data in session
-        req.session.user = { userId: user._id, email: user.email, username: user.username };
+        req.session.user = { 
+            userId: user._id, 
+            email: user.email, 
+            username: user.username,
+            isAdmin: user.isAdmin,  // Ensure this field exists in the user schema
+            isBlocked: user.isBlocked
+        };
 
         // Redirect to home page
         res.redirect('/home');

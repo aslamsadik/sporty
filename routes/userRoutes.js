@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const userController = require('../controllers/userController');
+const { isBlockedMiddleware } = require('../middlewares/adminAuth');
+
 
 // Google OAuth Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -22,6 +24,10 @@ router.get('/facebook/callback',
     res.redirect('/home');
   }
 );
+
+// Apply isBlockedMiddleware to all routes that require the user to be logged in
+router.use(isBlockedMiddleware);
+
 
 // Define other routes as needed
 router.get('/', userController.signUpPage);

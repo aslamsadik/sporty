@@ -48,7 +48,11 @@ const Admin_addProductPage = async (req, res) => {
 const Admin_addProduct = async (req, res) => {
     try {
         const { name, description, price, brand, category } = req.body;
-        const images = req.files.map(file => file.filename); // Assuming images are uploaded using multer
+        const images = req.files.map(file => file.filename);
+
+        if (images.length > 3) {
+            return res.status(400).send('You can upload a maximum of 3 images per product.');
+        }
 
         const newProduct = new Product({ name, description, price, brand, category, images });
         await newProduct.save();
@@ -59,6 +63,7 @@ const Admin_addProduct = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 const Admin_editProductPage = async (req, res) => {
     try {
@@ -94,6 +99,7 @@ const Admin_editProduct = async (req, res) => {
     }
 };
 
+
 // Delete product
 const Admin_deleteProduct = async (req, res) => {
     try {
@@ -105,6 +111,7 @@ const Admin_deleteProduct = async (req, res) => {
     }
 };
 
+
 // Category Management
 const Admin_category = async (req, res) => {
     try {
@@ -115,14 +122,37 @@ const Admin_category = async (req, res) => {
     }
 };
 
-const Admin_user = async (req, res) => {
+// List Users
+const Admin_userList = async (req, res) => {
     try {
-        return res.render('userManagement');
+        const users = await User.find();
+        res.render('userManagement', { users });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
+// Block/Unblock User
+const Admin_toggleBlockUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            console.log('User not found:', req.params.id); // Debugging line
+            return res.status(404).send('User not found');
+        }
+
+        console.log('User before toggling block status:', user); // Debugging line
+        user.isBlocked = !user.isBlocked;
+        await user.save();
+        console.log('User after toggling block status:', user); // Debugging line
+        res.redirect('/admin/userManagement');
+    } catch (error) {
+        console.log('Error toggling block status:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 
 module.exports = {
     Admin_login,
@@ -134,5 +164,6 @@ module.exports = {
     Admin_editProduct,
     Admin_deleteProduct,
     Admin_category,
-    Admin_user
+    Admin_userList,
+    Admin_toggleBlockUser
 };

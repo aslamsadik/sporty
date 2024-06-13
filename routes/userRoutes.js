@@ -38,6 +38,6 @@ router.post('/verifyotp', userController.verifyOtp);
 router.get('/home', userController.HomePage);
 router.post('/resend-otp', userController.resendOtp);  // New route for resending OTP
 router.get('/shop', userController.getShopPage);// Route for the shop page
-
+router.get('/product/:id', userController.getProductDescriptionPage);
 
 module.exports = router;

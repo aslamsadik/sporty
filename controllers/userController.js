@@ -61,6 +61,21 @@ const getShopPage = async (req, res) => {
     }
 };
 
+// Fetch and render product description page
+const getProductDescriptionPage = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).send('Product not found');
+        }
+        res.render('shopdetails', { product });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
 // const shopPage = async (req, res) => {
 //     try {
 //         return res.render('shop', { message: null, messageType: null });
@@ -184,7 +199,7 @@ const verifyOtp = async (req, res) => {
         }
 
         // Save the new user to the database
-        const newUser = new User({ username, email, password, isVerified: true });
+        const newUser = new User({ username, email, password, isVerified: true, isBlocked: false  });
         await newUser.save();
 
         // Delete the OTP record from the database
@@ -298,5 +313,6 @@ module.exports = {
     HomePage,
     verifyOtp,
     resendOtp,
-    getShopPage
+    getShopPage,
+    getProductDescriptionPage
 };

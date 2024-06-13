@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
+const Category = require('../models/categoryModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -113,14 +114,16 @@ const Admin_deleteProduct = async (req, res) => {
 
 
 // Category Management
-const Admin_category = async (req, res) => {
+const getCategoryPage = async (req, res) => {
     try {
-        return res.render('catagoryManagement');
+        const categories = await Category.find();
+        res.render('catagoryManagement', { categories });
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 // List Users
 const Admin_userList = async (req, res) => {
@@ -132,6 +135,7 @@ const Admin_userList = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 // Block/Unblock User
 const Admin_toggleBlockUser = async (req, res) => {
@@ -153,6 +157,42 @@ const Admin_toggleBlockUser = async (req, res) => {
     }
 };
 
+const addCategory = async (req, res) => {
+    const { name, description } = req.body;
+    try {
+        const newCategory = new Category({ name, description });
+        await newCategory.save();
+        res.redirect('/admin/catagories/catagoryManagement');
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const editCategory = async (req, res) => {
+    const { id } = req.params;
+    const { name, description } = req.body;
+    try {
+        await Category.findByIdAndUpdate(id, { name, description });
+        res.redirect('/admin/catagories/catagoryManagement');
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const deleteCategory = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await Category.findByIdAndDelete(id);
+        res.redirect('/admin/catagories/catagoryManagement');
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
 
 module.exports = {
     Admin_login,
@@ -163,7 +203,10 @@ module.exports = {
     Admin_editProductPage,
     Admin_editProduct,
     Admin_deleteProduct,
-    Admin_category,
+    getCategoryPage,
     Admin_userList,
-    Admin_toggleBlockUser
+    Admin_toggleBlockUser,
+    addCategory,
+    editCategory,
+    deleteCategory
 };

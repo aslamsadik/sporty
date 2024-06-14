@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+Admin_router.get('/login', adminController.Admin_login);
+Admin_router.post('/login', adminController.Admin_loginFunction);
 
 Admin_router.get('/userManagement', adminController.Admin_userList);
 Admin_router.post('/toggleBlockUser/:id', adminController.Admin_toggleBlockUser);

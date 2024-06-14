@@ -28,7 +28,7 @@
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
                                         <div class="product-img product-img-zoom">
-                                            <a href="/shop-product/<%= product._id %>">
+                                            <a href="/product/<%= product._id %>">
                                                 <% if (product.images && product.images.length > 0) { %>
                                                     <img class="default-img" src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="">
                                                     <% if (product.images.length > 1) { %>
@@ -58,7 +58,7 @@
                                         <div class="product-category">
                                             <a href="/shop-grid-right.html"><%= product.category %></a>
                                         </div>
-                                        <h2><a href="/shop-product/<%= product._id %>"><%= product.name %></a></h2>
+                                        <h2><a href="/product/<%= product._id %>"><%= product.name %></a></h2>
                                         <div class="rating-result" title="90%">
                                             <span>
                                                 <span>90%</span>
@@ -164,8 +164,7 @@
                             </div>
                             <div class="content pt-10">
                                 <h5><a href="shop-product-detail.html">Chen Cardigan</a></h5>
-                                <p class="price
-                                mb-0 mt-5">$99.50</p>
+                                <p class="price mb-0 mt-5">$99.50</p>
                                 <div class="product-rate">
                                     <div class="product-rating" style="width: 90%"></div>
                                 </div>
@@ -225,12 +224,10 @@
     </section>
 </main>
 
+
 <!-- <%- include("../layouts/footer.ejs") %> -->
 
-
-
-
-    <!-- Preloader Start -->
+<!-- Preloader Start -->
     <div id="preloader-active">
         <div class="preloader d-flex align-items-center justify-content-center">
             <div class="preloader-inner position-relative">

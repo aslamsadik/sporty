@@ -886,8 +886,8 @@
                                 <!-- Product image and action -->
                                 <div class="product-img-action-wrap">
                                     <div class="product-img product-img-zoom">
-                                        <a href="<%= product.url %>">
-                                            <img class="default-img" src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="">
+                                        <a href="/product/<%= product._id %>">
+                                            <img class="default-img" src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="<%= product.name %>">
                                             <!-- Add hover image if needed -->
                                         </a>
                                     </div>
@@ -898,7 +898,7 @@
                                     <div class="product-category">
                                         <a href="#"><%= product.category %></a>
                                     </div>
-                                    <h2><a href="<%= product.url %>"><%= product.name %></a></h2>
+                                    <h2><a href="/product/<%= product._id %>"><%= product.name %></a></h2>
                                     <!-- Add other product details like price, rating, etc. -->
                                     <div class="product-price">
                                         <span><%= product.price %></span>
@@ -910,6 +910,9 @@
                         </div>
                     <% }); %>
                 </div>
+                
+                
+                
                 
                 <!--End product-grid-4-->
             </div>

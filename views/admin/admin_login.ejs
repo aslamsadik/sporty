@@ -3,7 +3,7 @@
 <link href="/admin_assets/css/main.css" rel="stylesheet" type="text/css" />
 
 <main>
-    <header class="main-header style-2 navbar">
+    <!-- <header class="main-header style-2 navbar">
         <div class="col-brand">
             <a href="index.html" class="brand-wrap">
                 <img src="admin_assets/imgs/theme/logo.svg" class="logo" alt="Evara Dashboard">
@@ -46,17 +46,32 @@
                 </li>
             </ul>
         </div>
-    </header>
+    </header> -->
     <section class="content-main mt-80 mb-80">
         <div class="card mx-auto card-login">
             <div class="card-body">
                 <h4 class="card-title mb-4">Admin Login</h4>
-                <form>
+    
+                <!-- Display error messages if any -->
+                <% if (message && messageType === 'error') { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= message %>
+                </div>
+                <% } %>
+    
+                <!-- Display success messages if any -->
+                <% if (message && messageType === 'success') { %>
+                <div class="alert alert-success" role="alert">
+                    <%= message %>
+                </div>
+                <% } %>
+    
+                <form action="/admin/login" method="POST">
                     <div class="mb-3">
-                        <input class="form-control" placeholder="Username or email" type="text">
+                        <input class="form-control" placeholder="Username or email" type="text" name="email">
                     </div> <!-- form-group// -->
                     <div class="mb-3">
-                        <input class="form-control" placeholder="Password" type="password">
+                        <input class="form-control" placeholder="Password" type="password" name="password">
                     </div> <!-- form-group// -->
                     <div class="mb-3">
                         <a href="#" class="float-end font-sm text-muted">Forgot password?</a>
@@ -69,15 +84,18 @@
                         <button type="submit" class="btn btn-primary w-100"> Login </button>
                     </div> <!-- form-group// -->
                 </form>
+            </div>
+        </div>
     </section>
-    <footer class="main-footer text-center">
+    
+    <!-- <footer class="main-footer text-center">
         <p class="font-xs">
             <script>
             document.write(new Date().getFullYear())
             </script> ©, Evara - HTML Ecommerce Template .
         </p>
         <p class="font-xs mb-30">All rights reserved</p>
-    </footer>
+    </footer> -->
 </main>
 <script src="admin_assets/js/vendors/jquery-3.6.0.min.js"></script>
 <script src="admin_assets/js/vendors/bootstrap.bundle.min.js"></script>

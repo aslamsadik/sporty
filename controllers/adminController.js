@@ -9,12 +9,47 @@ const mongoose = require('mongoose');
 
 const Admin_login = async (req, res) => {
     try {
-        return res.render('admin_login');
+        return res.render('admin_login',{ message: null, messageType: null });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
+const Admin_loginFunction=async(req,res)=>{
+    try {
+        const { email, password } = req.body;
+        console.log(email,password);
+        // Find the user by email
+        const user = await User.findOne({ email });
+
+        // Check if user exists and is an admin
+        if (!user || !user.isAdmin || !user.isVerified) {
+            return res.render('admin_login', { message: 'Ony admin are allowed to enter', messageType: 'error' });
+        }
+
+        // Compare the provided password with the stored hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.render('admin_login', { message: 'Invalid email or password', messageType: 'error' });
+        }
+
+        // Store user data in session
+        req.session.user = { 
+            userId: user._id, 
+            email: user.email, 
+            username: user.username,
+            isAdmin: user.isAdmin,
+            isBlocked: user.isBlocked
+        };
+
+        // Redirect to admin home page
+        return res.redirect('/admin/home');
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+}
 
 const Admin_home = async (req, res) => {
     try {
@@ -208,5 +243,6 @@ module.exports = {
     Admin_toggleBlockUser,
     addCategory,
     editCategory,
-    deleteCategory
+    deleteCategory,
+    Admin_loginFunction
 };

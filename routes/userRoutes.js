@@ -30,9 +30,9 @@ router.use(isBlockedMiddleware);
 
 
 // Define other routes as needed
-router.get('/', userController.signUpPage);
+router.get('/signup', userController.signUpPage);
 router.post('/signup', userController. signUp);
-router.get('/login', userController.loginPage);
+router.get('/', userController.loginPage);
 router.post('/login', userController.login);
 router.post('/verifyotp', userController.verifyOtp);
 router.get('/home', userController.HomePage);

@@ -41,6 +41,23 @@ const loginPage = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        // Destroy the session
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error destroying session:', err.message);
+                return res.status(500).send('Internal Server Error');
+            }
+            // Redirect to the login page after logout
+            res.redirect('/');
+        });
+    } catch (error) {
+        console.error('Error logging out:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 const HomePage = async (req, res) => {
     try {
         const products = await Product.find();
@@ -310,6 +327,7 @@ module.exports = {
     loginPage,
     signUp,
     login,
+    logout,
     HomePage,
     verifyOtp,
     resendOtp,

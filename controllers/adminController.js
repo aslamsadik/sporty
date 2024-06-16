@@ -51,6 +51,23 @@ const Admin_loginFunction=async(req,res)=>{
     }
 }
 
+const Admin_logout = async (req, res) => {
+    try {
+        // Destroy the session
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error destroying session:', err.message);
+                return res.status(500).send('Internal Server Error');
+            }
+            // Redirect to the login page after logout
+            res.redirect('/');
+        });
+    } catch (error) {
+        console.error('Error logging out:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 const Admin_home = async (req, res) => {
     try {
         return res.render('dashboard');
@@ -244,5 +261,6 @@ module.exports = {
     addCategory,
     editCategory,
     deleteCategory,
-    Admin_loginFunction
+    Admin_loginFunction,
+    Admin_logout
 };

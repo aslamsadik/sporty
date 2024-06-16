@@ -34,6 +34,7 @@ router.get('/signup', userController.signUpPage);
 router.post('/signup', userController. signUp);
 router.get('/', userController.loginPage);
 router.post('/login', userController.login);
+router.get('/logout',userController.logout)
 router.post('/verifyotp', userController.verifyOtp);
 router.get('/home', userController.HomePage);
 router.post('/resend-otp', userController.resendOtp);  // New route for resending OTP

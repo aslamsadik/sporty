@@ -70,13 +70,26 @@ const HomePage = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
-        const products = await Product.find();
-        res.render('shop', { products });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9; // Number of products per page
+        const skip = (page - 1) * limit;
+
+        const totalProducts = await Product.countDocuments();
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        const products = await Product.find().skip(skip).limit(limit);
+
+        res.render('shop', { 
+            products, 
+            currentPage: page, 
+            totalPages 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
     }
 };
+
 
 // Fetch and render product description page
 const getProductDescriptionPage = async (req, res) => {

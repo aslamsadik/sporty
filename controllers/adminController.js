@@ -81,13 +81,26 @@ const Admin_home = async (req, res) => {
 
 const Admin_productList = async (req, res) => {
     try {
-        const products = await Product.find();
-        return res.render('productList', { products });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10; // Number of products per page
+        const totalProducts = await Product.countDocuments();
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        const products = await Product.find()
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        return res.render('productList', {
+            products,
+            currentPage: page,
+            totalPages,
+        });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 const Admin_addProductPage = async (req, res) => {
     try {
@@ -180,13 +193,36 @@ const getCategoryPage = async (req, res) => {
 // List Users
 const Admin_userList = async (req, res) => {
     try {
-        const users = await User.find();
-        res.render('userManagement', { users });
+        // Get page number from query parameters, default to 1 if not provided
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10; // Number of users per page
+
+        // Get the total number of users
+        const totalUsers = await User.countDocuments();
+        
+        // Calculate total pages
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        // Fetch users for the current page
+        const users = await User.find()
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.render('userManagement', {
+            users,
+            currentPage: page,
+            totalPages,
+            limit,
+            message: null,
+            messageType: null
+        });
     } catch (error) {
-        console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        console.error('Error fetching users:', error.message);
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
+
+
 
 
 // Block/Unblock User

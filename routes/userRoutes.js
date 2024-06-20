@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const userController = require('../controllers/userController');
-const { isBlockedMiddleware } = require('../middlewares/adminAuth');
-
+const { isBlockedMiddleware, addNoCacheHeaders, isAuthenticated, isNotAuthenticated } = require('../middlewares/middleware');
 
 // Google OAuth Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -28,17 +27,16 @@ router.get('/facebook/callback',
 // Apply isBlockedMiddleware to all routes that require the user to be logged in
 router.use(isBlockedMiddleware);
 
-
 // Define other routes as needed
-router.get('/signup', userController.signUpPage);
-router.post('/signup', userController. signUp);
-router.get('/', userController.loginPage);
-router.post('/login', userController.login);
-router.get('/logout',userController.logout)
-router.post('/verifyotp', userController.verifyOtp);
-router.get('/home', userController.HomePage);
-router.post('/resend-otp', userController.resendOtp);  // New route for resending OTP
-router.get('/shop', userController.getShopPage);// Route for the shop page
-router.get('/product/:id', userController.getProductDescriptionPage);
+router.get('/signup', addNoCacheHeaders, isNotAuthenticated, userController.signUpPage);
+router.post('/signup', addNoCacheHeaders, isNotAuthenticated, userController.signUp);
+router.get('/', addNoCacheHeaders, isNotAuthenticated, userController.loginPage);
+router.post('/login', addNoCacheHeaders, isNotAuthenticated, userController.login);
+router.get('/logout', isAuthenticated, userController.logout);
+router.post('/verifyotp', addNoCacheHeaders, isNotAuthenticated, userController.verifyOtp);
+router.get('/home', isAuthenticated, userController.HomePage);
+router.post('/resend-otp', addNoCacheHeaders, isNotAuthenticated, userController.resendOtp);
+router.get('/shop', isAuthenticated, userController.getShopPage);
+router.get('/product/:id', isAuthenticated, userController.getProductDescriptionPage);
 
 module.exports = router;

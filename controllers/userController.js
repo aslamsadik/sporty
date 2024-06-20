@@ -106,15 +106,6 @@ const getProductDescriptionPage = async (req, res) => {
 };
 
 
-// const shopPage = async (req, res) => {
-//     try {
-//         return res.render('shop', { message: null, messageType: null });
-//     } catch (error) {
-//         console.log(error.message);
-//         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
-//     }
-// };
-
 const signUp = async (req, res) => {
     try {
         const { username, email, password, confirmPassword } = req.body;
@@ -239,7 +230,7 @@ const verifyOtp = async (req, res) => {
         req.session.signupData = null;
 
         // Redirect to login page with success message
-        res.redirect('/login');
+        res.redirect('/');
     } catch (error) {
         console.error('Error during OTP verification:', error.message);
         res.render('otp_page', {
@@ -276,7 +267,8 @@ const resendOtp = async (req, res) => {
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Error sending OTP email:', error);
-                return res.status(500).json({ success: false, message: 'Error sending OTP email' });
+                return res.status(500).json({ success:
+                    false, message: 'Error sending OTP email' });
             }
             console.log('OTP email sent: ', info.response);
             res.status(200).json({ success: true, message: 'A new OTP has been sent to your email.' });
@@ -286,7 +278,6 @@ const resendOtp = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 const login = async (req, res) => {
     try {
@@ -307,10 +298,9 @@ const login = async (req, res) => {
 
         if (!user || !user.isVerified) {
             return res.render('login', { message: 'Invalid email or password', messageType: 'error' });
-        }else if (!user || user.isBlocked) {
-            return res.render('login', { message: 'account is blocked', messageType: 'error' });
+        } else if (user.isBlocked) {
+            return res.render('login', { message: 'Account is blocked', messageType: 'error' });
         }
-
 
         // Compare the provided password with the stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);

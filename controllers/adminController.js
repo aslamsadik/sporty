@@ -104,7 +104,10 @@ const Admin_productList = async (req, res) => {
 
 const Admin_addProductPage = async (req, res) => {
     try {
-        return res.render('productManagement');
+        return res.render('productManagement', {
+            message: null,
+            messageType: null
+        });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Internal Server Error');
@@ -116,8 +119,22 @@ const Admin_addProduct = async (req, res) => {
         const { name, description, price, brand, category } = req.body;
         const images = req.files.map(file => file.filename);
 
+        // Check if a product with the same name already exists
+        const existingProduct = await Product.findOne({ name });
+        if (existingProduct) {
+            return res.render('productManagement', { 
+                message: 'Product already exists.', 
+                messageType: 'error', 
+                product: req.body 
+            });
+        }
+
         if (images.length > 3) {
-            return res.status(400).send('You can upload a maximum of 3 images per product.');
+            return res.render('admin_addProduct', { 
+                message: 'You can upload a maximum of 3 images per product.', 
+                messageType: 'error', 
+                product: req.body 
+            });
         }
 
         const newProduct = new Product({ name, description, price, brand, category, images });
@@ -126,7 +143,11 @@ const Admin_addProduct = async (req, res) => {
         res.redirect('/admin/productList');
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        res.status(500).render('admin_addProduct', { 
+            message: 'Internal Server Error', 
+            messageType: 'error', 
+            product: req.body 
+        });
     }
 };
 

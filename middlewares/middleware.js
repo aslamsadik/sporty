@@ -9,7 +9,7 @@ const isBlockedMiddleware = async (req, res, next) => {
                     if (err) {
                         return next(err);
                     }
-                    return res.redirect('/login');
+                    return res.redirect('/');
                 });
             } else {
                 next();
@@ -37,7 +37,7 @@ const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
     } else {
-        return res.redirect('/login');
+        return res.redirect('/');
     }
 };
 

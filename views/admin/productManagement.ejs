@@ -16,6 +16,11 @@
             }
         }
     </script>
+    <style>
+        .error-message {
+            color: red;
+        }
+    </style>
 </head>
 <body>
 <section class="content-main">
@@ -26,6 +31,11 @@
             </div>
         </div>
     </div>
+    <% if (message) { %>
+        <div class="<%= messageType === 'error' ? 'error-message' : '' %>">
+            <%= message %>
+        </div>
+    <% } %>
     <form action="/admin/addProduct" method="POST" enctype="multipart/form-data" onsubmit="validateForm(event)">
         <div class="row">
             <div class="col-lg-6">
@@ -107,5 +117,6 @@
 </section>
 </body>
 </html>
+
 
 <%- include("../layouts/admin_footer.ejs") %>

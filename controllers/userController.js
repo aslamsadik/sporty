@@ -105,7 +105,14 @@ const getProductDescriptionPage = async (req, res) => {
     }
 };
 
-
+const profilePage = async (req, res) => {
+    try {
+        return res.render('profile');
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+    }
+};
 const signUp = async (req, res) => {
     try {
         const { username, email, password, confirmPassword } = req.body;
@@ -335,5 +342,6 @@ module.exports = {
     verifyOtp,
     resendOtp,
     getShopPage,
-    getProductDescriptionPage
+    getProductDescriptionPage,
+    profilePage
 };

@@ -40,5 +40,9 @@ router.get('/shop', isAuthenticated, userController.getShopPage);
 router.get('/product/:id', isAuthenticated, userController.getProductDescriptionPage);
 router.get('/profile', isAuthenticated, userController.profilePage);
 
+// Cart routes
+router.get('/cart', isAuthenticated, userController.getCart);
+router.post('/cart/add', isAuthenticated, userController.addToCart);
+router.post('/cart/remove', isAuthenticated, userController.removeFromCart);
 
 module.exports = router;

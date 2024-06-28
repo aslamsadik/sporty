@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
+const Cart = require('../models/cartModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -113,6 +114,15 @@ const profilePage = async (req, res) => {
         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
+
+// const getCart = async (req, res) => {
+//     try {
+//         return res.render('cart');
+//     } catch (error) {
+//         console.log(error.message);
+//         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+//     }
+// };
 const signUp = async (req, res) => {
     try {
         const { username, email, password, confirmPassword } = req.body;
@@ -332,6 +342,70 @@ const login = async (req, res) => {
     }
 };
 
+// Get Cart
+const getCart = async (req, res) => {
+    try {
+        const cart = await Cart.findOne({ userId: req.session.user.userId }).populate('products.productId');
+        res.render('cart', { cart });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+    }
+};
+
+// Add to Cart
+const addToCart = async (req, res) => {
+    try {
+        const userId = req.session.user.userId;
+        const productId = req.body.productId;
+        const quantity = req.body.quantity || 1;
+
+        let cart = await Cart.findOne({ userId });
+
+        if (cart) {
+            // Check if product already exists in cart
+            const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+            if (productIndex > -1) {
+                // Update quantity
+                cart.products[productIndex].quantity += quantity;
+            } else {
+                // Add new product to cart
+                cart.products.push({ productId, quantity });
+            }
+        } else {
+            // Create new cart for user
+            cart = new Cart({ userId, products: [{ productId, quantity }] });
+        }
+
+        await cart.save();
+        res.status(200).json({ success: true, message: 'Product added to cart successfully' });
+    } catch (error) {
+        console.error('Error adding to cart:', error.message);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+// Remove from Cart
+const removeFromCart = async (req, res) => {
+    try {
+        const userId = req.session.user.userId;
+        const productId = req.body.productId;
+
+        let cart = await Cart.findOne({ userId });
+
+        if (cart) {
+            cart.products = cart.products.filter(p => p.productId.toString() !== productId);
+            await cart.save();
+        }
+
+        res.status(200).json({ success: true, message: 'Product removed from cart successfully' });
+    } catch (error) {
+        console.error('Error removing from cart:', error.message);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+
 module.exports = {
     signUpPage,
     loginPage,
@@ -343,5 +417,8 @@ module.exports = {
     resendOtp,
     getShopPage,
     getProductDescriptionPage,
-    profilePage
+    profilePage,
+    getCart,
+    removeFromCart,
+    addToCart
 };

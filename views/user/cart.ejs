@@ -9,6 +9,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
     <title>Shopping Cart</title>
+    <style>
+        .cart-table img {
+            max-width: 100px; /* Adjust the width as needed */
+            max-height: 100px; /* Adjust the height as needed */
+            object-fit: cover; /* Ensures the image covers the box without stretching */
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center; /* Align items vertically center */
+            gap: 10px; /* Space between the image and the product name */
+        }
+
+        .product-item img {
+            margin-right: 10px; /* Space between the image and the product name */
+        }
+
+        .product-item span {
+            display: flex;
+            align-items: center;
+        }
+
+        .cart-wrapper {
+            max-width: 1200px; /* Adjust as needed for the maximum content width */
+            margin: 0 auto; /* Center the content */
+            padding: 20px; /* Add padding around the content */
+        }
+
+        .cart-header {
+            margin-bottom: 20px; /* Space below the header */
+        }
+
+        .cart-footer {
+            margin-top: 20px; /* Space above the footer */
+        }
+
+        .cart-actions .btn {
+            margin-right: 10px; /* Space between buttons */
+        }
+
+        .cart-actions .btn:last-child {
+            margin-right: 0; /* Remove margin from the last button */
+        }
+
+        /* Add space for the navbar and footer */
+        body {
+            padding-top: 60px; /* Adjust as needed to match the height of the navbar */
+            padding-bottom: 40px; /* Adjust as needed to match the height of the footer */
+        }
+
+        /* Add space below the content to account for the footer */
+        .page-content-wrapper {
+            margin-bottom: 20px; /* Add space at the bottom */
+        }
+    </style>
 </head>
 
 <body>
@@ -115,13 +170,11 @@
                                 <ul class="dropdown">
                                     <li><a href="/blog-category-grid">Blog Category Grid</a></li>
                                     <li><a href="/blog-category-list">Blog Category List</a></li>
-                                    <li><a href="/blog-category-big">Blog Category Big</a></li>
-                                    <li><a href="/blog-category-fullwidth">Blog Category Wide</a></li>
-                                    <li class="menu-item-has-children"><span class="menu-expand"></span><a href="#">Single Product Layout</a>
+                                    <li class="menu-item-has-children"><span class="menu-expand"></span><a href="#">Blog Single</a>
                                         <ul class="dropdown">
-                                            <li><a href="/blog-post-left">Left Sidebar</a></li>
-                                            <li><a href="/blog-post-right">Right Sidebar</a></li>
-                                            <li><a href="/blog-post-fullwidth">No Sidebar</a></li>
+                                            <li><a href="/blog-post-left-sidebar">Blog Post – Left Sidebar</a></li>
+                                            <li><a href="/blog-post-right-sidebar">Blog Post – Right Sidebar</a></li>
+                                            <li><a href="/blog-post-no-sidebar">Blog Post – No Sidebar</a></li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -129,12 +182,10 @@
                             <li class="menu-item-has-children"><span class="menu-expand"></span><a href="#">Pages</a>
                                 <ul class="dropdown">
                                     <li><a href="/page-about">About Us</a></li>
-                                    <li><a href="/page-contact">Contact</a></li>
-                                    <li><a href="/page-account">My Account</a></li>
-                                    <li><a href="/page-login-register">Login/Register</a></li>
-                                    <li><a href="/page-purchase-guide">Purchase Guide</a></li>
-                                    <li><a href="/page-privacy-policy">Privacy Policy</a></li>
-                                    <li><a href="/page-terms">Terms of Service</a></li>
+                                    <li><a href="/page-contact">Contact Us</a></li>
+                                    <li><a href="/page-terms">Terms & Conditions</a></li>
+                                    <li><a href="/page-privacy">Privacy Policy</a></li>
+                                    <li><a href="/page-faq">FAQ</a></li>
                                     <li><a href="/page-404">404 Page</a></li>
                                 </ul>
                             </li>
@@ -164,6 +215,12 @@
                                     <h2 class="cart-title">Shopping Cart</h2>
                                     <a href="/cart/clear" class="text-muted"><i class="fi-rs-trash mr-5"></i>Clear Cart</a>
                                 </div>
+
+                                <!-- Added Total Products Section -->
+                                <div class="total-products mb-4">
+                                    <p>Total Products in Cart: <span id="total-products"><%= cart.totalQuantity %></span></p>
+                                </div>
+
                                 <form action="/cart/update" method="post">
                                     <div class="table-responsive">
                                         <table class="table cart-table">
@@ -181,7 +238,7 @@
                                                     <tr>
                                                         <td class="product-item">
                                                             <a href="/product/<%= product.productId._id %>">
-                                                                <img src="<%= product.productId.images[0] %>" alt="<%= product.productId.name %>">
+                                                                <img src="/user_assets/imgs/shop/<%= product.productId.images[0] %>" alt="<%= product.productId.name %>">
                                                                 <span><%= product.productId.name %></span>
                                                             </a>
                                                         </td>
@@ -241,13 +298,22 @@
                 itemTotalElem.textContent = `$${(price * qty).toFixed(2)}`;
 
                 // Update cart total and grand total
-                const cartSubtotal = [...document.querySelectorAll('.item-total')]
+                const cartSubtotal = [...document.querySelectorAll('.product-total')]
                     .reduce((acc, el) => acc + parseFloat(el.textContent.replace('$', '')), 0);
-                document.querySelector('#cart-total').textContent = `Total: $${cartSubtotal.toFixed(2)}`;
                 document.querySelector('#cart-subtotal').textContent = `$${cartSubtotal.toFixed(2)}`;
                 document.querySelector('#cart-grand-total').textContent = `$${cartSubtotal.toFixed(2)}`;
+
+                // Update total products in cart
+                const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
+                    .reduce((acc, el) => acc + parseInt(el.textContent), 0);
+                document.querySelector('#total-products').textContent = totalQuantity;
             });
         });
+
+        // Initial calculation of total products in cart
+        const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
+            .reduce((acc, el) => acc + parseInt(el.textContent), 0);
+        document.querySelector('#total-products').textContent = totalQuantity;
     </script>
 </body>
 

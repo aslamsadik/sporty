@@ -345,10 +345,24 @@ const login = async (req, res) => {
 // Get Cart
 const getCart = async (req, res) => {
     try {
-        const cart = await Cart.findOne({ userId: req.session.user.userId }).populate('products.productId');
+        const userId = req.session.user.userId; // Extract userId from session
+
+        // Fetch the cart for the logged-in user and populate product details
+        let cart = await Cart.findOne({ userId }).populate('products.productId');
+
+        if (!cart) {
+            // If no cart exists, create a new one with empty products and zero totalPrice
+            cart = { products: [], totalPrice: 0 };
+        } else {
+            // Calculate total price from the products in the cart
+            cart.totalPrice = cart.products.reduce((total, item) => total + item.productId.price * item.quantity, 0);
+            await cart.save(); // Save the updated cart
+        }
+
+        // Render the cart view with the cart object
         res.render('cart', { cart });
     } catch (error) {
-        console.error(error.message);
+        console.error('Error getting cart:', error.message);
         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
@@ -358,7 +372,7 @@ const addToCart = async (req, res) => {
     try {
         const userId = req.session.user.userId;
         const productId = req.body.productId;
-        const quantity = req.body.quantity || 1;
+        const quantity = parseInt(req.body.quantity, 10) || 1; // Ensure quantity is an integer
 
         let cart = await Cart.findOne({ userId });
 
@@ -377,7 +391,18 @@ const addToCart = async (req, res) => {
             cart = new Cart({ userId, products: [{ productId, quantity }] });
         }
 
+        // Save the cart
         await cart.save();
+
+        // Calculate the new total price
+        cart.totalPrice = await cart.products.reduce(async (total, item) => {
+            const product = await Product.findById(item.productId);
+            return total + (product ? product.price * item.quantity : 0);
+        }, 0);
+
+        // Save the updated totalPrice to the cart
+        await cart.save();
+
         res.status(200).json({ success: true, message: 'Product added to cart successfully' });
     } catch (error) {
         console.error('Error adding to cart:', error.message);
@@ -394,9 +419,18 @@ const removeFromCart = async (req, res) => {
         let cart = await Cart.findOne({ userId });
 
         if (cart) {
+            // Filter out the product to remove it from the cart
             cart.products = cart.products.filter(p => p.productId.toString() !== productId);
             await cart.save();
         }
+
+        // Recalculate total price
+        cart.totalPrice = cart.products.reduce(async (total, item) => {
+            const product = await Product.findById(item.productId);
+            return total + (product ? product.price * item.quantity : 0);
+        }, 0);
+
+        await cart.save(); // Save the updated totalPrice to the cart
 
         res.status(200).json({ success: true, message: 'Product removed from cart successfully' });
     } catch (error) {

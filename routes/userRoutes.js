@@ -43,6 +43,7 @@ router.get('/profile', isAuthenticated, userController.profilePage);
 // Cart routes
 router.get('/cart', isAuthenticated, userController.getCart);
 router.post('/cart/add', isAuthenticated, userController.addToCart);
+// router.post('/cart/update/:productId', isAuthenticated, userController.updateCart); // Ensure this route is defined
 router.post('/cart/remove', isAuthenticated, userController.removeFromCart);
 
 module.exports = router;

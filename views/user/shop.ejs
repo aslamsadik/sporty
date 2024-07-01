@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
 
+<link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
 
 <main class="main">
     <div class="page-header breadcrumb-wrap">
@@ -19,7 +19,42 @@
                             <p> We found <strong class="text-brand"><%= products.length %></strong> items for you!</p>
                         </div>
                         <div class="sort-by-product-area">
-                            <!-- Sort and Filter Options -->
+                            <form id="filter-form" method="GET" action="/shop">
+                                <div class="sort-by">
+                                    <label for="sort">Sort By:</label>
+                                    <select name="sort" id="sort" onchange="this.form.submit()">
+                                        <option value="popularity" <%= sort === 'popularity' ? 'selected' : '' %>>Popularity</option>
+                                        <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Price Low to High</option>
+                                        <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Price High to Low</option>
+                                        <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>>Rating</option>
+                                    </select>
+                                </div>
+                                <div class="filter-by-price">
+                                    <label for="amount">Price Range:</label>
+                                    <input type="text" id="amount" readonly />
+                                    <input type="hidden" name="minPrice" value="<%= minPrice || 0 %>" />
+                                    <input type="hidden" name="maxPrice" value="<%= maxPrice || 1000 %>" />
+                                </div>
+                                <div class="filter-by-category">
+                                    <label>Category:</label>
+                                    <% categories.forEach(cat => { %>
+                                        <div>
+                                            <input type="checkbox" name="categories" value="<%= cat %>" <%= selectedCategories.includes(cat) ? 'checked' : '' %> />
+                                            <label><%= cat %></label>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                                <div class="filter-by-brand">
+                                    <label>Brand:</label>
+                                    <% brands.forEach(brand => { %>
+                                        <div>
+                                            <input type="checkbox" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> />
+                                            <label><%= brand %></label>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            </form>
                         </div>
                     </div>
                     <div class="row product-grid-3">
@@ -61,7 +96,7 @@
                                         <h2><a href="/product/<%= product._id %>"><%= product.name %></a></h2>
                                         <div class="rating-result" title="90%">
                                             <span>
-                                                <span>90%</span>
+                                                <span><%= product.rating || 0 %> Stars</span>
                                             </span>
                                         </div>
                                         <div class="product-price">
@@ -86,17 +121,17 @@
                             <ul class="pagination justify-content-center">
                                 <% if (currentPage > 1) { %>
                                     <li class="page-item">
-                                        <a class="page-link" href="/shop?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+                                        <a class="page-link" href="/shop?page=<%= currentPage - 1 %>&sort=<%= sort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&categories=<%= selectedCategories.join(',') %>&brands=<%= selectedBrands.join(',') %>">&laquo; Previous</a>
                                     </li>
                                 <% } %>
                                 <% for (let i = 1; i <= totalPages; i++) { %>
                                     <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                                        <a class="page-link" href="/shop?page=<%= i %>"><%= i %></a>
+                                        <a class="page-link" href="/shop?page=<%= i %>&sort=<%= sort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&categories=<%= selectedCategories.join(',') %>&brands=<%= selectedBrands.join(',') %>"><%= i %></a>
                                     </li>
                                 <% } %>
                                 <% if (currentPage < totalPages) { %>
                                     <li class="page-item">
-                                        <a class="page-link" href="/shop?page=<%= currentPage + 1 %>">Next &raquo;</a>
+                                        <a class="page-link" href="/shop?page=<%= currentPage + 1 %>&sort=<%= sort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&categories=<%= selectedCategories.join(',') %>&brands=<%= selectedBrands.join(',') %>">Next &raquo;</a>
                                     </li>
                                 <% } %>
                             </ul>
@@ -104,20 +139,12 @@
                     </div>
                 </div>
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
-                    <div class="row">
-                        <div class="col-lg-12 col-mg-6"></div>
-                        <div class="col-lg-12 col-mg-6"></div>
-                    </div>
                     <div class="widget-category mb-30">
                         <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                         <ul class="categories">
-                            <li><a href="/shop-grid-right.html">Shoes & Bags</a></li>
-                            <li><a href="/shop-grid-right.html">Blouses & Shirts</a></li>
-                            <li><a href="/shop-grid-right.html">Dresses</a></li>
-                            <li><a href="/shop-grid-right.html">Swimwear</a></li>
-                            <li><a href="/shop-grid-right.html">Beauty</a></li>
-                            <li><a href="/shop-grid-right.html">Jewelry & Watch</a></li>
-                            <li><a href="/shop-grid-right.html">Accessories</a></li>
+                            <% categories.forEach(cat => { %>
+                                <li><a href="/shop?categories=<%= cat %>"><%= cat %></a></li>
+                            <% }) %>
                         </ul>
                     </div>
                     <!-- Filter By Price -->
@@ -136,96 +163,28 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="list-group">
-                            <div class="list-group-item mb-10 mt-10">
-                                <label class="fw-900">Color</label>
-                                <div class="custome-checkbox">
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox1" value="">
-                                    <label class="form-check-label" for="exampleCheckbox1"><span>Red (56)</span></label>
-                                    <br>
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox2" value="">
-                                    <label class="form-check-label" for="exampleCheckbox2"><span>Green (78)</span></label>
-                                    <br>
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox3" value="">
-                                    <label class="form-check-label" for="exampleCheckbox3"><span>Blue (54)</span></label>
-                                </div>
-                                <label class="fw-900 mt-15">Item Condition</label>
-                                <div class="custome-checkbox">
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox11" value="">
-                                    <label class="form-check-label" for="exampleCheckbox11"><span>New (1506)</span></label>
-                                    <br>
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox21" value="">
-                                    <label class="form-check-label" for="exampleCheckbox21"><span>Refurbished (27)</span></label>
-                                    <br>
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox31" value="">
-                                    <label class="form-check-label" for="exampleCheckbox31"><span>Used (45)</span></label>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="/shop-grid-right.html" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i> Filter</a>
+                        <a href="/shop" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Filter</a>
                     </div>
                     <!-- Product sidebar Widget -->
-                    <div class="sidebar-widget product-sidebar mb-30 p-30 bg-grey border-radius-10">
-                        <h5 class="section-title style-1 mb-30 wow fadeIn animated">New products</h5>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-3.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h5><a href="shop-product-detail.html">Chen Cardigan</a></h5>
-                                <p class="price mb-0 mt-5">$99.50</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width: 90%"></div>
+                    <div class="sidebar-widget product-sidebar  mb-30 p-30 bg-grey border-radius-10">
+                        <div class="widget-header position-relative mb-20 pb-10">
+                            <h5 class="widget-title mb-10">New products</h5>
+                            <div class="bt-1 border-color-1"></div>
+                        </div>
+                        <% latestProducts.forEach(product => { %>
+                            <div class="single-post clearfix">
+                                <div class="image">
+                                    <img src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="#" />
+                                </div>
+                                <div class="content pt-10">
+                                    <h5><a href="/product/<%= product._id %>"><%= product.name %></a></h5>
+                                    <p class="price mb-0 mt-5">$<%= product.price %></p>
+                                    <div class="product-rate">
+                                        <div class="product-rating" style="width:90%"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-4.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h6><a href="shop-product-detail.html">Chen Sweater</a></h6>
-                                <p class="price mb-0 mt-5">$89.50</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width: 80%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-5.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h6><a href="shop-product-detail.html">Colorful Jacket</a></h6>
-                                <p class="price mb-0 mt-5">$25</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width: 60%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-6.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h6><a href="shop-product-detail.html">Lorem, ipsum</a></h6>
-                                <p class="price mb-0 mt-5">$25</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width: 60%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="banner-img wow fadeIn mb-45 animated d-lg-block d-none">
-                        <img src="assets/imgs/banner/banner-11.png" alt="">
-                        <div class="banner-text">
-                            <span>Organic</span>
-                            <h4>
-                                Save 17% <br>
-                                on <span class="text-brand">Organic</span><br>
-                                Juice
-                            </h4>
-                        </div>
+                        <% }); %>
                     </div>
                 </div>
             </div>
@@ -233,48 +192,46 @@
     </section>
 </main>
 
-
 <!-- <%- include("../layouts/footer.ejs") %> -->
 
 <!-- Preloader Start -->
-    <div id="preloader-active">
-        <div class="preloader d-flex align-items-center justify-content-center">
-            <div class="preloader-inner position-relative">
-                <div class="text-center">
-                    <h5 class="mb-5">Now Loading</h5>
-                    <div class="loader">
-                        <div class="bar bar1"></div>
-                        <div class="bar bar2"></div>
-                        <div class="bar bar3"></div>
-                    </div>
+<div id="preloader-active">
+    <div class="preloader d-flex align-items-center justify-content-center">
+        <div class="preloader-inner position-relative">
+            <div class="text-center">
+                <h5 class="mb-5">Now Loading</h5>
+                <div class="loader">
+                    <div class="bar bar1"></div>
+                    <div class="bar bar2"></div>
+                    <div class="bar bar3"></div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Vendor JS-->
-    <script src="user_assets/js/vendor/modernizr-3.6.0.min.js"></script>
-    <script src="user_assets/js/vendor/jquery-3.6.0.min.js"></script>
-    <script src="user_assets/js/vendor/jquery-migrate-3.3.0.min.js"></script>
-    <script src="user_assets/js/vendor/bootstrap.bundle.min.js"></script>
-    <script src="user_assets/js/plugins/slick.js"></script>
-    <script src="user_assets/js/plugins/jquery.syotimer.min.js"></script>
-    <script src="user_assets/js/plugins/wow.js"></script>
-    <script src="user_assets/js/plugins/jquery-ui.js"></script>
-    <script src="user_assets/js/plugins/perfect-scrollbar.js"></script>
-    <script src="user_assets/js/plugins/magnific-popup.js"></script>
-    <script src="user_assets/js/plugins/select2.min.js"></script>
-    <script src="user_assets/js/plugins/waypoints.js"></script>
-    <script src="user_assets/js/plugins/counterup.js"></script>
-    <script src="user_assets/js/plugins/jquery.countdown.min.js"></script>
-    <script src="user_assets/js/plugins/images-loaded.js"></script>
-    <script src="user_assets/js/plugins/isotope.js"></script>
-    <script src="user_assets/js/plugins/scrollup.js"></script>
-    <script src="user_assets/js/plugins/jquery.vticker-min.js"></script>
-    <script src="user_assets/js/plugins/jquery.theia.sticky.js"></script>
-    <script src="user_assets/js/plugins/jquery.elevatezoom.js"></script>
-    <!-- Template  JS -->
-    <script src="./user_assets/js/main.js?v=3.4"></script>
-    <script src="./user_assets/js/shop.js?v=3.4"></script>
+</div>
+<!-- Vendor JS-->
+<script src="user_assets/js/vendor/modernizr-3.6.0.min.js"></script>
+<script src="user_assets/js/vendor/jquery-3.6.0.min.js"></script>
+<script src="user_assets/js/vendor/jquery-migrate-3.3.0.min.js"></script>
+<script src="user_assets/js/vendor/bootstrap.bundle.min.js"></script>
+<script src="user_assets/js/plugins/slick.js"></script>
+<script src="user_assets/js/plugins/jquery.syotimer.min.js"></script>
+<script src="user_assets/js/plugins/wow.js"></script>
+<script src="user_assets/js/plugins/jquery-ui.js"></script>
+<script src="user_assets/js/plugins/perfect-scrollbar.js"></script>
+<script src="user_assets/js/plugins/magnific-popup.js"></script>
+<script src="user_assets/js/plugins/select2.min.js"></script>
+<script src="user_assets/js/plugins/waypoints.js"></script>
+<script src="user_assets/js/plugins/counterup.js"></script>
+<script src="user_assets/js/plugins/jquery.countdown.min.js"></script>
+<script src="user_assets/js/plugins/images-loaded.js"></script>
+<script src="user_assets/js/plugins/isotope.js"></script>
+<script src="user_assets/js/plugins/scrollup.js"></script>
+<script src="user_assets/js/plugins/jquery.vticker-min.js"></script>
+<script src="user_assets/js/plugins/jquery.theia.sticky.js"></script>
+<script src="user_assets/js/plugins/jquery.elevatezoom.js"></script>
+<!-- Template JS -->
+<script src="./user_assets/js/main.js?v=3.4"></script>
+<script src="./user_assets/js/shop.js?v=3.4"></script>
 </body>
-
 </html>

@@ -346,6 +346,9 @@ const login = async (req, res) => {
 const getCart = async (req, res) => {
     try {
         const userId = req.session.user.userId; // Extract userId from session
+        const page = parseInt(req.query.page, 10) || 1; // Get the current page from the query parameters (default to 1)
+        const limit = 5; // Number of items per page
+        const skip = (page - 1) * limit; // Calculate the number of items to skip for pagination
 
         // Fetch the cart for the logged-in user and populate product details
         let cart = await Cart.findOne({ userId }).populate('products.productId');
@@ -359,13 +362,27 @@ const getCart = async (req, res) => {
             await cart.save(); // Save the updated cart
         }
 
-        // Render the cart view with the cart object
-        res.render('cart', { cart });
+        // Paginate products
+        const paginatedProducts = cart.products.slice(skip, skip + limit);
+        const totalItems = cart.products.length;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        // Render the cart view with the cart object and pagination details
+        res.render('cart', {
+            cart: {
+                ...cart,
+                products: paginatedProducts,
+                totalQuantity: totalItems,
+                totalPages,
+                currentPage: page
+            }
+        });
     } catch (error) {
         console.error('Error getting cart:', error.message);
         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
+
 
 // Add to Cart
 const addToCart = async (req, res) => {
@@ -409,6 +426,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
 
 // Remove from Cart
 const removeFromCart = async (req, res) => {

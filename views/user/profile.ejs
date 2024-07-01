@@ -1,396 +1,309 @@
 <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
 
-<main class="main">
-    
-    <section class="pt-100 pb-120">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-10 m-auto">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="dashboard-menu">
-                                <ul class="nav flex-column" role="tablist">
-                                    <li>
-                                    <div class="card" style="background-color: rgb(45, 194, 191);">
-                                        <div class="card-body">
-                                            <div class="d-flex flex-column align-items-center text-center">
-                                               <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="Admin" class="rounded-circle" width="150">
-                                              <div class="mt-3">
-                                                <!-- <h3 style="color: white;">Hii <span style="color: rgb(255, 204, 0);">!!!</span></h3> -->
+<!DOCTYPE html>
+<html lang="en">
 
-                                               
-                                              </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
+    <title>Profile</title>
+    <style>
+        .dashboard-menu {
+            background-color: black;
+            color: white;
+        }
+
+        .dashboard-menu .nav-item {
+            background-color: black;
+        }
+
+        .dashboard-menu .nav-link {
+            color: white;
+        }
+
+        .dashboard-menu .nav-link:hover {
+            background-color: #333;
+        }
+
+        .dashboard-menu .nav-link.active {
+            background-color: rgb(45, 194, 191);
+            color: black;
+        }
+
+        .card {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .card-header {
+            background-color: rgb(44, 167, 198);
+            color: white;
+        }
+
+        .card-header h5 {
+            margin: 0;
+        }
+
+        .tab-content {
+            margin-top: 30px;
+        }
+
+        .black-border {
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+
+        .btn-fill-out {
+            background-color: black;
+            color: white;
+        }
+
+        .btn-clear {
+            background-color: black;
+            color: white;
+            width: 100px;
+        }
+
+        .btn-fill-out:hover, .btn-clear:hover {
+            opacity: 0.8;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .modal-content {
+            border-radius: 10px;
+        }
+
+        .modal-header {
+            background-color: black;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .profile-img {
+            border-radius: 50%;
+            max-width: 150px;
+        }
+
+        .profile-card {
+            background-color: rgb(45, 194, 191);
+            color: white;
+        }
+
+        .profile-card .card-body {
+            text-align: center;
+        }
+
+        .profile-card h3 {
+            margin-top: 10px;
+        }
+
+        .tab-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-control.square {
+            border-radius: 5px;
+            border: 1px solid black;
+        }
+
+        .input-style {
+            margin-bottom: 15px;
+        }
+
+        .input-style label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .submit {
+            background-color: black;
+            color: white;
+        }
+
+        .submit:hover {
+            opacity: 0.8;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="main">
+        <section class="pt-100 pb-120">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-10 m-auto">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="dashboard-menu">
+                                    <ul class="nav flex-column" role="tablist">
+                                        <li>
+                                            <div class="card profile-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex flex-column align-items-center text-center">
+                                                        <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="Admin" class="profile-img">
+                                                        <div class="mt-3">
+                                                            <h3>Hi <span style="color: rgb(255, 204, 0);">!!!</span></h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                          </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="orders-tab" href="/orders" role="tab" aria-controls="orders" aria-selected="false">
+                                                <i class="bi bi-box2-fill" style="font-size: 1rem;"></i>
+                                                Orders
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#manageAdress" role="tab" aria-controls="address" aria-selected="true">
+                                                <i class="bi bi-houses" style="font-size: 1rem;"></i>
+                                                Manage Address
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab" href="#accountdetails" role="tab" aria-controls="account-detail" aria-selected="true">
+                                                <i class="bi bi-person-fill" style="font-size: 1.2rem;"></i>
+                                                Account Details
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="changeemail-tab" data-bs-toggle="tab" href="#changeemail" role="tab" aria-controls="changeemail" aria-selected="true">
+                                                <i class="bi bi-envelope" style="font-size: 1.2rem;"></i>
+                                                Change Email
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/logout">
+                                                <i class="fi-rs-sign-out mr-10"></i>
+                                                Logout
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="tab-content dashboard-content">
+                                    <div class="tab-pane fade active show" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Dashboard</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <p>From your account dashboard, you can easily:</p>
+                                                <ul>
+                                                    <li>Check and view your <a href="#" style="color: black;">recent orders</a>.</li>
+                                                    <li>Manage your <a href="#" style="color: black;">shipping and billing addresses</a>.</li>
+                                                    <li>Edit your <a href="#" style="color: black;">password and account details</a>.</li>
+                                                    <li>Customized feature: Explore exclusive offers and promotions!</li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
-                                </li>
-                                <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="orders-tab" href="/orders" role="tab" aria-controls="orders" aria-selected="false" style="color: white;">
-                                        <i class="bi bi-box2-fill" style="font-size: 1rem; color: white;"></i>
-                                        Orders
-                                    </a>
-                                </li>
-                                
-                                <!-- <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#Add-Address" role="tab" aria-controls="address" aria-selected="true" style="color: white;">
-                                        <i class="bi bi-plus-lg" style="font-size: 1rem; color: white;"></i>
-                                        Add Address
-                                    </a>
-                                </li> -->
-                                <!-- <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#Wallet" role="tab" aria-controls="track-orders" aria-selected="false" style="color: white;">
-                                        <i class="bi bi-wallet2" style="font-size: 1rem; color: white;"></i>
-                                        Wallet
-                                    </a>
-                                </li> -->
-                                <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#manageAdress" role="tab" aria-controls="address" aria-selected="true" style="color: white;">
-                                        <i class="bi bi-houses" style="font-size: 1rem; color: white;"></i>
-                                        Manage Address
-                                    </a>
-                                </li>
-                                <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab" href="#accountdetails" role="tab" aria-controls="account-detail" aria-selected="true" style="color: white;">
-                                        <i class="bi bi-person-fill" style="font-size: 1.2rem; color: white;"></i>
-                                        Account details
-                                    </a>
-                                </li>
-                                <!-- <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="account-security-tab" data-bs-toggle="tab" href="#accountsecurity" role="tab" aria-controls="account-security" aria-selected="true" style="color: white;">
-                                        <i class="bi bi-shield" style="font-size: 1.2rem; color: white;"></i>
-                                        
-                                        Account Security
-                                    </a>
-                                </li> -->
-                                <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" id="account-security-tab" data-bs-toggle="tab" href="#changeemail" role="tab" aria-controls="account-security" aria-selected="true" style="color: white;">
-                                        <i class="bi bi-envelope" style="font-size: 1.2rem; color: white;"></i>
-                                       
-                                        change password
-                                    </a>
-                                </li>
-                                <li class="nav-item" style="background-color: black;">
-                                    <a class="nav-link" href="/logout" style="color: white;">
-                                        <i class="fi-rs-sign-out mr-10" style="color: white;"></i>
-                                        Logout
-                                    </a>
-                                </li>
-                                
-                                </ul>
+                                    <div class="tab-pane fade" id="manageAdress" role="tabpanel" aria-labelledby="address-tab">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Manage Address</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="card mt-2 mb-3 black-border">
+                                                        <div class="card-body">
+                                                            <p>Address details go here.</p>
+                                                            <a href="" class="btn btn-sm btn-fill-out">Edit</a>
+                                                            <button class="btn btn-sm btn-fill-out" onclick="deleteAdress('')">Delete</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="accountdetails" role="tabpanel" aria-labelledby="account-detail-tab">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Account Details</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <form method="post" action="/editprofile">
+                                                    <div class="row">
+                                                        <div class="form-group col-md-6">
+                                                            <label>Name <span class="required">*</span></label>
+                                                            <input required="" class="form-control square black-border" id="proname" name="name" type="text" value="">
+                                                        </div>
+                                                        <div class="form-group col-md-6">
+                                                            <label>Mobile Number <span class="required">*</span></label>
+                                                            <input required="" class="form-control square black-border" id="pronumber" name="mobile" type="number" value="">
+                                                        </div>
+                                                        <div class="form-group col-md-12">
+                                                            <label>Email Address <span class="required">*</span></label>
+                                                            <input required="" class="form-control square black-border" name="email" type="email" value="" readonly>
+                                                        </div>
+                                                        <div class="form-group col-md-12">
+                                                            <label>Password <span class="required">*</span></label>
+                                                            <input required="" class="form-control square black-border" name="password" type="password">
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <button type="submit" class="btn btn-fill-out">Save</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="changeemail" role="tabpanel" aria-labelledby="changeemail-tab">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Change Email</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <form method="post" action="/changeemail">
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12">
+                                                            <label>New Email Address <span class="required">*</span></label>
+                                                            <input required="" class="form-control square black-border" name="newEmail" type="email" placeholder="Enter new email">
+                                                        </div>
+                                                        <div class="form-group col-md-12">
+                                                            <button type="submit" class="btn btn-fill-out">Change Email</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-8">
-                            <div class="tab-content dashboard-content">
-                                <div class="tab-pane fade active show" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-                                    <div class="card ">
-                                        <dcleciv class="card-header" style="background-color: rgb(44, 167, 198);">
-                                        </div>
-                                        <div class="card-body " style="color: rgb(0, 0, 0);">
-                                            <p>From your account dashboard, you can easily:</p>
-                                            <ul>
-                                                <li>Check and view your <a href="#" style="color: black;">recent orders</a>.</li>
-                                                <li>Manage your <a href="#" style="color: black;">shipping and billing addresses</a>.</li>
-                                                <li>Edit your <a href="#" style="color: black;">password and account details</a>.</li>
-                                                <li>Customized feature:  Explore exclusive offers and promotions!</li>
-                                                <br>
-                                               
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="track-orders" role="tabpanel" aria-labelledby="track-orders-tab">
-                                    <div class="card" style="background-color: black;">
-                                        <div class="card-header">
-                                            <h5 class="mb-0" style="color: white;">Orders tracking</h5>
-                                        </div>
-                                        <div class="card-body contact-from-area">
-                                            <p>To track your order please enter your OrderID in the box below and press "Track" button. This was given to you on your receipt and in the confirmation email you should have received.</p>
-                                            <div class="row">
-                                                <div class="col-lg-8">
-                                                    <form class="contact-form-style mt-30 mb-50" action="#" method="post">
-                                                        <div class="input-style mb-20">
-                                                            <label>Order ID</label>
-                                                            <input name="order-id" placeholder="Found in your order confirmation email" type="text" class="square">
-                                                        </div>
-                                                        <div class="input-style mb-20">
-                                                            <label>Billing email</label>
-                                                            <input name="billing-email" placeholder="Email you used during checkout" type="email" class="square">
-                                                        </div>
-                                                        <button class="submit submit-auto-width" type="submit">Track</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                <div class="tab-pane fade" id="Add-Address" role="tabpanel" aria-labelledby="account-detail-tab">
-                                    <div class="card">
-                                        <div class="card-header" style="background-color: black;">
-                                            <h5 style="color: white;" >Add Address <span style="color: yellow;">+</span></h5>
-                                        </div>
-                                        <div class="card-body">
-                                            
-                                                <div class="row">
-                                                    <div class="form-group col-md-6">
-                                                        <label><span class="required"></span></label>
-                                                        <input required="" class="form-control square" id="addresName" name="addresName" type="text" placeholder="Name" style="border: 1px solid black;">
-                                                        <div id="addresName-error" class="error-message"></div>
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label> <span class="required"></span></label>
-                                                        <input required="" class="form-control square" id="addressmobile" name="addressmobile" type="number" placeholder="10-Digit-Phone-Number" style="border: 1px solid black;">
-                                                        <div id="addressmobile-error" class="error-message"></div>
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label> <span class="required"></span></label>
-                                                        <input required="" class="form-control square" id="housename" name="housename" type="text" placeholder="House Name" style="border: 1px solid black;">
-                                                        <div id="housename-error" class="error-message"></div>
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label><span class="required"></span></label>
-                                                        <input required="" class="form-control square" id="pincode" name="pincode" type="number" placeholder="PINCODE*" style="border: 1px solid black;">
-                                                        <div id="pincode-error" class="error-message"></div>
-                                                    </div>
-                                                    <div class="form-group col-md-16">
-                                                        <label><span class="required"></span></label>
-                                                        <input required="" class="form-control square" name="townOrCity" id="townOrCity" type="text" placeholder="City/Town*" style="border: 1px solid black;">
-                                                        <div id="townOrCity-error" class="error-message"></div>
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label><span class="required"></span></label>
-                                                        <input required="" class="form-control square" name="district" type="text"  id="district" placeholder="District*" style="border: 1px solid black;">
-                                                        <div  id="district-error" ></div>
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label><span class="required"></span></label>
-                                                        <input required="" class="form-control square"  id="state" name="state" type="text" placeholder="State*" style="border: 1px solid black;">
-                                                        <div id="state-error"></div>
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label><span class="required"></span></label>
-                                                        <input required="" class="form-control square" id="country" name="country" type="text" placeholder="Country*" style="border: 1px solid black;">
-                                                        <div id="country-error" class="error-message"></div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        
-                                                    </div>
-                                                    <div class="col-md-10">
-                                                        <button type="submit" class="btn btn-fill-out " style="background-color: black;" name="submit" value="Submit">Save</button>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <input type="reset" class="btn btn-clear" value="Cancel" style="background-color: black; width: 100px;">
-                                                    </div>
-                                                    
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="tab-pane fade" id="Wallet" role="tabpanel" aria-labelledby="Wallet-tab">
-                                    <h5>Wallet</h5>
-                                        <a  class="btn btn-fill-out " style="background-color:black;"  data-toggle="modal" onclick="openSizeModal()">Add Money</a>
-                                    
-                                    <table class="table table-responsive">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Payment Method</th>
-                                                <th>Amount</th>
-                                            </tr>
-                                        </thead>
-                                     
-                                         
-                                        <tbody>
-                                          
-                                        
-                                        
-                                    </table>
-                                    
-                                    <div style="border: 2px solid #007bff; border-radius: 10px; padding: 20px; font-size: 24px; text-align: center;" class="d-flex justify-content-center">
-                                        <div>
-                                        
-                                        </div>
-                                        
-                                    </div><br><br>
-                                    <div class="modal fade" id="sizeModal" tabindex="-1" role="dialog" aria-labelledby="sizeModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="sizeModalLabel">Add Money</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body text-center">
-                                                    <p>Enter Amount to Add</p>
-                                                    <input type="text" name="" id="moneyToAdd" placeholder=" " style="width: 100px;">
-                                                </div>
-                                                
-                                                <div class="text-center mt-3">
-                                                    <div class="d-inline-block">
-                                                        <button class="btn btn-sm btn-primary" style="width: 70px; margin-bottom: 30px; background-color: black;" onclick="generateRazorpay()">Add</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-
-
-                                <div class="tab-pane fade" id="manageAdress" role="tabpanel" aria-labelledby="address-tab">
-                                   
-                                    <div class="row">
-                                       
-                                            <div class="card mt-2 mb-3 mb-lg-0 black-border">
-                                                <div class="card-body" style="color: white;">
-                                                   
-                                                    <p style="color: black;">
-                                                    
-                                                    </p>
-                                                    
-                                                    <a href="" class="btn btn-sm" style="background-color: black; color: white;">Edit</a>
-                                                    <button class="btn btn-sm" style="background-color: black; color: white;" onclick="deleteAdress('')">Delete</button>
-
-                                                   
-                                                    
-                                                </div>
-                                        
-                                            </div>
-                                        </div>
-                                      
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="accountdetails" role="tabpanel" aria-labelledby="account-detail-tab">
-                                    <div class="card">
-                                        <div class="card-header" style="background-color: black;">
-                                            <h5 style="color: white;">Account Details</h5><span><p style="color: white;">Also You Can Edit</p></span>
-                                        </div>
-                                        <div class="card-body">
-                                            <form class="" method="post" action="/editprofile" id="">
-
-                                                <div class="row">
-                                                    <div class="form-group col-md-6">
-                                                        <label> Name <span class="required">*</span></label>
-                                                        <input required="" class="form-control square black-border" id="proname" name="name" type="text" value="">
-                                                    </div>
-                                                    <div style="color: red;" id="proname-error"></div>
-                                                    <div class="form-group col-md-6">
-                                                        <label>Mobile Number <span class="required">*</span></label>
-                                                        <input required="" class="form-control square black-border" id="pronumber" name="mobile" type="number" value="">
-                                                    </div>
-                                                    <div style="color: red;" id="pronumber-error"></div>
-                                
-                                                    <div class="form-group col-md-12">
-                                                        <label>Email Address <span class="required">*</span></label>
-                                                        <input required="" class="form-control square black-border" name="email" type="email" value="" readonly>
-                                                    </div>
-                                
-                                                    <div class="form-group col-md-12">
-                                                        <label> Password <span class="required">*</span></label>
-                                                        <input required="" class="form-control square black-border" name="password" type="password">
-                                                    </div>
-                                                    <div class="col-md-12">
-                                                        <button type="submit" class="btn btn-fill-out " style="background-color:black;" name="submit" value="Submit">Save</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>    
-                                <div class="tab-pane fade" id="accountsecurity" role="tabpanel" aria-labelledby="address-tab">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <div class="card  black-border">
-                                                <div class="card-header" style="background-color: black;">
-                                                    <h5 style="color: white;">Edit Password</h5>
-                                                </div>
-                                                <div class="card-body" style="color: white;">
-                                                    <form class="" method="post" action="/changepassword" id="passform">
-                                                        <div class="row">
-                                                            <div class="form-group col-md-12">
-                                                                <label>Current Password <span class="required">*</span></label>
-                                                                <input required="" id="currentpassword" class="form-control square black-border" name="currentpassword" type="password" placeholder="currentpassword">
-                                                                <div id="error1"></div>
-                                                            </div>
-                                                            <div class="form-group col-md-12">
-                                                                <label>New Password <span class="required">*</span></label>
-                                                                <input required="" id="newpassword" class="form-control square black-border" name="newpassword" type="password" placeholder="newpassword">
-                                                                <div id="error2"></div>
-                                                            </div>
-                                                            <div class="form-group col-md-12">
-                                                                <label>Confirm Password <span class="required">*</span></label>
-                                                                <input required="" id="confrmpass" class="form-control square black-border" name="confirmpassword" type="password" placeholder="confirm password">
-                                                                <div id="error3"></div>
-                                                            </div>
-                                                            <div class="col-md-12">
-                                                                <button type="submit" class="btn btn-fill-out " style="background-color: black;" name="submit" value="Submit">change</button>
-                                                            </div>
-                                                        </div>
-                                                    </form>   
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-
-                                <div class="tab-pane fade" id="changeemail" role="tabpanel" aria-labelledby="account-detail-tab">
-                                    <div class="card">
-                                        <div class="card-header" style="background-color: black;">
-                                            <h5 style="color: white;">change email</h5><span></span>
-                                        </div>
-                                        <div class="card-body">
-                                            <form class=""  id="changeemail" method="post" action="/changeEmailId?_method=PATCH">
-                                                <input type="hidden" name="_method" value="PATCH">
-                                               
-
-                                               
-                                
-                                                <div class="form-group col-md-12">
-                                                    <label>Email Address <span class="required">*</span></label>
-                                                    <input  class="form-control square black-border" name="email" type="email" value=" " readonly>
-                                                </div>
-                                                
-                                
-                                                <div class="form-group col-md-10" style="display: flex; align-items: center;">
-                                                    <label style="margin-right: 10px;"> <span class="required" style="color: red;"></span></label>
-                                                    <!-- HTML Markup -->
-                                                    <input required="" class="form-control square black-border" id="newemail" name="newemail" type="email" class="otp" style="flex: 1;" placeholder="Enter your email">
-                                                    <button type="button" class="btn otp  square " id="sendOtp" style="margin-left: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;" onclick="otpSend()">Send OTP</button>
-                                                    <span id="timerDisplay" class="ms-2"></span>
-                                                 </div>
-                                                <div id="emailError" style="color: red; display: none; margin-top: 5px;">Please enter a valid email address.</div>
-                                                <div class="form-group mt-2 row">
-                                                    <div class="col-md-6 mb-2 mb-md-0">
-                                                        <input type="number" name="otp" placeholder="Enter OTP" class="form-control   square black-border" id="otpverify" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <button type="button" class="btn btn-primary w-100" id="verify">Verify</button>
-                                                        
-                                                    </div>
-                                                </div>
-                                                    <div class="col-md-12">
-                                                        <button  class="btn btn-fill-out " style="background-color:black;" name="" type="submit"  >change email</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>    
-                                   
-                                
-
-
-
-                             </div>
-                          </div>
-                       </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-</main>
+        </section>
+    </main>
+
+    <!-- Add Bootstrap JS and Popper.js for the functionality of tabs and modals -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>

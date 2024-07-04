@@ -443,10 +443,6 @@ const getCart = async (req, res) => {
         if (!cart) {
             // If no cart exists, create a new one with empty products and zero totalPrice
             cart = { products: [], totalPrice: 0 };
-        } else {
-            // Calculate total price from the products in the cart
-            cart.totalPrice = cart.products.reduce((total, item) => total + item.productId.price * item.quantity, 0);
-            await cart.save(); // Save the updated cart
         }
 
         // Paginate products
@@ -454,12 +450,15 @@ const getCart = async (req, res) => {
         const totalItems = cart.products.length;
         const totalPages = Math.ceil(totalItems / limit);
 
+        // Ensure totalPrice is a number and format it
+        cart.totalPrice = parseFloat(cart.totalPrice.toFixed(2));
+
         // Render the cart view with the cart object and pagination details
         res.render('cart', {
             cart: {
-                ...cart,
                 products: paginatedProducts,
                 totalQuantity: totalItems,
+                totalPrice: cart.totalPrice,
                 totalPages,
                 currentPage: page
             }
@@ -469,7 +468,6 @@ const getCart = async (req, res) => {
         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
-
 
 // Add to Cart
 const addToCart = async (req, res) => {
@@ -495,16 +493,16 @@ const addToCart = async (req, res) => {
             cart = new Cart({ userId, products: [{ productId, quantity }] });
         }
 
-        // Save the cart
-        await cart.save();
+        // Fetch the product price
+        const product = await Product.findById(productId);
+        const productPrice = product ? product.price : 0;
 
-        // Calculate the new total price
-        cart.totalPrice = await cart.products.reduce(async (total, item) => {
-            const product = await Product.findById(item.productId);
-            return total + (product ? product.price * item.quantity : 0);
+        // Recalculate total price
+        cart.totalPrice = cart.products.reduce((total, item) => {
+            return total + (productPrice * item.quantity);
         }, 0);
 
-        // Save the updated totalPrice to the cart
+        // Save the updated cart
         await cart.save();
 
         res.status(200).json({ success: true, message: 'Product added to cart successfully' });
@@ -513,6 +511,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
 
 // Remove from Cart
 const removeFromCart = async (req, res) => {
@@ -525,16 +524,16 @@ const removeFromCart = async (req, res) => {
         if (cart) {
             // Filter out the product to remove it from the cart
             cart.products = cart.products.filter(p => p.productId.toString() !== productId);
+
+            // Recalculate total price
+            cart.totalPrice = cart.products.reduce(async (total, item) => {
+                const product = await Product.findById(item.productId);
+                return total + (product ? product.price * item.quantity : 0);
+            }, 0);
+
+            // Save the updated totalPrice to the cart
             await cart.save();
         }
-
-        // Recalculate total price
-        cart.totalPrice = cart.products.reduce(async (total, item) => {
-            const product = await Product.findById(item.productId);
-            return total + (product ? product.price * item.quantity : 0);
-        }, 0);
-
-        await cart.save(); // Save the updated totalPrice to the cart
 
         res.status(200).json({ success: true, message: 'Product removed from cart successfully' });
     } catch (error) {
@@ -543,6 +542,47 @@ const removeFromCart = async (req, res) => {
     }
 };
 
+
+const clearCart = async (req, res) => {
+    try {
+        const userId = req.session.user.userId;
+
+        // Find the cart for the user
+        const cart = await Cart.findOne({ userId });
+
+        if (!cart || cart.products.length === 0) {
+            return res.status(400).json({ success: false, message: 'Your cart is already empty' });
+        }
+
+        // Create an array of product updates
+        const productUpdates = cart.products.map(item => {
+            const { productId, quantity } = item;
+            return Product.findByIdAndUpdate(productId, { $inc: { stock: quantity } });
+        });
+
+        // Perform all product stock updates in parallel
+        await Promise.all(productUpdates);
+
+        // Clear the cart items and reset the totalPrice
+        await Cart.findOneAndUpdate({ userId }, { $set: { products: [], totalPrice: 0 } });
+
+        return res.status(200).json({ success: true, message: 'Cart cleared successfully' });
+    } catch (error) {
+        console.error('Error clearing the cart:', error.message);
+        return res.status(500).json({ success: false, message: 'Error clearing the cart' });
+    }
+};
+
+
+
+const getCheckout = async (req, res) => {
+    try {
+       res.render('checkout')
+    } catch (error) {
+        console.error('Error clearing the cart:', error);
+        return res.status(500).json({ success: false, message: 'Error clearing the cart' });
+    }
+};
 
 module.exports = {
     signUpPage,
@@ -558,5 +598,8 @@ module.exports = {
     profilePage,
     getCart,
     removeFromCart,
-    addToCart
+    addToCart,
+    clearCart,
+    getCheckout
+
 };

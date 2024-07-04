@@ -18,44 +18,6 @@
                         <div class="totall-product">
                             <p> We found <strong class="text-brand"><%= products.length %></strong> items for you!</p>
                         </div>
-                        <div class="sort-by-product-area">
-                            <form id="filter-form" method="GET" action="/shop">
-                                <div class="sort-by">
-                                    <label for="sort">Sort By:</label>
-                                    <select name="sort" id="sort" onchange="this.form.submit()">
-                                        <option value="popularity" <%= sort === 'popularity' ? 'selected' : '' %>>Popularity</option>
-                                        <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Price Low to High</option>
-                                        <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Price High to Low</option>
-                                        <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>>Rating</option>
-                                    </select>
-                                </div>
-                                <div class="filter-by-price">
-                                    <label for="amount">Price Range:</label>
-                                    <input type="text" id="amount" readonly />
-                                    <input type="hidden" name="minPrice" value="<%= minPrice || 0 %>" />
-                                    <input type="hidden" name="maxPrice" value="<%= maxPrice || 1000 %>" />
-                                </div>
-                                <div class="filter-by-category">
-                                    <label>Category:</label>
-                                    <% categories.forEach(cat => { %>
-                                        <div>
-                                            <input type="checkbox" name="categories" value="<%= cat %>" <%= selectedCategories.includes(cat) ? 'checked' : '' %> />
-                                            <label><%= cat %></label>
-                                        </div>
-                                    <% }) %>
-                                </div>
-                                <div class="filter-by-brand">
-                                    <label>Brand:</label>
-                                    <% brands.forEach(brand => { %>
-                                        <div>
-                                            <input type="checkbox" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> />
-                                            <label><%= brand %></label>
-                                        </div>
-                                    <% }) %>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Apply Filters</button>
-                            </form>
-                        </div>
                     </div>
                     <div class="row product-grid-3">
                         <% products.forEach(product => { %>
@@ -139,52 +101,123 @@
                     </div>
                 </div>
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
-                    <div class="widget-category mb-30">
+                    <!-- <div class="widget-category mb-30">
                         <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                         <ul class="categories">
                             <% categories.forEach(cat => { %>
                                 <li><a href="/shop?categories=<%= cat %>"><%= cat %></a></li>
                             <% }) %>
                         </ul>
-                    </div>
-                    <!-- Filter By Price -->
-                    <div class="sidebar-widget price_range range mb-30">
-                        <div class="widget-header position-relative mb-20 pb-10">
-                            <h5 class="widget-title mb-10">Filter by price</h5>
-                            <div class="bt-1 border-color-1"></div>
-                        </div>
-                        <div class="price-filter">
-                            <div class="price-filter-inner">
-                                <div id="slider-range"></div>
-                                <div class="price_slider_amount">
-                                    <div class="label-input">
-                                        <span>Range:</span><input type="text" id="amount" name="price" placeholder="Add Your Price" />
+                    </div> -->
+                    <!-- Sort By -->
+                    <div class="sidebar-widget mb-30">
+                        <h5 class="section-title style-1 mb-30 wow fadeIn animated">Sort By</h5>
+                        <form id="filter-form" method="GET" action="/shop">
+                            <div class="sort-by mb-30">
+                                <label for="sort">Sort By:</label>
+                                <select name="sort" id="sort" onchange="this.form.submit()">
+                                    <!-- <option value="popularity" <%= sort === 'popularity' ? 'selected' : '' %>>Popularity</option> -->
+                                    <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Price Low to High</option>
+                                    <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Price High to Low</option>
+                                    <!-- <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>>Rating</option> -->
+                                </select>
+                            </div>
+                            <!-- Filter By Price -->
+                            <div class="sidebar-widget price_range range mb-30">
+                                <div class="widget-header position-relative mb-20 pb-10">
+                                    <h5 class="widget-title mb-10">Filter by price</h5>
+                                    <div class="bt-1 border-color-1"></div>
+                                </div>
+                                <div class="price-filter">
+                                    <div class="price-filter-inner">
+                                        <div id="slider-range"></div>
+                                        <div class="price_slider_amount">
+                                            <div class="label-input">
+                                                <span>Range:</span><input type="text" id="amount" name="price" placeholder="Add Your Price" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                                <input type="hidden" name="minPrice" value="<%= minPrice || 0 %>" />
+                                <input type="hidden" name="maxPrice" value="<%= maxPrice || 1000 %>" />
                             </div>
-                        </div>
-                        <a href="/shop" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Filter</a>
+                            <!-- Filter By Category -->
+                            <div class="filter-by-category mb-30">
+                                <label>Category:</label>
+                                <% categories.forEach(cat => { %>
+                                    <div>
+                                        <input type="checkbox" name="categories" value="<%= cat %>" <%= selectedCategories.includes(cat) ? 'checked' : '' %> />
+                                        <label><%= cat %></label>
+                                    </div>
+                                <% }) %>
+                            </div>
+                            <!-- Filter By Brand -->
+                            <div class="filter-by-brand mb-30">
+                                <label>Brand:</label>
+                                <% brands.forEach(brand => { %>
+                                    <div>
+                                        <input type="checkbox" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> />
+                                        <label><%= brand %></label>
+                                    </div>
+                                <% }) %>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        </form>
                     </div>
                     <!-- Product sidebar Widget -->
-                    <div class="sidebar-widget product-sidebar  mb-30 p-30 bg-grey border-radius-10">
+                    <div class="sidebar-widget product-sidebar mb-30 p-30 bg-grey border-radius-10">
                         <div class="widget-header position-relative mb-20 pb-10">
                             <h5 class="widget-title mb-10">New products</h5>
                             <div class="bt-1 border-color-1"></div>
                         </div>
-                        <% latestProducts.forEach(product => { %>
-                            <div class="single-post clearfix">
-                                <div class="image">
-                                    <img src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="#" />
-                                </div>
-                                <div class="content pt-10">
-                                    <h5><a href="/product/<%= product._id %>"><%= product.name %></a></h5>
-                                    <p class="price mb-0 mt-5">$<%= product.price %></p>
-                                    <div class="product-rate">
-                                        <div class="product-rating" style="width:90%"></div>
-                                    </div>
+                        <div class="single-post clearfix">
+                            <div class="image">
+                                <img src="assets/imgs/shop/thumbnail-3.jpg" alt="#">
+                            </div>
+                            <div class="content pt-10">
+                                <h5><a href="/shop-product-detail.html">Chen Cardigan</a></h5>
+                                <p class="price mb-0 mt-5">$99.50</p>
+                                <div class="product-rate">
+                                    <div class="product-rating" style="width:90%"></div>
                                 </div>
                             </div>
-                        <% }); %>
+                        </div>
+                        <div class="single-post clearfix">
+                            <div class="image">
+                                <img src="assets/imgs/shop/thumbnail-4.jpg" alt="#">
+                            </div>
+                            <div class="content pt-10">
+                                <h6><a href="/shop-product-detail.html">Chen Sweater</a></h6>
+                                <p class="price mb-0 mt-5">$89.50</p>
+                                <div class="product-rate">
+                                    <div class="product-rating" style="width:80%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-post clearfix">
+                            <div class="image">
+                                <img src="assets/imgs/shop/thumbnail-5.jpg" alt="#">
+                            </div>
+                            <div class="content pt-10">
+                                <h6><a href="/shop-product-detail.html">Colorful Jacket</a></h6>
+                                <p class="price mb-0 mt-5">$25</p>
+                                <div class="product-rate">
+                                    <div class="product-rating" style="width:60%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-post clearfix">
+                            <div class="image">
+                                <img src="assets/imgs/shop/thumbnail-6.jpg" alt="#">
+                            </div>
+                            <div class="content pt-10">
+                                <h6><a href="/shop-product-detail.html">Lorem, ipsum</a></h6>
+                                <p class="price mb-0 mt-5">$25</p>
+                                <div class="product-rate">
+                                    <div class="product-rating" style="width:60%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -192,7 +225,7 @@
     </section>
 </main>
 
-<!-- <%- include("../layouts/footer.ejs") %> -->
+
 
 <!-- Preloader Start -->
 <div id="preloader-active">

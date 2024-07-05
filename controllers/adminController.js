@@ -104,15 +104,20 @@ const Admin_productList = async (req, res) => {
 
 const Admin_addProductPage = async (req, res) => {
     try {
+        // Fetch all categories for the dropdown
+        const categories = await Category.find();
+
         return res.render('productManagement', {
             message: null,
-            messageType: null
+            messageType: null,
+            categories  // Pass categories to the view
         });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 const Admin_addProduct = async (req, res) => {
     try {
@@ -125,15 +130,28 @@ const Admin_addProduct = async (req, res) => {
             return res.render('productManagement', { 
                 message: 'Product already exists.', 
                 messageType: 'error', 
-                product: req.body 
+                product: req.body,
+                categories: await Category.find()
+            });
+        }
+
+        // Check if the category exists
+        const validCategory = await Category.findOne({ name: category });
+        if (!validCategory) {
+            return res.render('productManagement', { 
+                message: 'Category does not exist.', 
+                messageType: 'error', 
+                product: req.body,
+                categories: await Category.find()
             });
         }
 
         if (images.length > 3) {
-            return res.render('admin_addProduct', { 
+            return res.render('productManagement', { 
                 message: 'You can upload a maximum of 3 images per product.', 
                 messageType: 'error', 
-                product: req.body 
+                product: req.body,
+                categories: await Category.find()
             });
         }
 
@@ -143,46 +161,81 @@ const Admin_addProduct = async (req, res) => {
         res.redirect('/admin/productList');
     } catch (error) {
         console.log(error.message);
-        res.status(500).render('admin_addProduct', { 
+        res.status(500).render('productManagement', { 
             message: 'Internal Server Error', 
             messageType: 'error', 
-            product: req.body 
+            product: req.body,
+            categories: await Category.find()
         });
     }
 };
 
-
 const Admin_editProductPage = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
-        return res.render('editProduct', { product });
+        const productId = req.params.id;
+
+        // Fetch the product details
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.redirect('/admin/productList');  // Redirect if product is not found
+        }
+
+        // Fetch categories
+        const categories = await Category.find();
+
+        // Render the edit product page with default message and messageType
+        res.render('editProduct', {
+            product,
+            categories,
+            message: req.query.message || null,  // Pass message from query params
+            messageType: req.query.messageType || null  // Pass message type from query params
+        });
     } catch (error) {
-        console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        console.error(error.message);
+        res.redirect('/admin/productList?message=Internal Server Error&messageType=error');  // Redirect with query params for error
     }
 };
+
 
 const Admin_editProduct = async (req, res) => {
     try {
         const { name, description, price, brand, category } = req.body;
-        const product = await Product.findById(req.params.id);
+        const productId = req.params.id;
+        const images = req.files ? req.files.map(file => file.filename) : [];
 
-        if (req.files.length > 0) {
-            product.images = req.files.map(file => file.filename);
+        // Find the product to update
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.redirect('/admin/productList?message=Product not found&messageType=error');
         }
 
+        // Check if a product with the same name already exists, excluding the current product
+        const existingProduct = await Product.findOne({ name, _id: { $ne: productId } });
+        if (existingProduct) {
+            return res.redirect(`admin/editProduct/${productId}?message=Product with the same name already exists.&messageType=error`);
+        }
+
+        // Check if the category exists
+        const validCategory = await Category.findOne({ name: category });
+        if (!validCategory) {
+            return res.redirect(`admin/editProduct/${productId}?message=Category does not exist.&messageType=error`);
+        }
+
+        // Update the product details
         product.name = name;
         product.description = description;
         product.price = price;
         product.brand = brand;
         product.category = category;
+        if (images.length > 0) {
+            product.images = images;
+        }
 
         await product.save();
-
-        res.redirect('/admin/productList');
+        res.redirect('/admin/productList?message=Product updated successfully.&messageType=success');
     } catch (error) {
-        console.log(error.message);
-        res.status(500).send('Internal Server Error');
+        console.error(error.message);
+        res.redirect(`/admin/editProduct/${req.params.id}?message=Internal Server Error&messageType=error`);
     }
 };
 

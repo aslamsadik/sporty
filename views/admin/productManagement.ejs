@@ -57,9 +57,9 @@
                                 <div class="mb-4">
                                     <label class="form-label">Brand name</label>
                                     <select class="form-select" name="brand">
-                                        <option>Adidas</option>
-                                        <option>Nike</option>
-                                        <option>Puma</option>
+                                        <option value="Adidas">Adidas</option>
+                                        <option value="Nike">Nike</option>
+                                        <option value="Puma">Puma</option>
                                     </select>
                                 </div>
                             </div>
@@ -83,26 +83,13 @@
                             </div>
                             <div class="col-md-9">
                                 <div class="mb-4">
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Clothes" checked>
-                                        <span class="form-check-label">Football</span>
-                                    </label>
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Electronics">
-                                        <span class="form-check-label">Cricket</span>
-                                    </label>
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Electronics">
-                                        <span class="form-check-label">Boxing</span>
-                                    </label>
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Electronics">
-                                        <span class="form-check-label">Athletics</span>
-                                    </label>
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Electronics">
-                                        <span class="form-check-label">Gymnastics</span>
-                                    </label>
+                                    <label class="form-label">Select Category</label>
+                                    <select class="form-select" name="category" required>
+                                        <option value="" disabled selected>Select a category</option>
+                                        <% categories.forEach(category => { %>
+                                            <option value="<%= category.name %>"><%= category.name %></option>
+                                        <% }) %>
+                                    </select>
                                 </div>
                             </div>
                         </div>

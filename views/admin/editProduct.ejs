@@ -15,6 +15,9 @@
             margin-right: 10px;
             margin-bottom: 10px;
         }
+        .error-message {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -26,7 +29,12 @@
             </div>
         </div>
     </div>
-    <form action="/admin/editProduct/<%= product._id %>" method="POST" enctype="multipart/form-data">
+    <% if (message) { %>
+        <div class="<%= messageType === 'error' ? 'error-message' : '' %>">
+            <%= message %>
+        </div>
+    <% } %>
+    <form action="/admin/editProduct/<%= product._id %>" method="POST" enctype="multipart/form-data" onsubmit="validateForm(event)">
         <div class="row">
             <div class="col-lg-6">
                 <div class="card mb-4">
@@ -46,10 +54,19 @@
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Brand name</label>
-                                    <select class="form-select" name="brand">
-                                        <option <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
-                                        <option <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
-                                        <option <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
+                                    <select class="form-select" name="brand" required>
+                                        <option value="Adidas" <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
+                                        <option value="Nike" <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
+                                        <option value="Puma" <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Select Category</label>
+                                    <select class="form-select" name="category" required>
+                                        <option value="" disabled>Select a category</option>
+                                        <% categories.forEach(cat => { %>
+                                            <option value="<%= cat.name %>" <%= product.category === cat.name ? 'selected' : '' %>><%= cat.name %></option>
+                                        <% }) %>
                                     </select>
                                 </div>
                             </div>
@@ -69,25 +86,7 @@
                         <hr class="mb-4 mt-0">
                         <div class="row">
                             <div class="col-md-3">
-                                <h6>3. Category</h6>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="mb-4">
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Clothes" <%= product.category === 'Clothes' ? 'checked' : '' %>>
-                                        <span class="form-check-label">Football</span>
-                                    </label>
-                                    <label class="mb-2 form-check form-check-inline" style="width: 45%;">
-                                        <input class="form-check-input" name="category" type="radio" value="Electronics" <%= product.category === 'Electronics' ? 'checked' : '' %>>
-                                        <span class="form-check-label">Cricket</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <hr class="mb-4 mt-0">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <h6>4. Media</h6>
+                                <h6>3. Media</h6>
                             </div>
                             <div class="col-md-9">
                                 <div class="mb-4">
@@ -99,12 +98,10 @@
                                                 <img src="/user_assets/imgs/shop/<%= image %>" alt="Product Image" width="100">
                                             <% }) %>
                                         </div>
-                                        <br>
-                                        <div>
-                                            <button class="btn btn-md rounded font-sm hover-up">Update</button>
-                                        </div>
                                     <% } %>
-                                    
+                                </div>
+                                <div>
+                                    <button class="btn btn-md rounded font-sm hover-up" type="submit">Update</button>
                                 </div>
                             </div>
                         </div>
@@ -114,8 +111,18 @@
         </div>
     </form>
 </section>
+<script>
+    function validateForm(event) {
+        const imageInputs = document.querySelector('input[type="file"][name="images"]');
+        if (imageInputs.files.length > 3) {
+            event.preventDefault();
+            alert('You can upload a maximum of 3 images per product.');
+        }
+    }
+</script>
 </body>
 </html>
+
 
 
 <%- include("../layouts/admin_footer.ejs") %>

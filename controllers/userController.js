@@ -71,114 +71,60 @@ const HomePage = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
-        // Fetch the current page, sort option, minPrice, maxPrice, categories, and brands from query parameters
-        const { page = 1, sort = 'popularity', minPrice, maxPrice, categories = '', brands = '' } = req.query;
-        const productsPerPage = 9;
+        const perPage = 9;
+        const page = parseInt(req.query.page) || 1;
+        const sort = req.query.sort || 'price';
+        const minPrice = parseFloat(req.query.minPrice) || 0;
+        const maxPrice = parseFloat(req.query.maxPrice) || 1000;
+        const selectedCategories = req.query.categories ? req.query.categories.split(',') : [];
+        const selectedBrands = req.query.brands ? req.query.brands.split(',') : [];
 
-        // Prepare filters
-        const filters = {};
-        const selectedCategories = categories.split(',').filter(cat => cat); // Parse categories query
-        const selectedBrands = brands.split(',').filter(brand => brand); // Parse brands query
+        console.log('Min Price:', minPrice); // Debugging line
+        console.log('Max Price:', maxPrice); // Debugging line
+
+        // Build the filter query
+        let filter = {
+            price: { $gte: minPrice, $lte: maxPrice }
+        };
 
         if (selectedCategories.length > 0) {
-            filters.category = { $in: selectedCategories };
+            filter.category = { $in: selectedCategories };
         }
+
         if (selectedBrands.length > 0) {
-            filters.brand = { $in: selectedBrands };
-        }
-        if (minPrice || maxPrice) {
-            filters.price = { $gte: minPrice || 0, $lte: maxPrice || 1000 };
+            filter.brand = { $in: selectedBrands };
         }
 
-        // Fetch products based on filters, sorting, pagination, etc.
-        const products = await Product.find(filters)
-            .sort(sort === 'popularity' ? { createdAt: -1 } : 
-                  sort === 'price_asc' ? { price: 1 } :
-                  sort === 'price_desc' ? { price: -1 } :
-                  sort === 'rating' ? { rating: -1 } : { createdAt: -1 })
-            .skip((page - 1) * productsPerPage)
-            .limit(productsPerPage);
+        const [products, totalProducts, categories, brands] = await Promise.all([
+            Product.find(filter)
+                .sort({ [sort]: 1 })
+                .skip((perPage * page) - perPage)
+                .limit(perPage),
+            Product.countDocuments(filter),
+            Product.distinct('category'),
+            Product.distinct('brand')
+        ]);
 
-        const totalProducts = await Product.countDocuments(filters);
-        const totalPages = Math.ceil(totalProducts / productsPerPage);
-
-        // Fetch latest products
-        const latestProducts = await Product.find().sort({ createdAt: -1 }).limit(5);
-
-        // Fetch distinct categories and brands for the sidebar
-        const distinctCategories = await Product.distinct('category');
-        const distinctBrands = await Product.distinct('brand');
+        const totalPages = Math.ceil(totalProducts / perPage);
 
         res.render('shop', {
             products,
-            currentPage: parseInt(page),
+            totalProducts,
+            categories,
+            brands,
+            currentPage: page,
             totalPages,
-            categories: distinctCategories,
-            brands: distinctBrands,
             sort,
             minPrice,
             maxPrice,
             selectedCategories,
-            selectedBrands,
-            latestProducts // Pass latestProducts to the view
+            selectedBrands
         });
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error(error);
         res.status(500).send('Server Error');
     }
 };
-
-
-// const getShop = async (req, res) => {
-//     try {
-//         const { search, category, minPrice, maxPrice, sort, page = 1 } = req.query;
-
-//         const query = {};
-//         if (search) {
-//             query.name = new RegExp(search, 'i'); // Case-insensitive search
-//         }
-//         if (category) {
-//             query.category = category;
-//         }
-//         if (minPrice) {
-//             query.price = { ...query.price, $gte: parseFloat(minPrice) };
-//         }
-//         if (maxPrice) {
-//             query.price = { ...query.price, $lte: parseFloat(maxPrice) };
-//         }
-
-//         let sortOption = {};
-//         if (sort === 'priceAsc') {
-//             sortOption.price = 1;
-//         } else if (sort === 'priceDesc') {
-//             sortOption.price = -1;
-//         } else if (sort === 'popularity') {
-//             sortOption.popularity = -1; // Adjust as needed
-//         }
-
-//         const products = await Product.find(query).sort(sortOption).skip((page - 1) * 10).limit(10);
-//         const totalProducts = await Product.countDocuments(query);
-//         const totalPages = Math.ceil(totalProducts / 10);
-
-//         res.render('shop', {
-//             products,
-//             currentPage: parseInt(page),
-//             totalPages,
-//             search,
-//             category,
-//             minPrice,
-//             maxPrice,
-//             sort,
-//             categories: await Category.find() // Fetch categories for filter
-//         });
-//     } catch (error) {
-//         console.error('Error fetching products:', error.message);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
-
-
-
 // Fetch and render product description page
 const getProductDescriptionPage = async (req, res) => {
     try {
@@ -202,14 +148,7 @@ const profilePage = async (req, res) => {
     }
 };
 
-// const getCart = async (req, res) => {
-//     try {
-//         return res.render('cart');
-//     } catch (error) {
-//         console.log(error.message);
-//         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
-//     }
-// };
+
 const signUp = async (req, res) => {
     try {
         const { username, email, password, confirmPassword } = req.body;
@@ -465,7 +404,7 @@ const getCart = async (req, res) => {
         });
     } catch (error) {
         console.error('Error getting cart:', error.message);
-        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+        // res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
 
@@ -513,7 +452,8 @@ const addToCart = async (req, res) => {
 };
 
 
-// Remove from Cart
+
+
 const removeFromCart = async (req, res) => {
     try {
         const userId = req.session.user.userId;
@@ -526,12 +466,16 @@ const removeFromCart = async (req, res) => {
             cart.products = cart.products.filter(p => p.productId.toString() !== productId);
 
             // Recalculate total price
-            cart.totalPrice = cart.products.reduce(async (total, item) => {
+            let totalPrice = 0;
+            for (const item of cart.products) {
                 const product = await Product.findById(item.productId);
-                return total + (product ? product.price * item.quantity : 0);
-            }, 0);
+                if (product) {
+                    totalPrice += product.price * item.quantity;
+                }
+            }
+            cart.totalPrice = totalPrice;
 
-            // Save the updated totalPrice to the cart
+            // Save the updated cart
             await cart.save();
         }
 
@@ -572,6 +516,8 @@ const clearCart = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error clearing the cart' });
     }
 };
+
+
 
 
 

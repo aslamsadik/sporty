@@ -575,17 +575,42 @@ const clearCart = async (req, res) => {
 };
 
 
-
-
-
 const getCheckout = async (req, res) => {
     try {
-       res.render('checkout')
+        const userId = req.session.user.userId;
+
+        // Fetch the cart for the logged-in user and populate product details
+        const cart = await Cart.findOne({ userId }).populate('products.productId');
+
+        if (!cart || cart.products.length === 0) {
+            return res.status(400).render('checkout', { 
+                message: 'Your cart is empty', 
+                cart: null,
+                user: req.session.user
+            });
+        }
+
+        // Calculate the total price for confirmation (ensure totalPrice is a number and format it)
+        cart.totalPrice = parseFloat(cart.totalPrice.toFixed(2));
+
+        // Render the checkout view with the cart and user details
+        res.render('checkout', {
+            cart,
+            user: req.session.user,
+            message: null
+        });
     } catch (error) {
-        console.error('Error clearing the cart:', error);
-        return res.status(500).json({ success: false, message: 'Error clearing the cart' });
+        console.error('Error fetching checkout data:', error.message);
+        res.status(500).render('checkout', { 
+            message: 'Internal Server Error', 
+            cart: null,
+            user: req.session.user
+        });
     }
 };
+
+
+
 
 module.exports = {
     signUpPage,

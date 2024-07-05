@@ -69,62 +69,119 @@ const HomePage = async (req, res) => {
     }
 };
 
+// const getShopPage = async (req, res) => {
+//     try {
+//         const perPage = 9;
+//         const page = parseInt(req.query.page) || 1;
+//         const sort = req.query.sort || 'price';
+//         const minPrice = parseFloat(req.query.minPrice) || 0;
+//         const maxPrice = parseFloat(req.query.maxPrice) || 1000;
+//         const selectedCategories = req.query.categories ? req.query.categories.split(',') : [];
+//         const selectedBrands = req.query.brands ? req.query.brands.split(',') : [];
+
+//         console.log('Min Price:', minPrice); // Debugging line
+//         console.log('Max Price:', maxPrice); // Debugging line
+
+//         // Build the filter query
+//         let filter = {
+//             price: { $gte: minPrice, $lte: maxPrice }
+//         };
+
+//         if (selectedCategories.length > 0) {
+//             filter.category = { $in: selectedCategories };
+//         }
+
+//         if (selectedBrands.length > 0) {
+//             filter.brand = { $in: selectedBrands };
+//         }
+
+//         const [products, totalProducts, categories, brands] = await Promise.all([
+//             Product.find(filter)
+//                 .sort({ [sort]: 1 })
+//                 .skip((perPage * page) - perPage)
+//                 .limit(perPage),
+//             Product.countDocuments(filter),
+//             Product.distinct('category'),
+//             Product.distinct('brand')
+//         ]);
+
+//         const totalPages = Math.ceil(totalProducts / perPage);
+
+//         res.render('shop', {
+//             products,
+//             totalProducts,
+//             categories,
+//             brands,
+//             currentPage: page,
+//             totalPages,
+//             sort,
+//             minPrice,
+//             maxPrice,
+//             selectedCategories,
+//             selectedBrands
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send('Server Error');
+//     }
+// };
+
 const getShopPage = async (req, res) => {
     try {
-        const perPage = 9;
-        const page = parseInt(req.query.page) || 1;
-        const sort = req.query.sort || 'price';
-        const minPrice = parseFloat(req.query.minPrice) || 0;
-        const maxPrice = parseFloat(req.query.maxPrice) || 1000;
-        const selectedCategories = req.query.categories ? req.query.categories.split(',') : [];
-        const selectedBrands = req.query.brands ? req.query.brands.split(',') : [];
+        const { page = 1, sort = 'price', minPrice = 0, maxPrice = 1000, categories = [], brands = [] } = req.query;
+        const ITEMS_PER_PAGE = 9;
 
-        console.log('Min Price:', minPrice); // Debugging line
-        console.log('Max Price:', maxPrice); // Debugging line
+        // Convert categories and brands to arrays if they are not already
+        const categoryArray = Array.isArray(categories) ? categories : [categories];
+        const brandArray = Array.isArray(brands) ? brands : [brands];
 
-        // Build the filter query
+        // Create filter object
         let filter = {
             price: { $gte: minPrice, $lte: maxPrice }
         };
-
-        if (selectedCategories.length > 0) {
-            filter.category = { $in: selectedCategories };
+        if (categoryArray.length > 0 && categoryArray[0] !== '') {
+            filter.category = { $in: categoryArray };
+        }
+        if (brandArray.length > 0 && brandArray[0] !== '') {
+            filter.brand = { $in: brandArray };
         }
 
-        if (selectedBrands.length > 0) {
-            filter.brand = { $in: selectedBrands };
-        }
+        // Count total products
+        const totalProducts = await Product.countDocuments(filter);
 
-        const [products, totalProducts, categories, brands] = await Promise.all([
-            Product.find(filter)
-                .sort({ [sort]: 1 })
-                .skip((perPage * page) - perPage)
-                .limit(perPage),
-            Product.countDocuments(filter),
-            Product.distinct('category'),
-            Product.distinct('brand')
-        ]);
+        // Calculate total pages
+        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
-        const totalPages = Math.ceil(totalProducts / perPage);
+        // Fetch products with sorting, filtering, and pagination
+        const products = await Product.find(filter)
+            .sort({ price: sort === 'price' ? 1 : -1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+
+        // Fetch distinct categories and brands for filters
+        const categoriesList = await Product.distinct('category');
+        const brandsList = await Product.distinct('brand');
 
         res.render('shop', {
             products,
+            categories: categoriesList,
+            brands: brandsList,
             totalProducts,
-            categories,
-            brands,
-            currentPage: page,
             totalPages,
+            currentPage: parseInt(page),
             sort,
             minPrice,
             maxPrice,
-            selectedCategories,
-            selectedBrands
+            selectedCategories: categoryArray,
+            selectedBrands: brandArray
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error('Error fetching shop page:', error);
+        res.status(500).send('Internal Server Error');
     }
 };
+
+
 // Fetch and render product description page
 const getProductDescriptionPage = async (req, res) => {
     try {

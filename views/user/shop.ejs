@@ -1,6 +1,7 @@
 
 <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
 
+
 <main class="main">
     <div class="page-header breadcrumb-wrap">
         <div class="container">
@@ -17,6 +18,32 @@
                     <div class="shop-product-fillter">
                         <div class="totall-product">
                             <p> We found <strong class="text-brand"><%= totalProducts %></strong> items for you!</p>
+                        </div>
+                        <div class="sort-by-product-area">
+                            <div class="sort-by-cover">
+                                <form method="GET" action="/shop">
+                                    <div class="sort-by-product-wrap">
+                                        <div class="sort-by">
+                                            <span><i class="fi-rs-apps"></i>Sort by:</span>
+                                        </div>
+                                        <div class="sort-by-dropdown-wrap">
+                                            <select name="sort" onchange="this.form.submit()">
+                                                <option value="price" <%= sort === 'price' ? 'selected' : '' %>>Price: Low to High</option>
+                                                <option value="-price" <%= sort === '-price' ? 'selected' : '' %>>Price: High to Low</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="page" value="<%= currentPage %>" />
+                                    <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                                    <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                                    <% selectedCategories.forEach(category => { %>
+                                        <input type="hidden" name="categories" value="<%= category %>" />
+                                    <% }); %>
+                                    <% selectedBrands.forEach(brand => { %>
+                                        <input type="hidden" name="brands" value="<%= brand %>" />
+                                    <% }); %>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     <div class="row product-grid-3">
@@ -78,6 +105,7 @@
                         <% }); %>
                     </div>
                     <!--pagination-->
+                    <% if (totalPages > 1) { %>
                     <div class="pagination-area mt-15 mb-30">
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-center">
@@ -99,17 +127,19 @@
                             </ul>
                         </nav>
                     </div>                   
+                    <% } %>
                 </div>
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
                     <div class="sidebar-widget mb-30">
                         <h5 class="section-title style-1 mb-30 wow fadeIn animated">Filters</h5>
                         <form id="filter-form" method="GET" action="/shop">
-                            <!-- Filter By Price -->
-                            <div class="sidebar-widget price_range range mb-20">
-                                <label for="amount">Price Range:</label>
-                                <input type="text" id="amount" name="price" placeholder="Add Your Price" class="form-control mb-10"/>
-                                <input type="hidden" name="minPrice" value="<%= minPrice || 0 %>" />
-                                <input type="hidden" name="maxPrice" value="<%= maxPrice || 1000 %>" />
+                            <!-- Sort By Price -->
+                            <div class="filter-by-price mb-20">
+                                <label for="sort">Sort by Price:</label>
+                                <select id="sort" name="sort" class="form-control">
+                                    <option value="price" <%= sort === 'price' ? 'selected' : '' %>>Low to High</option>
+                                    <option value="-price" <%= sort === '-price' ? 'selected' : '' %>>High to Low</option>
+                                </select>
                             </div>
                             <!-- Filter By Category -->
                             <div class="filter-by-category mb-20">
@@ -121,87 +151,22 @@
                                     </div>
                                 <% }) %>
                             </div>
-                            <!-- Filter By Brand -->
-                            <div class="filter-by-brand mb-20">
-                                <label>Brand:</label>
-                                <% brands.forEach(brand => { %>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> />
-                                        <label class="form-check-label"><%= brand %></label>
-                                    </div>
-                                <% }) %>
-                            </div>
+                            <input type="hidden" name="page" value="<%= currentPage %>" />
                             <button type="submit" class="btn btn-primary">Apply Filters</button>
                         </form>
-                    </div>
-                    <!-- Product sidebar Widget -->
-                    <div class="sidebar-widget product-sidebar mb-30 p-30 bg-grey border-radius-10">
-                        <div class="widget-header position-relative mb-20 pb-10">
-                            <h5 class="widget-title mb-10">New products</h5>
-                            <div class="bt-1 border-color-1"></div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-3.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h5><a href="/shop-product-detail.html">Chen Cardigan</a></h5>
-                                <p class="price mb-0 mt-5">$99.50</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width:90%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-4.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h6><a href="/shop-product-detail.html">Chen Sweater</a></h6>
-                                <p class="price mb-0 mt-5">$89.50</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width:80%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-5.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h6><a href="/shop-product-detail.html">Colorful Jacket</a></h6>
-                                <p class="price mb-0 mt-5">$25</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width:60%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="single-post clearfix">
-                            <div class="image">
-                                <img src="assets/imgs/shop/thumbnail-6.jpg" alt="#">
-                            </div>
-                            <div class="content pt-10">
-                                <h6><a href="/shop-product-detail.html">Lorem, ipsum</a></h6>
-                                <p class="price mb-0 mt-5">$25</p>
-                                <div class="product-rate">
-                                    <div class="product-rating" style="width:60%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!--Banner-->
-                    <div class="banner-img wow fadeIn mb-lg-0 animated d-lg-block d-none">
-                        <img src="assets/imgs/banner/banner-11.png" alt="">
-                        <div class="banner-text">
-                            <span>Organic</span>
-                            <h4>Save 17% <br>on <span class="text-brand">Organic</span><br>Juice</h4>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 </main>
+
+
+
+
+
+
+
 
 
 <!-- Preloader Start -->

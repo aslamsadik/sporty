@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
 const Cart = require('../models/cartModel');
+const Order = require('../models/orderShema');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -574,42 +575,105 @@ const clearCart = async (req, res) => {
     }
 };
 
-
-const getCheckout = async (req, res) => {
+const getCheckoutPage = async (req, res) => {
     try {
         const userId = req.session.user.userId;
-
-        // Fetch the cart for the logged-in user and populate product details
         const cart = await Cart.findOne({ userId }).populate('products.productId');
 
-        if (!cart || cart.products.length === 0) {
-            return res.status(400).render('checkout', { 
-                message: 'Your cart is empty', 
-                cart: null,
-                user: req.session.user
-            });
+        res.render('checkout', { cart });
+    } catch (error) {
+        console.error('Error fetching checkout page:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const placeOrder = async (req, res) => {
+    try {
+        const userId = req.session.user?.userId;
+
+        // Check if userId exists
+        if (!userId) {
+            throw new Error('User is not authenticated');
         }
 
-        // Calculate the total price for confirmation (ensure totalPrice is a number and format it)
-        cart.totalPrice = parseFloat(cart.totalPrice.toFixed(2));
+        const { billingAddress, orderNotes, paymentMethod } = req.body;
+        const cart = await Cart.findOne({ userId }).populate('products.productId');
 
-        // Render the checkout view with the cart and user details
-        res.render('checkout', {
-            cart,
-            user: req.session.user,
-            message: null
+        // Check if cart exists
+        if (!cart || cart.products.length === 0) {
+            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error' });
+        }
+
+        // Log cart products for debugging
+        console.log('Cart Products:', cart.products);
+
+        // Calculate total price
+        const totalPrice = cart.products.reduce((total, item) => {
+            const product = item.productId; // Populated product document
+            console.log('Product:', product);
+            console.log('Product Price:', product.price);
+            console.log('Product Quantity:', item.quantity);
+            if (!product || typeof product.price !== 'number' || typeof item.quantity !== 'number') {
+                throw new Error('Invalid product price or quantity');
+            }
+            return total + (product.price * item.quantity);
+        }, 0);
+
+        console.log('Total Price:', totalPrice);
+
+        // Create a new order
+        const order = new Order({
+            userId,
+            products: cart.products.map(item => ({
+                productId: item.productId._id,
+                quantity: item.quantity
+            })),
+            billingAddress: {
+                firstName: billingAddress.firstName,
+                lastName: billingAddress.lastName,
+                companyName: billingAddress.companyName,
+                address1: billingAddress.address1,
+                address2: billingAddress.address2,
+                city: billingAddress.city,
+                state: billingAddress.state,
+                zip: billingAddress.zip,
+                phone: billingAddress.phone,
+                email: billingAddress.email
+            },
+            shippingAddress: billingAddress, // Assuming shippingAddress is the same as billingAddress
+            totalPrice,
+            paymentMethod,
+            orderNotes,
+            status: 'Pending', // Default status
+            createdAt: new Date()
         });
+
+        await order.save();
+        await Cart.deleteOne({ userId });
+
+        res.redirect('/orderConfirm/' + order._id);
     } catch (error) {
-        console.error('Error fetching checkout data:', error.message);
-        res.status(500).render('checkout', { 
-            message: 'Internal Server Error', 
-            cart: null,
-            user: req.session.user
-        });
+        console.log('Error placing order:', error.message);
+        res.render('checkout', { message: 'Error placing order. Please try again.', messageType: 'error' });
     }
 };
 
 
+const getOrderDetails = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findById(orderId).populate('products.productId');
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        res.render('orderDetails', { order });
+    } catch (error) {
+        console.error('Error fetching order details:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
 
 module.exports = {
@@ -628,6 +692,8 @@ module.exports = {
     removeFromCart,
     addToCart,
     clearCart,
-    getCheckout
+    getCheckoutPage,
+    placeOrder,
+    getOrderDetails
 
 };

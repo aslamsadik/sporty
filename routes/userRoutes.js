@@ -46,6 +46,8 @@ router.post('/cart/add', isAuthenticated, userController.addToCart);
 router.post('/cart/remove', isAuthenticated, userController.removeFromCart);
 router.post('/cart/clear', isAuthenticated,userController.clearCart);
 //checkout
-router.get('/checkout', isAuthenticated,userController.getCheckout)
+router.get('/checkout', isAuthenticated, userController.getCheckoutPage);
+router.post('/place-order', isAuthenticated, userController.placeOrder);
+router.get('/order/details/:id', isAuthenticated, userController.getOrderDetails);
 
 module.exports = router;

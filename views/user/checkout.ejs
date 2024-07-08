@@ -18,7 +18,6 @@
 </head>
 
 <body>
-
     <main class="main">
         <div class="page-header breadcrumb-wrap">
             <div class="container">
@@ -31,7 +30,6 @@
         </div>
         <section class="mt-50 mb-50">
             <div class="container">
-                <!-- Login and Coupon Section -->
                 <div class="row">
                     <div class="col-lg-6 mb-sm-15">
                         <div class="toggle_info">
@@ -40,228 +38,52 @@
                         <div class="panel-collapse collapse login_form" id="loginform">
                             <div class="panel-body">
                                 <p class="mb-30 font-sm">If you have shopped with us before, please enter your details below. If you are a new customer, please proceed to the Billing & Shipping section.</p>
-                                <form method="post">
-                                    <div class="form-group">
-                                        <input type="text" name="email" placeholder="Username Or Email">
+                                <form action="/place-order" method="POST">
+                                    <div>
+                                        <h3>Billing Address</h3>
+                                        <input type="text" name="billingAddress[firstName]" placeholder="First Name" required>
+                                        <input type="text" name="billingAddress[lastName]" placeholder="Last Name" required>
+                                        <input type="text" name="billingAddress[companyName]" placeholder="Company Name">
+                                        <input type="text" name="billingAddress[address1]" placeholder="Address 1" required>
+                                        <input type="text" name="billingAddress[address2]" placeholder="Address 2">
+                                        <input type="text" name="billingAddress[city]" placeholder="City" required>
+                                        <input type="text" name="billingAddress[state]" placeholder="State" required>
+                                        <input type="text" name="billingAddress[zip]" placeholder="ZIP Code" required>
+                                        <input type="text" name="billingAddress[phone]" placeholder="Phone" required>
+                                        <input type="email" name="billingAddress[email]" placeholder="Email" required>
                                     </div>
-                                    <div class="form-group">
-                                        <input type="password" name="password" placeholder="Password">
+                                    <div>
+                                        <h3>Order Notes</h3>
+                                        <textarea name="orderNotes" placeholder="Order Notes"></textarea>
                                     </div>
-                                    <div class="login_footer form-group">
-                                        <div class="chek-form">
-                                            <div class="custome-checkbox">
-                                                <input class="form-check-input" type="checkbox" name="checkbox" id="remember" value="">
-                                                <label class="form-check-label" for="remember"><span>Remember me</span></label>
-                                            </div>
-                                        </div>
-                                        <a href="#">Forgot password?</a>
+                                    <div>
+                                        <h3>Payment Method</h3>
+                                        <select name="paymentMethod" required>
+                                            <option value="Cash On Delivery">Cash On Delivery</option>
+                                            <option value="Credit Card">Credit Card</option>
+                                            <option value="PayPal">PayPal</option>
+                                        </select>
                                     </div>
-                                    <div class="form-group">
-                                        <button class="btn btn-md" name="login">Log in</button>
-                                    </div>
+                                    <button type="submit">Place Order</button>
                                 </form>
+                                
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="toggle_info">
-                            <span><i class="fi-rs-label mr-10"></i><span class="text-muted">Have a coupon?</span> <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a></span>
-                        </div>
-                        <div class="panel-collapse collapse coupon_form" id="coupon">
-                            <div class="panel-body">
-                                <p class="mb-30 font-sm">If you have a coupon code, please apply it below.</p>
-                                <form method="post">
-                                    <div class="form-group">
-                                        <input type="text" placeholder="Enter Coupon Code...">
-                                    </div>
-                                    <div class="form-group">
-                                        <button class="btn btn-md" name="login">Apply Coupon</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Divider -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="divider mt-50 mb-50"></div>
-                    </div>
-                </div>
-                <!-- Billing Details -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-25">
-                            <h4>Billing Details</h4>
-                        </div>
-                        <form method="post">
-                            <div class="form-group">
-                                <input type="text" required name="fname" placeholder="First name *">
-                            </div>
-                            <div class="form-group">
-                                <input type="text" required name="lname" placeholder="Last name *">
-                            </div>
-                            <div class="form-group">
-                                <input required type="text" name="cname" placeholder="Company Name">
-                            </div>
-                            <div class="form-group">
-                                <input type="text" name="billing_address" required placeholder="Address *">
-                            </div>
-                            <div class="form-group">
-                                <input type="text" name="billing_address2" required placeholder="Address line2">
-                            </div>
-                            <div class="form-group">
-                                <input required type="text" name="city" placeholder="City / Town *">
-                            </div>
-                            <div class="form-group">
-                                <input required type="text" name="state" placeholder="State / County *">
-                            </div>
-                            <div class="form-group">
-                                <input required type="text" name="zipcode" placeholder="Postcode / ZIP *">
-                            </div>
-                            <div class="form-group">
-                                <input required type="text" name="phone" placeholder="Phone *">
-                            </div>
-                            <div class="form-group">
-                                <input required type="text" name="email" placeholder="Email address *">
-                            </div>
-                            <div class="form-group">
-                                <div class="checkbox">
-                                    <div class="custome-checkbox">
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="createaccount">
-                                        <label class="form-check-label label_info" data-bs-toggle="collapse" href="#collapsePassword" data-target="#collapsePassword" aria-controls="collapsePassword" for="createaccount"><span>Create an account?</span></label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="collapsePassword" class="form-group create-account collapse in">
-                                <input required type="password" placeholder="Password" name="password">
-                            </div>
-                            <div class="ship_detail">
-                                <div class="form-group">
-                                    <div class="chek-form">
-                                        <div class="custome-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="checkbox" id="differentaddress">
-                                            <label class="form-check-label label_info" data-bs-toggle="collapse" data-target="#collapseAddress" href="#collapseAddress" aria-controls="collapseAddress" for="differentaddress"><span>Ship to a different address?</span></label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="collapseAddress" class="different_address collapse in">
-                                    <div class="form-group">
-                                        <input type="text" required name="fname" placeholder="First name *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" required name="lname" placeholder="Last name *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input required type="text" name="cname" placeholder="Company Name">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" name="billing_address" required placeholder="Address *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" name="billing_address2" required placeholder="Address line2">
-                                    </div>
-                                    <div class="form-group">
-                                        <input required type="text" name="city" placeholder="City / Town *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input required type="text" name="state" placeholder="State / County *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input required type="text" name="zipcode" placeholder="Postcode / ZIP *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input required type="text" name="phone" placeholder="Phone *">
-                                    </div>
-                                    <div class="form-group">
-                                        <input required type="text" name="email" placeholder="Email address *">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group mb-30">
-                                <textarea rows="5" placeholder="Additional information"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <!-- Order Summary -->
-                    <div class="col-md-6">
-                        <div class="mb-25">
-                            <h4>Your Order</h4>
-                        </div>
-                        <div class="order_review">
-                            <% if (cart) { %>
-                            <div class="table-responsive order_table text-center">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% cart.products.forEach(product => { %>
-                                        <tr>
-                                            <td class="image product-thumbnail"><img src="<%= product.productId.images[0] %>" alt="#"></td>
-                                            <td class="product-des product-name">
-                                                <h5 class="product-name"><a href="/product/<%= product.productId._id %>"><%= product.productId.name %></a></h5>
-                                            </td>
-                                            <td class="price"><span>$<%= product.productId.price %> x <%= product.quantity %></span></td>
-                                            <td class="text-right"><span>$<%= product.productId.price * product.quantity %></span></td>
-                                        </tr>
-                                        <% }) %>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th>Subtotal</th>
-                                            <td class="product-subtotal"><span class="amount">$<%= cart.totalPrice %></span></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Shipping</th>
-                                            <td><span>Free shipping</span></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total</th>
-                                            <td><span class="font-xl text-brand fw-900">$<%= cart.totalPrice %></span></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            <% } else { %>
-                            <p>Your cart is empty.</p>
-                            <% } %>
-                            <div class="payment_method">
-                                <div class="form-group">
-                                    <div class="chek-form">
-                                        <div class="custome-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox12" value="">
-                                            <label class="form-check-label" for="exampleCheckbox12"><span>Cash on delivery</span></label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="chek-form">
-                                        <div class="custome-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox2" value="">
-                                            <label class="form-check-label" for="exampleCheckbox2"><span>Check payments</span></label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="chek-form">
-                                        <div class="custome-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox3" value="">
-                                            <label class="form-check-label" for="exampleCheckbox3"><span>Direct bank transfer</span></label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <a href="#" class="btn btn-fill-out btn-block mt-30">Place Order</a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
    

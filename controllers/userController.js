@@ -587,6 +587,77 @@ const getCheckoutPage = async (req, res) => {
     }
 };
 
+// const placeOrder = async (req, res) => {
+//     try {
+//         const userId = req.session.user?.userId;
+
+//         // Check if userId exists
+//         if (!userId) {
+//             throw new Error('User is not authenticated');
+//         }
+
+//         const { billingAddress, orderNotes, paymentMethod } = req.body;
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+
+//         // Check if cart exists
+//         if (!cart || cart.products.length === 0) {
+//             return res.render('checkout', { message: 'Your cart is empty', messageType: 'error' });
+//         }
+
+//         // Log cart products for debugging
+//         console.log('Cart Products:', cart.products);
+
+//         // Calculate total price
+//         const totalPrice = cart.products.reduce((total, item) => {
+//             const product = item.productId; // Populated product document
+//             console.log('Product:', product);
+//             console.log('Product Price:', product.price);
+//             console.log('Product Quantity:', item.quantity);
+//             if (!product || typeof product.price !== 'number' || typeof item.quantity !== 'number') {
+//                 throw new Error('Invalid product price or quantity');
+//             }
+//             return total + (product.price * item.quantity);
+//         }, 0);
+
+//         console.log('Total Price:', totalPrice);
+
+//         // Create a new order
+//         const order = new Order({
+//             userId,
+//             products: cart.products.map(item => ({
+//                 productId: item.productId._id,
+//                 quantity: item.quantity
+//             })),
+//             billingAddress: {
+//                 firstName: billingAddress.firstName,
+//                 lastName: billingAddress.lastName,
+//                 companyName: billingAddress.companyName,
+//                 address1: billingAddress.address1,
+//                 address2: billingAddress.address2,
+//                 city: billingAddress.city,
+//                 state: billingAddress.state,
+//                 zip: billingAddress.zip,
+//                 phone: billingAddress.phone,
+//                 email: billingAddress.email
+//             },
+//             shippingAddress: billingAddress, // Assuming shippingAddress is the same as billingAddress
+//             totalPrice,
+//             paymentMethod,
+//             orderNotes,
+//             status: 'Pending', // Default status
+//             createdAt: new Date()
+//         });
+
+//         await order.save();
+//         await Cart.deleteOne({ userId });
+
+//         res.redirect('/orderConfirm/' + order._id);
+//     } catch (error) {
+//         console.log('Error placing order:', error.message);
+//         res.render('checkout', { message: 'Error placing order. Please try again.', messageType: 'error' });
+//     }
+// };
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
@@ -604,22 +675,14 @@ const placeOrder = async (req, res) => {
             return res.render('checkout', { message: 'Your cart is empty', messageType: 'error' });
         }
 
-        // Log cart products for debugging
-        console.log('Cart Products:', cart.products);
-
         // Calculate total price
         const totalPrice = cart.products.reduce((total, item) => {
             const product = item.productId; // Populated product document
-            console.log('Product:', product);
-            console.log('Product Price:', product.price);
-            console.log('Product Quantity:', item.quantity);
             if (!product || typeof product.price !== 'number' || typeof item.quantity !== 'number') {
                 throw new Error('Invalid product price or quantity');
             }
             return total + (product.price * item.quantity);
         }, 0);
-
-        console.log('Total Price:', totalPrice);
 
         // Create a new order
         const order = new Order({
@@ -648,9 +711,13 @@ const placeOrder = async (req, res) => {
             createdAt: new Date()
         });
 
+        // Save order
         await order.save();
+
+        // Clear cart
         await Cart.deleteOne({ userId });
 
+        // Redirect to order confirmation page
         res.redirect('/orderConfirm/' + order._id);
     } catch (error) {
         console.log('Error placing order:', error.message);
@@ -659,21 +726,23 @@ const placeOrder = async (req, res) => {
 };
 
 
+
 const getOrderDetails = async (req, res) => {
     try {
-        const orderId = req.params.id;
+        const orderId = req.params.orderId;
         const order = await Order.findById(orderId).populate('products.productId');
 
         if (!order) {
-            return res.status(404).send('Order not found');
+            return res.render('error', { message: 'Order not found', messageType: 'error' });
         }
 
         res.render('orderDetails', { order });
     } catch (error) {
-        console.error('Error fetching order details:', error.message);
-        res.status(500).send('Internal Server Error');
+        console.log('Error fetching order details:', error.message);
+        res.render('error', { message: 'Error fetching order details. Please try again.', messageType: 'error' });
     }
 };
+
 
 
 module.exports = {
@@ -695,5 +764,4 @@ module.exports = {
     getCheckoutPage,
     placeOrder,
     getOrderDetails
-
 };

@@ -1,26 +1,48 @@
+<!-- orderDetails.ejs -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Details</title>
-  <!-- Add your CSS files here -->
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Your custom CSS -->
+  <link rel="stylesheet" href="/user_assets/css/main.css"> <!-- Adjust the path as needed -->
 </head>
 <body>
-  <h1>Order Details</h1>
-  <p>Order ID: <%= order._id %></p>
-  <p>Status: <%= order.status %></p>
-  <h2>Products</h2>
-  <ul>
-    <% order.products.forEach(item => { %>
-      <li>
-        <%= item.productId.name %> - Quantity: <%= item.quantity %> - Price: <%= item.productId.price %>
-      </li>
-    <% }); %>
-  </ul>
-  <p>Total Amount: <%= order.totalPrice %></p>
-  <form action="/order/cancel/<%= order._id %>" method="POST">
-    <button type="submit">Cancel Order</button>
-  </form>
+  <div class="container">
+    <div class="row mt-5">
+      <div class="col-md-8 offset-md-2">
+        <div class="card">
+          <div class="card-header">
+            <h1 class="text-center">Order Details</h1>
+          </div>
+          <div class="card-body">
+            <p class="card-text">Order ID: <%= order._id %></p>
+            <p class="card-text">Status: <%= order.status %></p>
+            <h2>Products</h2>
+            <ul class="list-group">
+              <% order.products.forEach(item => { %>
+                <li class="list-group-item">
+                  <%= item.productId.name %> - Quantity: <%= item.quantity %> - Price: <%= item.productId.price %>
+                </li>
+              <% }); %>
+            </ul>
+            <p class="card-text mt-3">Total Amount: <%= order.totalPrice %></p>
+            <form action="/order/cancel/<%= order._id %>" method="POST">
+              <button type="submit" class="btn btn-danger">Cancel Order</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and other scripts -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Your custom scripts -->
+  <script src="/user_assets/js/main.js"></script> <!-- Adjust the path as needed -->
 </body>
 </html>

@@ -48,6 +48,7 @@ router.post('/cart/clear', isAuthenticated,userController.clearCart);
 //checkout
 router.get('/checkout', isAuthenticated, userController.getCheckoutPage);
 router.post('/place-order', isAuthenticated, userController.placeOrder);
-router.get('/order/details/:id', isAuthenticated, userController.getOrderDetails);
+router.get('/orderConfirm/:orderId', isAuthenticated, userController.getOrderDetails);
+router.post('/order/cancel/:id', isAuthenticated, userController.cancelOrder);
 
 module.exports = router;

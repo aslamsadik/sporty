@@ -736,13 +736,34 @@ const getOrderDetails = async (req, res) => {
             return res.render('error', { message: 'Order not found', messageType: 'error' });
         }
 
-        res.render('orderDetails', { order });
+        res.render('orderConfirm', { order });
     } catch (error) {
         console.log('Error fetching order details:', error.message);
         res.render('error', { message: 'Error fetching order details. Please try again.', messageType: 'error' });
     }
 };
 
+const cancelOrder = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+
+        // Find the order by ID and update its status or delete it
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.render('error', { message: 'Order not found', messageType: 'error' });
+        }
+
+        // Example: Updating status to 'Cancelled'
+        order.status = 'Cancelled';
+        await order.save();
+
+        res.redirect('/orderConfirm/' + orderId); // Redirect to order confirmation page or any other page
+    } catch (error) {
+        console.log('Error cancelling order:', error.message);
+        res.render('error', { message: 'Error cancelling order. Please try again.', messageType: 'error' });
+    }
+};
 
 
 module.exports = {
@@ -763,5 +784,6 @@ module.exports = {
     clearCart,
     getCheckoutPage,
     placeOrder,
-    getOrderDetails
+    getOrderDetails,
+    cancelOrder
 };

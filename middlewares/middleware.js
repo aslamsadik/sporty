@@ -1,5 +1,6 @@
 const User = require('../models/userModel');
 
+// Middleware to check if the user is blocked
 const isBlockedMiddleware = async (req, res, next) => {
     if (req.session.user) {
         try {
@@ -9,13 +10,14 @@ const isBlockedMiddleware = async (req, res, next) => {
                     if (err) {
                         return next(err);
                     }
+                    console.log(`Blocked user attempted access: ${user.email}`);
                     return res.redirect('/');
                 });
             } else {
                 next();
             }
         } catch (error) {
-            console.log(error.message);
+            console.error('Error in isBlockedMiddleware:', error.message);
             res.status(500).send('Internal Server Error');
         }
     } else {
@@ -37,6 +39,7 @@ const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
     } else {
+        console.log('User not authenticated. Redirecting to login page.');
         return res.redirect('/');
     }
 };
@@ -46,6 +49,7 @@ const isNotAuthenticated = (req, res, next) => {
     if (!req.session.user) {
         return next();
     } else {
+        console.log('Authenticated user attempted to access login/register page. Redirecting to home page.');
         return res.redirect('/home');
     }
 };

@@ -1,8 +1,5 @@
-<link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -178,7 +175,7 @@
                                             </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#manageAdress" role="tab" aria-controls="address" aria-selected="true">
+                                            <a class="nav-link" id="address-tab" href="/addAddress" role="tab" aria-controls="address" aria-selected="true">
                                                 <i class="bi bi-houses" style="font-size: 1rem;"></i>
                                                 Manage Address
                                             </a>
@@ -222,7 +219,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="manageAdress" role="tabpanel" aria-labelledby="address-tab">
+                                    <div class="tab-pane fade" id="manageAddress" role="tabpanel" aria-labelledby="address-tab">
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5>Manage Address</h5>
@@ -232,8 +229,8 @@
                                                     <div class="card mt-2 mb-3 black-border">
                                                         <div class="card-body">
                                                             <p>Address details go here.</p>
-                                                            <a href="" class="btn btn-sm btn-fill-out">Edit</a>
-                                                            <button class="btn btn-sm btn-fill-out" onclick="deleteAdress('')">Delete</button>
+                                                            <a href="/addAddress" class="btn btn-sm btn-fill-out">Add New Address</a>
+                                                            <button class="btn btn-sm btn-fill-out" onclick="deleteAddress('')">Delete</button>
                                                         </div>
                                                     </div>
                                                 </div>

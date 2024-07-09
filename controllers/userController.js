@@ -197,14 +197,14 @@ const getProductDescriptionPage = async (req, res) => {
     }
 };
 
-const profilePage = async (req, res) => {
-    try {
-        return res.render('profile');
-    } catch (error) {
-        console.log(error.message);
-        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
-    }
-};
+// const profilePage = async (req, res) => {
+//     try {
+//         return res.render('profile');
+//     } catch (error) {
+//         console.log(error.message);
+//         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+//     }
+// };
 
 
 const signUp = async (req, res) => {
@@ -414,9 +414,11 @@ const login = async (req, res) => {
             userId: user._id, 
             email: user.email, 
             username: user.username,
-            isAdmin: user.isAdmin,  // Ensure this field exists in the user schema
+            isAdmin: user.isAdmin,
             isBlocked: user.isBlocked
         };
+
+        console.log('User session data set:', req.session.user);
 
         // Redirect to home page
         res.redirect('/home');
@@ -425,6 +427,7 @@ const login = async (req, res) => {
         res.render('login', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
+
 
 // Get Cart
 const getCart = async (req, res) => {
@@ -577,15 +580,26 @@ const clearCart = async (req, res) => {
 
 const getCheckoutPage = async (req, res) => {
     try {
-        const userId = req.session.user.userId;
-        const cart = await Cart.findOne({ userId }).populate('products.productId');
+        const userId = req.session.user?.userId;
 
-        res.render('checkout', { cart });
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const cart = await Cart.findOne({ userId }).populate('products.productId');
+        const user = await User.findById(userId);
+
+        if (!cart || cart.products.length === 0) {
+            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart, user });
+        }
+
+        res.render('checkout', { cart, user });
     } catch (error) {
-        console.error('Error fetching checkout page:', error.message);
+        console.log('Error fetching checkout page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 // const placeOrder = async (req, res) => {
 //     try {
@@ -662,66 +676,51 @@ const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
 
-        // Check if userId exists
         if (!userId) {
             throw new Error('User is not authenticated');
         }
 
-        const { billingAddress, orderNotes, paymentMethod } = req.body;
+        const { billingAddressId, shippingAddressId, orderNotes, paymentMethod } = req.body;
+        const user = await User.findById(userId);
         const cart = await Cart.findOne({ userId }).populate('products.productId');
 
-        // Check if cart exists
         if (!cart || cart.products.length === 0) {
-            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error' });
+            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user });
         }
 
-        // Calculate total price
+        const selectedBillingAddress = user.addresses.id(billingAddressId);
+        const selectedShippingAddress = user.addresses.id(shippingAddressId);
+
+        if (!selectedBillingAddress || !selectedShippingAddress) {
+            throw new Error('Address not found');
+        }
+
         const totalPrice = cart.products.reduce((total, item) => {
-            const product = item.productId; // Populated product document
-            if (!product || typeof product.price !== 'number' || typeof item.quantity !== 'number') {
-                throw new Error('Invalid product price or quantity');
-            }
+            const product = item.productId;
             return total + (product.price * item.quantity);
         }, 0);
 
-        // Create a new order
         const order = new Order({
             userId,
             products: cart.products.map(item => ({
                 productId: item.productId._id,
                 quantity: item.quantity
             })),
-            billingAddress: {
-                firstName: billingAddress.firstName,
-                lastName: billingAddress.lastName,
-                companyName: billingAddress.companyName,
-                address1: billingAddress.address1,
-                address2: billingAddress.address2,
-                city: billingAddress.city,
-                state: billingAddress.state,
-                zip: billingAddress.zip,
-                phone: billingAddress.phone,
-                email: billingAddress.email
-            },
-            shippingAddress: billingAddress, // Assuming shippingAddress is the same as billingAddress
+            billingAddressId,
+            shippingAddressId,
             totalPrice,
             paymentMethod,
             orderNotes,
-            status: 'Pending', // Default status
+            status: 'Pending',
             createdAt: new Date()
         });
 
-        // Save order
         await order.save();
-
-        // Clear cart
         await Cart.deleteOne({ userId });
-
-        // Redirect to order confirmation page
         res.redirect('/orderConfirm/' + order._id);
     } catch (error) {
         console.log('Error placing order:', error.message);
-        res.render('checkout', { message: 'Error placing order. Please try again.', messageType: 'error' });
+        res.render('checkout', { message: 'Error placing order. Please try again.', messageType: 'error', cart: null, user: null });
     }
 };
 
@@ -730,38 +729,127 @@ const placeOrder = async (req, res) => {
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        const order = await Order.findById(orderId).populate('products.productId');
+        const order = await Order.findById(orderId)
+            .populate('products.productId')
+            .populate('userId', 'addresses') // Populate user and addresses
 
         if (!order) {
-            return res.render('error', { message: 'Order not found', messageType: 'error' });
+            return res.status(404).render('orderConfirm', { message: 'Order not found', messageType: 'error' });
         }
 
-        res.render('orderConfirm', { order });
+        // Find the billing and shipping addresses within the user's addresses
+        const user = order.userId;
+        const billingAddress = user.addresses.id(order.billingAddressId);
+        const shippingAddress = user.addresses.id(order.shippingAddressId);
+
+        if (!billingAddress || !shippingAddress) {
+            return res.status(404).render('orderConfirm', { message: 'Address not found', messageType: 'error' });
+        }
+
+        // Render the order details with populated addresses
+        res.render('orderConfirm', { order, billingAddress, shippingAddress });
     } catch (error) {
-        console.log('Error fetching order details:', error.message);
-        res.render('error', { message: 'Error fetching order details. Please try again.', messageType: 'error' });
+        console.log('Error retrieving order details:', error.message);
+        res.status(500).render('orderConfirm', { message: 'Error retrieving order details. Please try again.', messageType: 'error' });
     }
 };
 
 const cancelOrder = async (req, res) => {
     try {
-        const orderId = req.params.id;
-
-        // Find the order by ID and update its status or delete it
+        const orderId = req.params.orderId;
         const order = await Order.findById(orderId);
 
         if (!order) {
-            return res.render('error', { message: 'Order not found', messageType: 'error' });
+            return res.status(404).render('orderConfirm', { message: 'Order not found', messageType: 'error' });
         }
 
-        // Example: Updating status to 'Cancelled'
+        if (order.status !== 'Pending') {
+            return res.status(400).render('orderConfirm', { message: 'Only pending orders can be cancelled', messageType: 'error' });
+        }
+
         order.status = 'Cancelled';
         await order.save();
-
-        res.redirect('/orderConfirm/' + orderId); // Redirect to order confirmation page or any other page
+        res.redirect('/orders');
     } catch (error) {
         console.log('Error cancelling order:', error.message);
-        res.render('error', { message: 'Error cancelling order. Please try again.', messageType: 'error' });
+        res.status(500).render('orderDetails', { message: 'Error cancelling order. Please try again.', messageType: 'error' });
+    }
+};
+
+const getProfilePage = async (req, res) => {
+    try {
+        const userId = req.session.user.userId;
+        const user = await User.findById(userId);
+        res.render('profile', { user });
+    } catch (error) {
+        console.error('Error fetching profile page:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const getaddresPage = async (req, res) => {
+    try {
+        res.render('manageAddress');
+    } catch (error) {
+        console.error('Error fetching profile page:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const addAddress = async (req, res) => {
+    const { firstName, lastName, companyName, address1, address2, city, state, zip, phone, email } = req.body;
+
+    try {
+        const userId = req.session.user?.userId;
+        if (!userId) {
+            console.error('User ID not found in session.');
+            return res.status(401).send('User not authenticated');
+        }
+
+        const user = await User.findById(userId);
+        user.addresses.push({ firstName, lastName, companyName, address1, address2, city, state, zip, phone, email });
+        await user.save();
+        res.redirect('/profile');
+    } catch (error) {
+        console.error('Error adding address:', error);
+        res.status(500).send('Server Error');
+    }
+};
+
+const editAddress = async (req, res) => {
+    try {
+        const userId = req.session.user?.userId;
+        if (!userId) {
+            console.error('User ID not found in session.');
+            return res.status(401).send('User not authenticated');
+        }
+
+        const addressId = req.params.id;
+        await User.updateOne(
+            { _id: userId, 'addresses._id': addressId },
+            { $set: { 'addresses.$': req.body } }
+        );
+        res.redirect('/profile');
+    } catch (error) {
+        console.error('Error editing address:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const deleteAddress = async (req, res) => {
+    try {
+        const userId = req.session.user?.userId;
+        if (!userId) {
+            console.error('User ID not found in session.');
+            return res.status(401).send('User not authenticated');
+        }
+
+        const addressId = req.params.id;
+        await User.findByIdAndUpdate(userId, { $pull: { addresses: { _id: addressId } } });
+        res.redirect('/profile');
+    } catch (error) {
+        console.error('Error deleting address:', error.message);
+        res.status(500).send('Internal Server Error');
     }
 };
 
@@ -777,7 +865,7 @@ module.exports = {
     resendOtp,
     getShopPage,
     getProductDescriptionPage,
-    profilePage,
+    getProfilePage,
     getCart,
     removeFromCart,
     addToCart,
@@ -785,5 +873,9 @@ module.exports = {
     getCheckoutPage,
     placeOrder,
     getOrderDetails,
-    cancelOrder
+    cancelOrder,
+    getaddresPage,
+    addAddress,
+    editAddress,
+    deleteAddress
 };

@@ -115,30 +115,49 @@
                                 <div class="order-summary">
                                     <h3>Order Summary</h3>
                                     <ul>
-                                        <% cart.products.forEach(item => { %>
-                                        <li>
-                                            <img src="/user_assets/imgs/shop/<%= item.productId.images[0] %>" alt="<%= item.productId.name %>" />
-                                            <span><%= item.productId.name %></span>
-                                            <span>Quantity: <%= item.quantity %></span>
-                                            <span>Price: <%= item.productId.price %> each</span>
-                                            <span>Subtotal: <%= item.quantity * item.productId.price %></span>
-                                        </li>
-                                        <% }); %>
+                                        <% if (cart && cart.products.length > 0) { %>
+                                            <% cart.products.forEach(item => { %>
+                                                <li>
+                                                    <img src="/user_assets/imgs/shop/<%= item.productId.images[0] %>" alt="<%= item.productId.name %>" />
+                                                    <span><%= item.productId.name %></span>
+                                                    <span>Quantity: <%= item.quantity %></span>
+                                                    <span>Price: <%= item.productId.price %> each</span>
+                                                    <span>Subtotal: <%= item.quantity * item.productId.price %></span>
+                                                </li>
+                                            <% }); %>
+                                        <% } else { %>
+                                            <li>Your cart is empty</li>
+                                        <% } %>
                                     </ul>
-                                    <p>Total Amount: <%= cart.totalPrice %></p>
+                                    <p>Total Amount: <%= cart ? cart.totalPrice : 0 %></p>
                                 </div>
                                 <div class="billing-address">
                                     <h3>Billing Address</h3>
-                                    <input type="text" name="billingAddress[firstName]" placeholder="First Name" required>
-                                    <input type="text" name="billingAddress[lastName]" placeholder="Last Name" required>
-                                    <input type="text" name="billingAddress[companyName]" placeholder="Company Name">
-                                    <input type="text" name="billingAddress[address1]" placeholder="Address 1" required>
-                                    <input type="text" name="billingAddress[address2]" placeholder="Address 2">
-                                    <input type="text" name="billingAddress[city]" placeholder="City" required>
-                                    <input type="text" name="billingAddress[state]" placeholder="State" required>
-                                    <input type="text" name="billingAddress[zip]" placeholder="ZIP Code" required>
-                                    <input type="text" name="billingAddress[phone]" placeholder="Phone" required>
-                                    <input type="email" name="billingAddress[email]" placeholder="Email" required>
+                                    <% if (user && user.addresses && user.addresses.length > 0) { %>
+                                        <select name="billingAddressId" required>
+                                            <% user.addresses.forEach(address => { %>
+                                                <option value="<%= address._id %>">
+                                                    <%= address.firstName %> <%= address.lastName %> - <%= address.address1 %>, <%= address.city %>, <%= address.state %> <%= address.zip %>
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                    <% } else { %>
+                                        <p>No saved addresses found. Please add an address in your profile.</p>
+                                    <% } %>
+                                </div>
+                                <div class="shipping-address">
+                                    <h3>Shipping Address</h3>
+                                    <% if (user && user.addresses && user.addresses.length > 0) { %>
+                                        <select name="shippingAddressId" required>
+                                            <% user.addresses.forEach(address => { %>
+                                                <option value="<%= address._id %>">
+                                                    <%= address.firstName %> <%= address.lastName %> - <%= address.address1 %>, <%= address.city %>, <%= address.state %> <%= address.zip %>
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                    <% } else { %>
+                                        <p>No saved addresses found. Please add an address in your profile.</p>
+                                    <% } %>
                                 </div>
                                 <div class="payment-method">
                                     <h3>Payment Method</h3>
@@ -155,6 +174,8 @@
             </div>
         </section>
     </main>
+    
+    
 
     <!-- Vendor JS-->
     <script src="user_assets/js/vendor/modernizr-3.6.0.min.js"></script>
@@ -175,9 +196,10 @@
     <script src="user_assets/js/plugins/isotope.js"></script>
     <script src="user_assets/js/plugins/scrollup.js"></script>
     <script src="user_assets/js/plugins/jquery.vticker-min.js"></script>
-    <!-- Template  JS -->
-    <script src="./user_assets/js/main.js?v=3.4"></script>
-    <script src="./user_assets/js/shop.js?v=3.4"></script>
+    <script src="user_assets/js/plugins/jquery.theia.sticky.js"></script>
+    <script src="user_assets/js/plugins/jquery.elevatezoom.js"></script>
+    <!-- Template JS -->
+    <script src="user_assets/js/main.js?v=3.4"></script>
 </body>
 
 </html>

@@ -38,17 +38,26 @@ router.get('/home', isAuthenticated, userController.HomePage);
 router.post('/resend-otp', addNoCacheHeaders, isNotAuthenticated, userController.resendOtp);
 router.get('/shop', isAuthenticated, userController.getShopPage);
 router.get('/product/:id', isAuthenticated, userController.getProductDescriptionPage);
-router.get('/profile', isAuthenticated, userController.profilePage);
+// router.get('/profile', isAuthenticated, userController.profilePage);
 
 // Cart routes
 router.get('/cart', isAuthenticated, userController.getCart);
 router.post('/cart/add', isAuthenticated, userController.addToCart);
 router.post('/cart/remove', isAuthenticated, userController.removeFromCart);
 router.post('/cart/clear', isAuthenticated,userController.clearCart);
+
 //checkout
 router.get('/checkout', isAuthenticated, userController.getCheckoutPage);
 router.post('/place-order', isAuthenticated, userController.placeOrder);
 router.get('/orderConfirm/:orderId', isAuthenticated, userController.getOrderDetails);
 router.post('/order/cancel/:id', isAuthenticated, userController.cancelOrder);
+
+//profile
+router.get('/profile', userController.getProfilePage);
+router.get('/addAddress', userController.getaddresPage);
+router.post('/profile/add-address', userController.addAddress);
+router.post('/profile/edit-address/:id', userController.editAddress);
+router.post('/profile/delete-address/:id', userController.deleteAddress);
+
 
 module.exports = router;

@@ -1,11 +1,9 @@
-<!-- orderDetails.ejs -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Details</title>
+  <title>Order Confirmation</title>
   <style>
     .return-link {
       text-align: center;
@@ -23,23 +21,50 @@
       <div class="col-md-8 offset-md-2">
         <div class="card">
           <div class="card-header">
-            <h1 class="text-center">Order Details</h1>
+            <h1 class="text-center">
+              <% if (order && order.status === 'Cancelled') { %>
+                Order Cancelled
+              <% } else { %>
+                Order Confirmation
+              <% } %>
+            </h1>
           </div>
           <div class="card-body">
-            <p class="card-text">Order ID: <%= order._id %></p>
-            <p class="card-text">Status: <%= order.status %></p>
-            <h2>Products</h2>
-            <ul class="list-group">
-              <% order.products.forEach(item => { %>
-                <li class="list-group-item">
-                  <%= item.productId.name %> - Quantity: <%= item.quantity %> - Price: <%= item.productId.price %>
-                </li>
-              <% }); %>
-            </ul>
-            <p class="card-text mt-3">Total Amount: <%= order.totalPrice %></p>
-            <form action="/order/cancel/<%= order._id %>" method="POST">
-              <button type="submit" class="btn btn-danger">Cancel Order</button>
-            </form>
+            <% if (message && messageType === 'success') { %>
+              <div class="alert alert-success">
+                <%= message %>
+              </div>
+            <% } else if (message && messageType === 'error') { %>
+              <div class="alert alert-danger">
+                <%= message %>
+              </div>
+            <% } %>
+
+            <% if (order && order._id) { %>
+              <p class="card-text">Order ID: <%= order._id %></p>
+              <p class="card-text">Status: <%= order.status %></p>
+              <h2>Products</h2>
+              <ul class="list-group">
+                <% if (order.products && order.products.length > 0) { %>
+                  <% order.products.forEach(item => { %>
+                    <li class="list-group-item">
+                      <%= item.productId.name %> - Quantity: <%= item.quantity %> - Price: <%= item.productId.price %>
+                    </li>
+                  <% }); %>
+                <% } else { %>
+                  <li class="list-group-item">No products found.</li>
+                <% } %>
+              </ul>
+              <p class="card-text mt-3">Total Amount: <%= order.totalPrice %></p>
+            <% } else { %>
+              <p class="card-text">No order details available.</p>
+            <% } %>
+
+            <% if (order && order.status === 'Pending') { %>
+              <form action="/order/cancel/<%= order._id %>" method="POST">
+                <button type="submit" class="btn btn-danger">Cancel Order</button>
+              </form>
+            <% } %>
           </div>
         </div>
       </div>

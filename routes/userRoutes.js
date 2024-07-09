@@ -50,7 +50,7 @@ router.post('/cart/clear', isAuthenticated,userController.clearCart);
 router.get('/checkout', isAuthenticated, userController.getCheckoutPage);
 router.post('/place-order', isAuthenticated, userController.placeOrder);
 router.get('/orderConfirm/:orderId', isAuthenticated, userController.getOrderDetails);
-router.post('/order/cancel/:id', isAuthenticated, userController.cancelOrder);
+router.post('/order/cancel/:orderId', isAuthenticated, userController.cancelOrder);
 
 //profile
 router.get('/profile', userController.getProfilePage);

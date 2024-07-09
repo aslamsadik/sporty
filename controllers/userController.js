@@ -731,26 +731,17 @@ const getOrderDetails = async (req, res) => {
         const orderId = req.params.orderId;
         const order = await Order.findById(orderId)
             .populate('products.productId')
-            .populate('userId', 'addresses') // Populate user and addresses
+            .populate('billingAddressId')
+            .populate('shippingAddressId');
 
         if (!order) {
-            return res.status(404).render('orderConfirm', { message: 'Order not found', messageType: 'error' });
+            return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
         }
 
-        // Find the billing and shipping addresses within the user's addresses
-        const user = order.userId;
-        const billingAddress = user.addresses.id(order.billingAddressId);
-        const shippingAddress = user.addresses.id(order.shippingAddressId);
-
-        if (!billingAddress || !shippingAddress) {
-            return res.status(404).render('orderConfirm', { message: 'Address not found', messageType: 'error' });
-        }
-
-        // Render the order details with populated addresses
-        res.render('orderConfirm', { order, billingAddress, shippingAddress });
+        res.render('orderConfirm', { order, message: null, messageType: null });
     } catch (error) {
         console.log('Error retrieving order details:', error.message);
-        res.status(500).render('orderConfirm', { message: 'Error retrieving order details. Please try again.', messageType: 'error' });
+        res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
     }
 };
 
@@ -760,19 +751,22 @@ const cancelOrder = async (req, res) => {
         const order = await Order.findById(orderId);
 
         if (!order) {
-            return res.status(404).render('orderConfirm', { message: 'Order not found', messageType: 'error' });
+            return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
         }
 
         if (order.status !== 'Pending') {
-            return res.status(400).render('orderConfirm', { message: 'Only pending orders can be cancelled', messageType: 'error' });
+            return res.status(400).render('orderConfirm', { order, message: 'Only pending orders can be cancelled', messageType: 'error' });
         }
 
+        // Update the order status to 'Cancelled'
         order.status = 'Cancelled';
         await order.save();
-        res.redirect('/orders');
+
+        // Redirect to the order details page to show the updated status
+        res.redirect(`/order/details/${orderId}`);
     } catch (error) {
         console.log('Error cancelling order:', error.message);
-        res.status(500).render('orderDetails', { message: 'Error cancelling order. Please try again.', messageType: 'error' });
+        res.status(500).render('orderConfirm', { order: null, message: 'Error cancelling order. Please try again.', messageType: 'error' });
     }
 };
 

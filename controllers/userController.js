@@ -601,6 +601,7 @@ const getCheckoutPage = async (req, res) => {
 };
 
 
+
 // const placeOrder = async (req, res) => {
 //     try {
 //         const userId = req.session.user?.userId;
@@ -712,11 +713,13 @@ const placeOrder = async (req, res) => {
             paymentMethod,
             orderNotes,
             status: 'Pending',
-            createdAt: new Date()
+            createdAt: new Date(),
+            updatedAt: new Date()
         });
 
         await order.save();
         await Cart.deleteOne({ userId });
+
         res.redirect('/orderConfirm/' + order._id);
     } catch (error) {
         console.log('Error placing order:', error.message);
@@ -724,13 +727,12 @@ const placeOrder = async (req, res) => {
     }
 };
 
+
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
         const order = await Order.findById(orderId)
-            .populate('products.productId')
-            .populate('billingAddressId')
-            .populate('shippingAddressId');
+            .populate('products.productId');
 
         if (!order) {
             return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
@@ -756,11 +758,10 @@ const cancelOrder = async (req, res) => {
             return res.status(400).render('orderConfirm', { order, message: 'Only pending orders can be cancelled', messageType: 'error' });
         }
 
-        // Update the order status to 'Cancelled'
         order.status = 'Cancelled';
+        order.updatedAt = new Date(); // Update the `updatedAt` field when the order is cancelled
         await order.save();
 
-        // Redirect to the order details page to show the updated status
         res.redirect(`/orderConfirm/${orderId}`);
     } catch (error) {
         console.log('Error cancelling order:', error.message);
@@ -783,7 +784,7 @@ const getaddresPage = async (req, res) => {
     try {
         res.render('manageAddress');
     } catch (error) {
-        console.error('Error fetching profile page:', error.message);
+        console.error('Error fetching address page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
@@ -844,6 +845,7 @@ const deleteAddress = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 module.exports = {

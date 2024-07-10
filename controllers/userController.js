@@ -768,8 +768,6 @@ const cancelOrder = async (req, res) => {
     }
 };
 
-
-
 const getProfilePage = async (req, res) => {
     try {
         const userId = req.session.user.userId;

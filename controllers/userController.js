@@ -724,8 +724,6 @@ const placeOrder = async (req, res) => {
     }
 };
 
-
-
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
@@ -763,12 +761,14 @@ const cancelOrder = async (req, res) => {
         await order.save();
 
         // Redirect to the order details page to show the updated status
-        res.redirect(`/order/details/${orderId}`);
+        res.redirect(`/orderConfirm/${orderId}`);
     } catch (error) {
         console.log('Error cancelling order:', error.message);
         res.status(500).render('orderConfirm', { order: null, message: 'Error cancelling order. Please try again.', messageType: 'error' });
     }
 };
+
+
 
 const getProfilePage = async (req, res) => {
     try {

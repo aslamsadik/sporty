@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="no-js" lang="en">
 <head>
     <meta charset="utf-8">
@@ -23,7 +23,6 @@
         }
 
         .order-summary,
-        .billing-address,
         .shipping-address,
         .payment-method {
             width: 48%;
@@ -33,7 +32,6 @@
         }
 
         .order-summary h3,
-        .billing-address h3,
         .shipping-address h3,
         .payment-method h3 {
             font-size: 16px;
@@ -83,13 +81,24 @@
             margin-bottom: 10px;
         }
 
-        .edit-address-btn {
+        .edit-address-btn,
+        .delete-address-btn {
             font-size: 12px;
             padding: 4px 8px;
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
+            margin-left: 5px;
             cursor: pointer;
+        }
+
+        .edit-address-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+
+        .delete-address-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
         }
 
         @media (max-width: 768px) {
@@ -98,7 +107,6 @@
             }
 
             .order-summary,
-            .billing-address,
             .shipping-address,
             .payment-method {
                 width: 100%;
@@ -145,23 +153,6 @@
                                     </ul>
                                     <p>Total Amount: <%= cart ? cart.totalPrice : 0 %></p>
                                 </div>
-                                <div class="billing-address">
-                                    <h3>Billing Address</h3>
-                                    <div class="address-selection">
-                                        <% if (user && user.addresses && user.addresses.length > 0) { %>
-                                            <select name="billingAddressId" required>
-                                                <% user.addresses.forEach(address => { %>
-                                                    <option value="<%= address._id %>">
-                                                        <%= address.firstName %> <%= address.lastName %> - <%= address.address1 %>, <%= address.city %>, <%= address.state %> <%= address.zip %>
-                                                    </option>
-                                                <% }); %>
-                                            </select>
-                                            <button type="button" class="edit-address-btn" onclick="location.href='/profile#addresses'">Edit Address</button>
-                                        <% } else { %>
-                                            <p>No saved addresses found. Please add an address in your profile.</p>
-                                        <% } %>
-                                    </div>
-                                </div>
                                 <div class="shipping-address">
                                     <h3>Shipping Address</h3>
                                     <div class="address-selection">
@@ -173,7 +164,22 @@
                                                     </option>
                                                 <% }); %>
                                             </select>
-                                            <button type="button" class="edit-address-btn" onclick="location.href='/profile#addresses'">Edit Address</button>
+                                            <div class="address-actions">
+                                                <% user.addresses.forEach(address => { %>
+                                                    <div class="address">
+                                                        <p><%= address.firstName %> <%= address.lastName %></p>
+                                                        <p><%= address.companyName %></p>
+                                                        <p><%= address.address1 %>, <%= address.address2 %></p>
+                                                        <p><%= address.city %>, <%= address.state %>, <%= address.zip %></p>
+                                                        <p><%= address.phone %></p>
+                                                        <p><%= address.email %></p>
+                                                        <a href="/profile/edit-address/<%= address._id %>" class="edit-address-btn">Edit</a>
+                                                        <form action="/profile/delete-address/<%= address._id %>" method="POST" style="display:inline;">
+                                                            <button type="submit" class="delete-address-btn">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                <% }); %>
+                                            </div>
                                         <% } else { %>
                                             <p>No saved addresses found. Please add an address in your profile.</p>
                                         <% } %>
@@ -201,12 +207,11 @@
     <script src="user_assets/js/vendor/bootstrap.bundle.min.js"></script>
     <script src="user_assets/js/plugins/slick.js"></script>
     <script src="user_assets/js/plugins/jquery.syotimer.min.js"></script>
+    <script src="user_assets/js/plugins/waypoints.js"></script>
     <script src="user_assets/js/plugins/wow.js"></script>
-    <script src="user_assets/js/plugins/jquery-ui.js"></script>
     <script src="user_assets/js/plugins/perfect-scrollbar.js"></script>
     <script src="user_assets/js/plugins/magnific-popup.js"></script>
     <script src="user_assets/js/plugins/select2.min.js"></script>
-    <script src="user_assets/js/plugins/waypoints.js"></script>
     <script src="user_assets/js/plugins/counterup.js"></script>
     <script src="user_assets/js/plugins/jquery.countdown.min.js"></script>
     <script src="user_assets/js/plugins/images-loaded.js"></script>

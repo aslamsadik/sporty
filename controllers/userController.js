@@ -681,7 +681,7 @@ const placeOrder = async (req, res) => {
             throw new Error('User is not authenticated');
         }
 
-        const { billingAddressId, shippingAddressId, orderNotes, paymentMethod } = req.body;
+        const {  shippingAddressId, orderNotes, paymentMethod } = req.body;
         const user = await User.findById(userId);
         const cart = await Cart.findOne({ userId }).populate('products.productId');
 
@@ -689,10 +689,10 @@ const placeOrder = async (req, res) => {
             return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user });
         }
 
-        const selectedBillingAddress = user.addresses.id(billingAddressId);
+        // const selectedBillingAddress = user.addresses.id(billingAddressId);
         const selectedShippingAddress = user.addresses.id(shippingAddressId);
 
-        if (!selectedBillingAddress || !selectedShippingAddress) {
+        if ( !selectedShippingAddress) {
             throw new Error('Address not found');
         }
 
@@ -707,7 +707,7 @@ const placeOrder = async (req, res) => {
                 productId: item.productId._id,
                 quantity: item.quantity
             })),
-            billingAddressId,
+            
             shippingAddressId,
             totalPrice,
             paymentMethod,
@@ -782,12 +782,15 @@ const getProfilePage = async (req, res) => {
 
 const getaddresPage = async (req, res) => {
     try {
-        res.render('manageAddress');
+        const userId=req.session.user.userId;
+        const user = await User.findById(userId).populate('addresses');
+        res.render('manageAddress', { user });
     } catch (error) {
         console.error('Error fetching address page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 const addAddress = async (req, res) => {
     const { firstName, lastName, companyName, address1, address2, city, state, zip, phone, email } = req.body;
@@ -806,6 +809,29 @@ const addAddress = async (req, res) => {
     } catch (error) {
         console.error('Error adding address:', error);
         res.status(500).send('Server Error');
+    }
+};
+
+const getEditAddressPage = async (req, res) => {
+    try {
+        const userId = req.session.user?.userId;
+        if (!userId) {
+            console.error('User ID not found in session.');
+            return res.status(401).send('User not authenticated');
+        }
+
+        const addressId = req.params.id;
+        const user = await User.findById(userId);
+        const address = user.addresses.id(addressId);
+
+        if (!address) {
+            return res.status(404).send('Address not found');
+        }
+
+        res.render('editAddress', { address });
+    } catch (error) {
+        console.error('Error fetching edit address page:', error.message);
+        res.status(500).send('Internal Server Error');
     }
 };
 
@@ -871,5 +897,6 @@ module.exports = {
     getaddresPage,
     addAddress,
     editAddress,
-    deleteAddress
+    deleteAddress,
+    getEditAddressPage
 };

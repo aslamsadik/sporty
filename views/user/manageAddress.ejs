@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
-    <title>Add Address</title>
+    <title>Manage Addresses</title>
     <style>
-        .form-container {
-            max-width: 600px;
+        .address-container {
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f8f9fa;
@@ -15,50 +15,69 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .form-container h1 {
+        .address-container h1 {
             text-align: center;
             margin-bottom: 20px;
         }
 
-        .form-control {
-            width: 100%;
+        .address-item {
             padding: 10px;
-            margin-bottom: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
         }
 
-        .btn-submit {
-            width: 100%;
-            padding: 10px;
-            background-color: black;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        .address-buttons {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        .edit-address-btn,
+        .delete-address-btn {
+            font-size: 12px;
+            padding: 4px 8px;
+            margin-left: 5px;
             cursor: pointer;
         }
 
-        .btn-submit:hover {
-            background-color: #333;
+        .edit-address-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+
+        .delete-address-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Add Address</h1>
-        <form action="/profile/add-address" method="POST">
-            <input type="text" name="firstName" class="form-control" placeholder="First Name" required>
-            <input type="text" name="lastName" class="form-control" placeholder="Last Name" required>
-            <input type="text" name="companyName" class="form-control" placeholder="Company Name">
-            <input type="text" name="address1" class="form-control" placeholder="Address 1" required>
-            <input type="text" name="address2" class="form-control" placeholder="Address 2">
-            <input type="text" name="city" class="form-control" placeholder="City" required>
-            <input type="text" name="state" class="form-control" placeholder="State" required>
-            <input type="text" name="zip" class="form-control" placeholder="ZIP Code" required>
-            <input type="text" name="phone" class="form-control" placeholder="Phone" required>
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
-            <button type="submit" class="btn-submit">Add Address</button>
-        </form>
+    <div class="address-container">
+        <h1>Manage Addresses</h1>
+        <div>
+            <% user.addresses.forEach((address, index) => { %>
+                <div class="address-item">
+                    <p><%= address.firstName %> <%= address.lastName %></p>
+                    <p><%= address.companyName %></p>
+                    <p><%= address.address1 %>, <%= address.address2 %></p>
+                    <p><%= address.city %>, <%= address.state %> <%= address.zip %></p>
+                    <p><%= address.phone %></p>
+                    <p><%= address.email %></p>
+                    <div class="address-buttons">
+                        <form action="/profile/edit-address/<%= address._id %>" method="GET" style="display:inline;">
+                            <button type="submit" class="edit-address-btn">Edit</button>
+                        </form>
+                        <form action="/profile/delete-address/<%= address._id %>" method="POST" style="display:inline;">
+                            <button type="submit" class="delete-address-btn">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
     </div>
 </body>
 </html>

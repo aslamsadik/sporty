@@ -53,6 +53,40 @@
             color: white;
             border: none;
         }
+
+        .add-address-btn {
+            font-size: 12px;
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .add-address-form {
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .add-address-form input,
+        .add-address-form button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        .add-address-form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -77,6 +111,23 @@
                     </div>
                 </div>
             <% }); %>
+        </div>
+
+        <div class="add-address-form">
+            <h2>Add New Address</h2>
+            <form action="/profile/add-address" method="POST">
+                <input type="text" name="firstName" placeholder="First Name" required>
+                <input type="text" name="lastName" placeholder="Last Name" required>
+                <input type="text" name="companyName" placeholder="Company Name">
+                <input type="text" name="address1" placeholder="Address Line 1" required>
+                <input type="text" name="address2" placeholder="Address Line 2">
+                <input type="text" name="city" placeholder="City" required>
+                <input type="text" name="state" placeholder="State" required>
+                <input type="text" name="zip" placeholder="Zip Code" required>
+                <input type="text" name="phone" placeholder="Phone Number" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <button type="submit">Add Address</button>
+            </form>
         </div>
     </div>
 </body>

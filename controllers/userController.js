@@ -848,7 +848,7 @@ const editAddress = async (req, res) => {
             { _id: userId, 'addresses._id': addressId },
             { $set: { 'addresses.$': req.body } }
         );
-        res.redirect('/profile');
+        res.redirect('/checkout');
     } catch (error) {
         console.error('Error editing address:', error.message);
         res.status(500).send('Internal Server Error');
@@ -865,7 +865,7 @@ const deleteAddress = async (req, res) => {
 
         const addressId = req.params.id;
         await User.findByIdAndUpdate(userId, { $pull: { addresses: { _id: addressId } } });
-        res.redirect('/profile');
+        res.redirect('/checkout');
     } catch (error) {
         console.error('Error deleting address:', error.message);
         res.status(500).send('Internal Server Error');

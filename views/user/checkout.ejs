@@ -157,13 +157,13 @@
                                     <h3>Shipping Address</h3>
                                     <div class="address-selection">
                                         <% if (user && user.addresses && user.addresses.length > 0) { %>
-                                            <select name="shippingAddressId" required>
+                                            <!-- <select name="shippingAddressId" required>
                                                 <% user.addresses.forEach(address => { %>
                                                     <option value="<%= address._id %>">
                                                         <%= address.firstName %> <%= address.lastName %> - <%= address.address1 %>, <%= address.city %>, <%= address.state %> <%= address.zip %>
                                                     </option>
                                                 <% }); %>
-                                            </select>
+                                            </select> -->
                                             <div class="address-actions">
                                                 <% user.addresses.forEach(address => { %>
                                                     <div class="address">

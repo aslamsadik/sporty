@@ -8,7 +8,6 @@ const orderSchema = new mongoose.Schema({
             quantity: { type: Number, required: true }
         }
     ],
-    // billingAddressId: { type: mongoose.Schema.Types.ObjectId, required: true },
     shippingAddressId: { type: mongoose.Schema.Types.ObjectId, required: true },
     totalPrice: { type: Number, required: true },
     paymentMethod: { type: String, required: true },

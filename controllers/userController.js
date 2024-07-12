@@ -590,88 +590,16 @@ const getCheckoutPage = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!cart || cart.products.length === 0) {
-            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart, user });
+            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user });
         }
 
-        res.render('checkout', { cart, user });
+        res.render('checkout', { message: null, messageType: null, cart, user });
     } catch (error) {
-        console.log('Error fetching checkout page:', error.message);
+        console.error('Error fetching checkout page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
 
-
-
-// const placeOrder = async (req, res) => {
-//     try {
-//         const userId = req.session.user?.userId;
-
-//         // Check if userId exists
-//         if (!userId) {
-//             throw new Error('User is not authenticated');
-//         }
-
-//         const { billingAddress, orderNotes, paymentMethod } = req.body;
-//         const cart = await Cart.findOne({ userId }).populate('products.productId');
-
-//         // Check if cart exists
-//         if (!cart || cart.products.length === 0) {
-//             return res.render('checkout', { message: 'Your cart is empty', messageType: 'error' });
-//         }
-
-//         // Log cart products for debugging
-//         console.log('Cart Products:', cart.products);
-
-//         // Calculate total price
-//         const totalPrice = cart.products.reduce((total, item) => {
-//             const product = item.productId; // Populated product document
-//             console.log('Product:', product);
-//             console.log('Product Price:', product.price);
-//             console.log('Product Quantity:', item.quantity);
-//             if (!product || typeof product.price !== 'number' || typeof item.quantity !== 'number') {
-//                 throw new Error('Invalid product price or quantity');
-//             }
-//             return total + (product.price * item.quantity);
-//         }, 0);
-
-//         console.log('Total Price:', totalPrice);
-
-//         // Create a new order
-//         const order = new Order({
-//             userId,
-//             products: cart.products.map(item => ({
-//                 productId: item.productId._id,
-//                 quantity: item.quantity
-//             })),
-//             billingAddress: {
-//                 firstName: billingAddress.firstName,
-//                 lastName: billingAddress.lastName,
-//                 companyName: billingAddress.companyName,
-//                 address1: billingAddress.address1,
-//                 address2: billingAddress.address2,
-//                 city: billingAddress.city,
-//                 state: billingAddress.state,
-//                 zip: billingAddress.zip,
-//                 phone: billingAddress.phone,
-//                 email: billingAddress.email
-//             },
-//             shippingAddress: billingAddress, // Assuming shippingAddress is the same as billingAddress
-//             totalPrice,
-//             paymentMethod,
-//             orderNotes,
-//             status: 'Pending', // Default status
-//             createdAt: new Date()
-//         });
-
-//         await order.save();
-//         await Cart.deleteOne({ userId });
-
-//         res.redirect('/orderConfirm/' + order._id);
-//     } catch (error) {
-//         console.log('Error placing order:', error.message);
-//         res.render('checkout', { message: 'Error placing order. Please try again.', messageType: 'error' });
-//     }
-// };
 
 const placeOrder = async (req, res) => {
     try {
@@ -681,19 +609,20 @@ const placeOrder = async (req, res) => {
             throw new Error('User is not authenticated');
         }
 
-        const {  shippingAddressId, orderNotes, paymentMethod } = req.body;
+        const { shippingAddressId, orderNotes, paymentMethod } = req.body;
         const user = await User.findById(userId);
-        const cart = await Cart.findOne({ userId }).populate('products.productId');
+        if (!user) {
+            throw new Error('User not found');
+        }
 
+        const cart = await Cart.findOne({ userId }).populate('products.productId');
         if (!cart || cart.products.length === 0) {
             return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user });
         }
 
-        // const selectedBillingAddress = user.addresses.id(billingAddressId);
         const selectedShippingAddress = user.addresses.id(shippingAddressId);
-
-        if ( !selectedShippingAddress) {
-            throw new Error('Address not found');
+        if (!selectedShippingAddress) {
+            return res.render('checkout', { message: 'Shipping address not found', messageType: 'error', cart, user });
         }
 
         const totalPrice = cart.products.reduce((total, item) => {
@@ -707,7 +636,6 @@ const placeOrder = async (req, res) => {
                 productId: item.productId._id,
                 quantity: item.quantity
             })),
-            
             shippingAddressId,
             totalPrice,
             paymentMethod,
@@ -722,17 +650,17 @@ const placeOrder = async (req, res) => {
 
         res.redirect('/orderConfirm/' + order._id);
     } catch (error) {
-        console.log('Error placing order:', error.message);
-        res.render('checkout', { message: 'Error placing order. Please try again.', messageType: 'error', cart: null, user: null });
+        console.error('Error placing order:', error.message);
+        res.render('checkout', { message: `Error placing order: ${error.message}`, messageType: 'error', cart: null, user: null });
     }
 };
+
 
 
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        const order = await Order.findById(orderId)
-            .populate('products.productId');
+        const order = await Order.findById(orderId).populate('products.productId');
 
         if (!order) {
             return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
@@ -740,7 +668,7 @@ const getOrderDetails = async (req, res) => {
 
         res.render('orderConfirm', { order, message: null, messageType: null });
     } catch (error) {
-        console.log('Error retrieving order details:', error.message);
+        console.error('Error retrieving order details:', error.message);
         res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
     }
 };
@@ -759,12 +687,12 @@ const cancelOrder = async (req, res) => {
         }
 
         order.status = 'Cancelled';
-        order.updatedAt = new Date(); // Update the `updatedAt` field when the order is cancelled
+        order.updatedAt = new Date();
         await order.save();
 
         res.redirect(`/orderConfirm/${orderId}`);
     } catch (error) {
-        console.log('Error cancelling order:', error.message);
+        console.error('Error cancelling order:', error.message);
         res.status(500).render('orderConfirm', { order: null, message: 'Error cancelling order. Please try again.', messageType: 'error' });
     }
 };
@@ -805,12 +733,13 @@ const addAddress = async (req, res) => {
         const user = await User.findById(userId);
         user.addresses.push({ firstName, lastName, companyName, address1, address2, city, state, zip, phone, email });
         await user.save();
-        res.redirect('/profile');
+        res.redirect('/checkout');  // Redirect back to checkout page
     } catch (error) {
         console.error('Error adding address:', error);
         res.status(500).send('Server Error');
     }
 };
+
 
 const getEditAddressPage = async (req, res) => {
     try {

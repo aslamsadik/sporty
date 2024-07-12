@@ -93,24 +93,26 @@
     <div class="address-container">
         <h1>Manage Addresses</h1>
         <div>
-            <% user.addresses.forEach((address, index) => { %>
-                <div class="address-item">
-                    <p><%= address.firstName %> <%= address.lastName %></p>
-                    <p><%= address.companyName %></p>
-                    <p><%= address.address1 %>, <%= address.address2 %></p>
-                    <p><%= address.city %>, <%= address.state %> <%= address.zip %></p>
-                    <p><%= address.phone %></p>
-                    <p><%= address.email %></p>
-                    <div class="address-buttons">
-                        <form action="/profile/edit-address/<%= address._id %>" method="GET" style="display:inline;">
-                            <button type="submit" class="edit-address-btn">Edit</button>
-                        </form>
-                        <form action="/profile/delete-address/<%= address._id %>" method="POST" style="display:inline;">
-                            <button type="submit" class="delete-address-btn">Delete</button>
-                        </form>
+            <% if (user && user.addresses && user.addresses.length > 0) { %>
+                <% user.addresses.forEach(address => { %>
+                    <div class="address-item">
+                        <div class="address-details">
+                            <p><%= address.firstName %> <%= address.lastName %></p>
+                            <p><%= address.companyName %></p>
+                            <p><%= address.address1 %>, <%= address.address2 %></p>
+                            <p><%= address.city %>, <%= address.state %>, <%= address.zip %></p>
+                            <p><%= address.phone %></p>
+                            <p><%= address.email %></p>
+                        </div>
+                        <div class="address-buttons">
+                            <button class="edit-address-btn" onclick="window.location.href='/profile/edit-address/<%= address._id %>'">Edit</button>
+                            <button class="delete-address-btn" onclick="deleteAddress('<%= address._id %>')">Delete</button>
+                        </div>
                     </div>
-                </div>
-            <% }); %>
+                <% }); %>
+            <% } else { %>
+                <p>No saved addresses found. Please add an address.</p>
+            <% } %>
         </div>
 
         <div class="add-address-form">
@@ -130,5 +132,25 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function deleteAddress(addressId) {
+            if (confirm('Are you sure you want to delete this address?')) {
+                fetch(`/profile/delete-address/${addressId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete address.');
+                    }
+                });
+            }
+        }
+    </script>
 </body>
 </html>
+

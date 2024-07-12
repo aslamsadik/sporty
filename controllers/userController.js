@@ -710,7 +710,7 @@ const getProfilePage = async (req, res) => {
 
 const getaddresPage = async (req, res) => {
     try {
-        const userId=req.session.user.userId;
+        const userId = req.session.user.userId;
         const user = await User.findById(userId).populate('addresses');
         res.render('manageAddress', { user });
     } catch (error) {
@@ -718,7 +718,6 @@ const getaddresPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 const addAddress = async (req, res) => {
     const { firstName, lastName, companyName, address1, address2, city, state, zip, phone, email } = req.body;
@@ -733,13 +732,12 @@ const addAddress = async (req, res) => {
         const user = await User.findById(userId);
         user.addresses.push({ firstName, lastName, companyName, address1, address2, city, state, zip, phone, email });
         await user.save();
-        res.redirect('/checkout');  // Redirect back to checkout page
+        res.redirect('/profile/add-addressPage');  // Redirect back to address page
     } catch (error) {
         console.error('Error adding address:', error);
         res.status(500).send('Server Error');
     }
 };
-
 
 const getEditAddressPage = async (req, res) => {
     try {
@@ -777,7 +775,7 @@ const editAddress = async (req, res) => {
             { _id: userId, 'addresses._id': addressId },
             { $set: { 'addresses.$': req.body } }
         );
-        res.redirect('/checkout');
+        res.redirect('/profile/add-addressPage');
     } catch (error) {
         console.error('Error editing address:', error.message);
         res.status(500).send('Internal Server Error');
@@ -794,13 +792,12 @@ const deleteAddress = async (req, res) => {
 
         const addressId = req.params.id;
         await User.findByIdAndUpdate(userId, { $pull: { addresses: { _id: addressId } } });
-        res.redirect('/checkout');
+        res.redirect('/profile/add-addressPage');
     } catch (error) {
         console.error('Error deleting address:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 
 module.exports = {

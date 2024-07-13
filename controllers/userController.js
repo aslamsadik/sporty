@@ -799,6 +799,27 @@ const deleteAddress = async (req, res) => {
     }
 };
 
+const getOrderListing = async (req, res) => {
+    try {
+        const orders = await Order.find({ userId: req.session.user?.userId}).populate('products.productId');
+
+        const ordersWithProductDetails = orders.map(order => {
+            order.products = order.products.map(product => ({
+                name: product.productId.name,
+                images: product.productId.images,
+                price: product.productId.price,
+                quantity: product.quantity
+            }));
+            return order;
+        });
+
+        res.render('orderListing', { orders: ordersWithProductDetails });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).send('Server Error');
+    }
+};
+
 
 module.exports = {
     signUpPage,
@@ -824,5 +845,6 @@ module.exports = {
     addAddress,
     editAddress,
     deleteAddress,
-    getEditAddressPage
+    getEditAddressPage,
+    getOrderListing
 };

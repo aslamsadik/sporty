@@ -51,11 +51,20 @@ router.post('/place-order', isAuthenticated, userController.placeOrder);
 router.get('/orderConfirm/:orderId', isAuthenticated, userController.getOrderDetails);
 router.post('/order/cancel/:orderId', isAuthenticated, userController.cancelOrder);
 
+//profile and address management
 router.get('/profile', isAuthenticated, userController.getProfilePage);
 router.get('/profile/add-addressPage', isAuthenticated, userController.getaddresPage);
 router.post('/profile/add-address', isAuthenticated, userController.addAddress);
 router.get('/profile/edit-address/:id', isAuthenticated, userController.getEditAddressPage);
 router.post('/profile/edit-address/:id', isAuthenticated, userController.editAddress);
 router.post('/profile/delete-address/:id', isAuthenticated, userController.deleteAddress);
+
+//order
+router.get('/orders', isAuthenticated, userController.getOrderListing);
+
+
+
+
+
 
 module.exports = router;

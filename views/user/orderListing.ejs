@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Listing</title>
+    <link rel="stylesheet" href="/styles/orderListing.css">
+    <style>
+ body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.order-card {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.order-card h2 {
+    margin-top: 0;
+}
+
+.product {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.product img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 10px;
+}
+
+.product-info {
+    flex-grow: 1;
+}
+
+.cancel-button {
+    background-color: #ff4d4d;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.cancel-button:hover {
+    background-color: #ff1a1a;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Orders</h1>
+        <% if (orders.length === 0) { %>
+            <p>You have no orders.</p>
+        <% } else { %>
+            <% orders.forEach(order => { %>
+                <div class="order-card">
+                    <% order.products.forEach(product => { %>
+                        <div class="product">
+                            <% if (product.images && product.images.length > 0) { %>
+                                <img src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="<%= product.name %>">
+                            <% } else { %>
+                                <img src="/user_assets/imgs/shop/default.jpg" alt="Default Image">
+                            <% } %>
+                            <div class="product-info">
+                                <p><%= product.name %></p>
+                                <p>$<%= product.price %></p>
+                            </div>
+                        </div>
+                    <% }) %>
+                    <p>Status: <%= order.status %></p>
+                    <p>Total Price: $<%= order.totalPrice %></p>
+                    <p>Order Date: <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                    <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <script>
+        function cancelOrder(orderId) {
+            if (confirm("Are you sure you want to cancel this order?")) {
+                fetch(`/order/cancel/${orderId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Order cancelled successfully');
+                            window.location.reload();
+                        } else {
+                            alert('Failed to cancel the order');
+                        }
+                    });
+            }
+        }
+    </script>
+</body>
+</html>

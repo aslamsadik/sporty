@@ -58,6 +58,7 @@ router.post('/profile/add-address', isAuthenticated, userController.addAddress);
 router.get('/profile/edit-address/:id', isAuthenticated, userController.getEditAddressPage);
 router.post('/profile/edit-address/:id', isAuthenticated, userController.editAddress);
 router.post('/profile/delete-address/:id', isAuthenticated, userController.deleteAddress);
+router.post('/editprofile', isAuthenticated, userController.updateProfile);
 
 //order
 router.get('/orders', isAuthenticated, userController.getOrderListing);

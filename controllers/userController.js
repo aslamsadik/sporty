@@ -648,13 +648,12 @@ const placeOrder = async (req, res) => {
         await order.save();
         await Cart.deleteOne({ userId });
 
-        res.redirect('/orderConfirm/' + order._id);
+        res.json({ orderId: order._id });
     } catch (error) {
         console.error('Error placing order:', error.message);
-        res.render('checkout', { message: `Error placing order: ${error.message}`, messageType: 'error', cart: null, user: null });
+        res.status(500).json({ message: `Error placing order: ${error.message}` });
     }
 };
-
 
 
 const getOrderDetails = async (req, res) => {
@@ -820,6 +819,26 @@ const getOrderListing = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+    const { name, mobile, password } = req.body;
+    try {
+        const user = await User.findById(req.session.user?.userId);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        user.name = name;
+        user.mobile = mobile;
+        if (password) {
+            user.password = password;
+        }
+        await user.save();
+        res.redirect('/profile');
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).send('Server Error');
+    }
+};
+
 
 module.exports = {
     signUpPage,
@@ -846,5 +865,6 @@ module.exports = {
     editAddress,
     deleteAddress,
     getEditAddressPage,
-    getOrderListing
+    getOrderListing,
+    updateProfile
 };

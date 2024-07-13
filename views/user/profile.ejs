@@ -162,7 +162,7 @@
                                                     <div class="d-flex flex-column align-items-center text-center">
                                                         <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="Admin" class="profile-img">
                                                         <div class="mt-3">
-                                                            <h3>Hi <span style="color: rgb(255, 204, 0);">!!!</span></h3>
+                                                            <h3>Hi <%= user.name %> <span style="color: rgb(255, 204, 0);">!!!</span></h3>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -247,19 +247,19 @@
                                                     <div class="row">
                                                         <div class="form-group col-md-6">
                                                             <label>Name <span class="required">*</span></label>
-                                                            <input required="" class="form-control square black-border" id="proname" name="name" type="text" value="">
+                                                            <input required="" class="form-control square black-border" id="proname" name="name" type="text" value="<%= user.username %>">
                                                         </div>
                                                         <div class="form-group col-md-6">
                                                             <label>Mobile Number <span class="required">*</span></label>
-                                                            <input required="" class="form-control square black-border" id="pronumber" name="mobile" type="number" value="">
+                                                            <input required="" class="form-control square black-border" id="pronumber" name="mobile" type="number" value="<%= user.mobile %>">
                                                         </div>
                                                         <div class="form-group col-md-12">
                                                             <label>Email Address <span class="required">*</span></label>
-                                                            <input required="" class="form-control square black-border" name="email" type="email" value="" readonly>
+                                                            <input required="" class="form-control square black-border" name="email" type="email" value="<%= user.email %>" readonly>
                                                         </div>
                                                         <div class="form-group col-md-12">
                                                             <label>Password <span class="required">*</span></label>
-                                                            <input required="" class="form-control square black-border" name="password" type="password">
+                                                            <input required="" class="form-control square black-border" name="password" type="password" value="">
                                                         </div>
                                                         <div class="col-md-12">
                                                             <button type="submit" class="btn btn-fill-out">Save</button>

@@ -3,70 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <title>Order Listing</title>
-    <link rel="stylesheet" href="/styles/orderListing.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles/evala.css">
     <style>
- body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 0;
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
 
-.container {
-    width: 80%;
-    margin: 0 auto;
-    padding: 20px;
-}
+        .container {
+            width: 85%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
 
-h1 {
-    text-align: center;
-    margin-bottom: 20px;
-}
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
 
-.order-card {
-    background-color: #fff;
-    padding: 20px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
+        .order-card {
+            background-color: #fdfdfd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-.order-card h2 {
-    margin-top: 0;
-}
+        .order-card h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
 
-.product {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
+        .product {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
 
-.product img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-right: 10px;
-}
+        .product img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+        }
 
-.product-info {
-    flex-grow: 1;
-}
+        .product-info {
+            flex-grow: 1;
+        }
 
-.cancel-button {
-    background-color: #ff4d4d;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 4px;
-}
+        .product-info p {
+            margin: 0;
+        }
 
-.cancel-button:hover {
-    background-color: #ff1a1a;
-}
+        .cancel-button {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
 
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
 
+        .order-summary {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .order-summary p {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -85,20 +104,23 @@ h1 {
                                 <img src="/user_assets/imgs/shop/default.jpg" alt="Default Image">
                             <% } %>
                             <div class="product-info">
-                                <p><%= product.name %></p>
-                                <p>$<%= product.price %></p>
+                                <p><strong><%= product.name %></strong></p>
+                                <p>Price: $<%= product.price %></p>
                             </div>
                         </div>
                     <% }) %>
-                    <p>Status: <%= order.status %></p>
-                    <p>Total Price: $<%= order.totalPrice %></p>
-                    <p>Order Date: <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                    <div class="order-summary">
+                        <p>Status: <strong><%= order.status %></strong></p>
+                        <p>Total Price: <strong>$<%= order.totalPrice %></strong></p>
+                        <p>Order Date: <strong><%= new Date(order.createdAt).toLocaleDateString() %></strong></p>
+                    </div>
                     <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
                 </div>
             <% }) %>
         <% } %>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
         function cancelOrder(orderId) {
             if (confirm("Are you sure you want to cancel this order?")) {

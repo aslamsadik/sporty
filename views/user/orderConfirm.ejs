@@ -4,16 +4,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Confirmation</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="/user_assets/css/main.css"> <!-- Adjust the path as needed -->
   <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f9fa;
+    }
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+      background-color: #007bff;
+      color: white;
+      border-radius: 10px 10px 0 0;
+      text-align: center;
+      padding: 20px;
+    }
+    .card-body {
+      padding: 30px;
+    }
+    .list-group-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .list-group-item span {
+      font-weight: bold;
+    }
     .return-link {
       text-align: center;
-      margin-top: 20px; /* Adjust margin as needed */
+      margin-top: 20px;
+    }
+    .return-link a {
+      color: #007bff;
+      text-decoration: none;
+      font-size: 18px;
+    }
+    .return-link a:hover {
+      text-decoration: underline;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+      border: none;
+    }
+    .btn-danger:hover {
+      background-color: #c82333;
     }
   </style>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- Your custom CSS -->
-  <link rel="stylesheet" href="/user_assets/css/main.css"> <!-- Adjust the path as needed -->
 </head>
 <body>
   <div class="container">
@@ -21,7 +62,7 @@
       <div class="col-md-8 offset-md-2">
         <div class="card">
           <div class="card-header">
-            <h1 class="text-center">
+            <h1>
               <% if (order && order.status === 'Cancelled') { %>
                 Order Cancelled
               <% } else { %>
@@ -41,28 +82,28 @@
             <% } %>
 
             <% if (order && order._id) { %>
-              <p class="card-text">Order ID: <%= order._id %></p>
-              <p class="card-text">Status: <%= order.status %></p>
+              <p class="card-text">Order ID: <span><%= order._id %></span></p>
+              <p class="card-text">Status: <span><%= order.status %></span></p>
               <h2>Products</h2>
               <ul class="list-group">
                 <% if (order.products && order.products.length > 0) { %>
                   <% order.products.forEach(item => { %>
                     <li class="list-group-item">
-                      <%= item.productId.name %> - Quantity: <%= item.quantity %> - Price: <%= item.productId.price %>
+                      <%= item.productId.name %> - Quantity: <span><%= item.quantity %></span> - Price: <span>$<%= item.productId.price.toFixed(2) %></span>
                     </li>
                   <% }); %>
                 <% } else { %>
                   <li class="list-group-item">No products found.</li>
                 <% } %>
               </ul>
-              <p class="card-text mt-3">Total Amount: <%= order.totalPrice %></p>
+              <p class="card-text mt-3">Total Amount: <span>$<%= order.totalPrice.toFixed(2) %></span></p>
             <% } else { %>
               <p class="card-text">No order details available.</p>
             <% } %>
 
             <% if (order && order.status === 'Pending') { %>
               <form action="/order/cancel/<%= order._id %>" method="POST">
-                <button type="submit" class="btn btn-danger">Cancel Order</button>
+                <button type="submit" class="btn btn-danger mt-3">Cancel Order</button>
               </form>
             <% } %>
           </div>
@@ -70,13 +111,10 @@
       </div>
     </div>
   </div>
-  <!-- Add a link to return to home page -->
   <div class="return-link">
-    <a href="/home">Return to Home Page</a>
+    <a href="/home"><i class="fas fa-home"></i> Return to Home Page</a>
   </div>
-  <!-- Bootstrap JS and other scripts -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <!-- Your custom scripts -->
   <script src="/user_assets/js/main.js"></script> <!-- Adjust the path as needed -->
 </body>
 </html>

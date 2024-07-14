@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel');
+const Order = require('../models/orderShema'); // Adjust the path as necessary
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -354,7 +355,22 @@ const deleteCategory = async (req, res) => {
     }
 };
 
-
+const getOrderManagementPage = async (req, res) => {
+    try {
+      const orders = await Order.find().populate({
+        path: 'userId',
+        select: 'username addresses',
+      }).exec();
+  
+      // Log the orders to verify data
+      console.log(JSON.stringify(orders, null, 2));
+  
+      res.render('orderManagement', { orders });
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      res.status(500).send('Error fetching orders');
+    }
+  };
 
 module.exports = {
     Admin_login,
@@ -372,5 +388,6 @@ module.exports = {
     editCategory,
     deleteCategory,
     Admin_loginFunction,
-    Admin_logout
+    Admin_logout,
+    getOrderManagementPage
 };

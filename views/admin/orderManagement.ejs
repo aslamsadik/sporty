@@ -1,0 +1,109 @@
+<%- include("../layouts/admin_header.ejs") %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management</title>
+  <style>
+    .table-container {
+      margin: 20px 0;
+    }
+
+    .order-details {
+      margin-top: 20px;
+    }
+
+    .status-select {
+      width: 150px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="mt-5">Order Management</h1>
+    <div class="table-container">
+      <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Shipping Address</th>
+            <th>Total Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order._id %></td>
+            <td>
+              <% if(order.userId) { %>
+                <%= order.userId.username %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </td>
+            <td>
+              <% 
+                const address = order.userId.addresses.find(address => address._id.equals(order.shippingAddressId));
+                if(address) { %>
+                <%= address.firstName %> <%= address.lastName %>, 
+                <%= address.address1 %>, 
+                <%= address.city %>, 
+                <%= address.state %> 
+                <%= address.zip %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </td>
+            <td>$<%= order.totalPrice %></td>
+            <td>
+              <select class="status-select form-control" onchange="updateOrderStatus('<%= order._id %>', this.value)">
+                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewOrderDetails('<%= order._id %>')">View</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteOrder('<%= order._id %>')">Delete</button>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="order-details" id="orderDetails" style="display: none;">
+      <!-- Order details will be loaded here -->
+    </div>
+  </div>
+
+  <script>
+    function updateOrderStatus(orderId, status) {
+      // Add your AJAX request to update order status
+      console.log('Updating order', orderId, 'to status', status);
+    }
+
+    function viewOrderDetails(orderId) {
+      // Add your AJAX request to load order details
+      console.log('Viewing details for order', orderId);
+      document.getElementById('orderDetails').style.display = 'block';
+    }
+
+    function deleteOrder(orderId) {
+      // Add your AJAX request to delete order
+      console.log('Deleting order', orderId);
+    }
+  </script>
+</body>
+
+</html>
+
+
+<%- include("../layouts/admin_footer.ejs") %>

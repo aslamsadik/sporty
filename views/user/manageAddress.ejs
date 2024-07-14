@@ -6,82 +6,118 @@
     <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
     <title>Manage Addresses</title>
     <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
         .address-container {
-            max-width: 400px;
+            max-width: 800px;
             margin: 50px auto;
             padding: 20px;
-            background-color: #f8f9fa;
+            background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .address-container h1 {
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 30px;
+            font-size: 28px;
+            color: #333;
         }
 
         .address-item {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 20px;
             position: relative;
-            background-color: #ffffff;
+            background-color: #f9f9f9;
+        }
+
+        .address-item p {
+            margin: 0 0 10px;
+            color: #555;
         }
 
         .address-buttons {
             position: absolute;
-            right: 10px;
-            top: 10px;
+            right: 20px;
+            top: 20px;
         }
 
         .edit-address-btn,
         .delete-address-btn {
-            font-size: 12px;
-            padding: 4px 8px;
-            margin-left: 5px;
+            font-size: 14px;
+            padding: 8px 12px;
+            margin-left: 10px;
             cursor: pointer;
+            border-radius: 4px;
+            border: none;
+            transition: background-color 0.3s;
         }
 
         .edit-address-btn {
             background-color: #007bff;
             color: white;
-            border: none;
+        }
+
+        .edit-address-btn:hover {
+            background-color: #0056b3;
         }
 
         .delete-address-btn {
             background-color: #dc3545;
             color: white;
-            border: none;
+        }
+
+        .delete-address-btn:hover {
+            background-color: #c82333;
         }
 
         .add-address-btn {
-            font-size: 12px;
-            padding: 8px 16px;
+            font-size: 14px;
+            padding: 10px 20px;
             background-color: #28a745;
             color: white;
             border: none;
             cursor: pointer;
-            margin-top: 20px;
+            border-radius: 4px;
             display: block;
-            margin: 0 auto;
+            margin: 20px auto 0;
+            transition: background-color 0.3s;
+        }
+
+        .add-address-btn:hover {
+            background-color: #218838;
         }
 
         .add-address-form {
-            padding: 10px;
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 30px;
         }
 
         .add-address-form input,
         .add-address-form button {
-            width: 100%;
-            padding: 8px;
+            width: calc(50% - 10px);
+            padding: 10px;
             margin: 5px 0;
             font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .add-address-form input:focus,
+        .add-address-form button:focus {
+            outline: none;
+            border-color: #007bff;
         }
 
         .add-address-form button {
@@ -89,12 +125,18 @@
             color: white;
             border: none;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
 
-        .address-container h2 {
+        .add-address-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .add-address-form h2 {
             text-align: center;
-            margin-bottom: 10px;
-            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #333;
         }
     </style>
 </head>
@@ -106,7 +148,7 @@
                 <% user.addresses.forEach(address => { %>
                     <div class="address-item">
                         <div class="address-details">
-                            <p><%= address.firstName %> <%= address.lastName %></p>
+                            <p><strong><%= address.firstName %> <%= address.lastName %></strong></p>
                             <p><%= address.companyName %></p>
                             <p><%= address.address1 %>, <%= address.address2 %></p>
                             <p><%= address.city %>, <%= address.state %>, <%= address.zip %></p>

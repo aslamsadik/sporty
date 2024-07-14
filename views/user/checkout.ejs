@@ -4,31 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">  
-
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="/user_assets/css/main.css"> <!-- Adjust the path as needed -->
     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 50px;
+        }
+        .container {
+            max-width: 900px;
+        }
         .error-message {
             color: red;
         }
         .address-card {
             border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 10px;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .address-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .address-card.active {
             border-color: #007bff;
-            background-color: #f8f9fa;
+            background-color: #f1f9ff;
         }
         .address-actions {
             margin-top: 10px;
             text-align: right;
         }
+        .list-group-item {
+            border: none;
+            padding: 10px 0;
+        }
+        .order-summary .list-group-item {
+            border-top: 1px solid #ddd;
+            padding: 15px 0;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Checkout</h2>
+        <h2 class="mb-4 text-center">Checkout</h2>
 
         <% if (message) { %>
             <div class="alert alert-<%= messageType %>">
@@ -59,7 +88,7 @@
                         <p>No addresses found. Please add an address in your profile.</p>
                     <% } %>
 
-                    <h4>Payment Method</h4>
+                    <h4 class="mt-4">Payment Method</h4>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="Credit Card" checked>
                         <label class="form-check-label" for="creditCard">Credit Card</label>
@@ -77,9 +106,9 @@
                 <div class="col-md-4">
                     <h4>Order Summary</h4>
                     <% if (cart && cart.products && cart.products.length > 0) { %>
-                        <ul class="list-group mb-3">
+                        <ul class="list-group order-summary mb-3">
                             <% cart.products.forEach(product => { %>
-                                <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                <li class="list-group-item d-flex justify-content-between">
                                     <div>
                                         <h6 class="my-0"><%= product.productId.name %></h6>
                                         <small class="text-muted">Quantity: <%= product.quantity %></small>
@@ -133,6 +162,5 @@
             });
         });
     </script>
-    
 </body>
 </html>

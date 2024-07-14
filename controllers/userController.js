@@ -70,63 +70,6 @@ const HomePage = async (req, res) => {
     }
 };
 
-// const getShopPage = async (req, res) => {
-//     try {
-//         const perPage = 9;
-//         const page = parseInt(req.query.page) || 1;
-//         const sort = req.query.sort || 'price';
-//         const minPrice = parseFloat(req.query.minPrice) || 0;
-//         const maxPrice = parseFloat(req.query.maxPrice) || 1000;
-//         const selectedCategories = req.query.categories ? req.query.categories.split(',') : [];
-//         const selectedBrands = req.query.brands ? req.query.brands.split(',') : [];
-
-//         console.log('Min Price:', minPrice); // Debugging line
-//         console.log('Max Price:', maxPrice); // Debugging line
-
-//         // Build the filter query
-//         let filter = {
-//             price: { $gte: minPrice, $lte: maxPrice }
-//         };
-
-//         if (selectedCategories.length > 0) {
-//             filter.category = { $in: selectedCategories };
-//         }
-
-//         if (selectedBrands.length > 0) {
-//             filter.brand = { $in: selectedBrands };
-//         }
-
-//         const [products, totalProducts, categories, brands] = await Promise.all([
-//             Product.find(filter)
-//                 .sort({ [sort]: 1 })
-//                 .skip((perPage * page) - perPage)
-//                 .limit(perPage),
-//             Product.countDocuments(filter),
-//             Product.distinct('category'),
-//             Product.distinct('brand')
-//         ]);
-
-//         const totalPages = Math.ceil(totalProducts / perPage);
-
-//         res.render('shop', {
-//             products,
-//             totalProducts,
-//             categories,
-//             brands,
-//             currentPage: page,
-//             totalPages,
-//             sort,
-//             minPrice,
-//             maxPrice,
-//             selectedCategories,
-//             selectedBrands
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send('Server Error');
-//     }
-// };
-
 const getShopPage = async (req, res) => {
     try {
         const { page = 1, sort = 'price', minPrice = 0, maxPrice = 1000, categories = [], brands = [] } = req.query;
@@ -196,15 +139,6 @@ const getProductDescriptionPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
-// const profilePage = async (req, res) => {
-//     try {
-//         return res.render('profile');
-//     } catch (error) {
-//         console.log(error.message);
-//         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
-//     }
-// };
 
 
 const signUp = async (req, res) => {

@@ -20,7 +20,6 @@ const upload = multer({ storage: storage });
 Admin_router.get('/login', adminController.Admin_login);
 Admin_router.post('/login', adminController.Admin_loginFunction);
 Admin_router.get('/logout', adminController.Admin_logout);
-
 Admin_router.get('/userManagement', adminController.Admin_userList);
 Admin_router.post('/toggleBlockUser/:id', adminController.Admin_toggleBlockUser);
 Admin_router.get('/home', adminController.Admin_home);
@@ -38,5 +37,8 @@ Admin_router.get('/catagories/catagoryManagement', adminController.getCategoryPa
 Admin_router.post('/catagories/add', adminController.addCategory);
 Admin_router.post('/catagories/edit/:id', adminController.editCategory);
 Admin_router.post('/catagories/delete/:id', adminController.deleteCategory);
+
+//orderManagement
+Admin_router.get('/orders', adminController.getOrderManagementPage);
 
 module.exports = Admin_router;

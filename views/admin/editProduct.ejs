@@ -1,33 +1,90 @@
 <%- include("../layouts/admin_header.ejs") %>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Edit Product</title>
     <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f4f5f7;
+            color: #444;
+            margin: 0;
+        }
+        .content-main {
+            padding: 30px;
+        }
+        .content-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .form-control, .form-select {
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: #fff;
+        }
+        .card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
         .image-container {
             display: flex;
             flex-wrap: wrap;
+            margin-bottom: 20px;
         }
         .image-container img {
             margin-right: 10px;
             margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         .error-message {
             color: red;
+        }
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-header h2 {
+            margin: 0;
         }
     </style>
 </head>
 <body>
 <section class="content-main">
-    <div class="row">
-        <div class="col-6">
-            <div class="content-header">
-                <h2 class="content-title">Edit Product</h2>
-            </div>
-        </div>
+    <div class="content-header">
+        <h2 class="content-title">Edit Product</h2>
     </div>
     <% if (message) { %>
         <div class="<%= messageType === 'error' ? 'error-message' : '' %>">
@@ -35,77 +92,55 @@
         </div>
     <% } %>
     <form action="/admin/editProduct/<%= product._id %>" method="POST" enctype="multipart/form-data" onsubmit="validateForm(event)">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <h6>1. General info</h6>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="mb-4">
-                                    <label class="form-label">Product title</label>
-                                    <input type="text" placeholder="Type here" class="form-control" name="name" value="<%= product.name %>" required>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label">Description</label>
-                                    <textarea placeholder="Type here" class="form-control" rows="4" name="description" required><%= product.description %></textarea>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label">Brand name</label>
-                                    <select class="form-select" name="brand" required>
-                                        <option value="Adidas" <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
-                                        <option value="Nike" <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
-                                        <option value="Puma" <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
-                                    </select>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label">Select Category</label>
-                                    <select class="form-select" name="category" required>
-                                        <option value="" disabled>Select a category</option>
-                                        <% categories.forEach(cat => { %>
-                                            <option value="<%= cat.name %>" <%= product.category === cat.name ? 'selected' : '' %>><%= cat.name %></option>
-                                        <% }) %>
-                                    </select>
-                                </div>
-                            </div>
+        <div class="card">
+            <div class="card-body">
+                <h6>1. General info</h6>
+                <div>
+                    <label class="form-label">Product title</label>
+                    <input type="text" placeholder="Type here" class="form-control" name="name" value="<%= product.name %>" required>
+                </div>
+                <div>
+                    <label class="form-label">Description</label>
+                    <textarea placeholder="Type here" class="form-control" rows="4" name="description" required><%= product.description %></textarea>
+                </div>
+                <div>
+                    <label class="form-label">Brand name</label>
+                    <select class="form-select" name="brand" required>
+                        <option value="Adidas" <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
+                        <option value="Nike" <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
+                        <option value="Puma" <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Select Category</label>
+                    <select class="form-select" name="category" required>
+                        <option value="" disabled>Select a category</option>
+                        <% categories.forEach(cat => { %>
+                            <option value="<%= cat.name %>" <%= product.category === cat.name ? 'selected' : '' %>><%= cat.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <hr class="mb-4 mt-0">
+                <h6>2. Pricing</h6>
+                <div>
+                    <label class="form-label">Cost in USD</label>
+                    <input type="text" placeholder="$00.0" class="form-control" name="price" value="<%= product.price %>" required>
+                </div>
+                <hr class="mb-4 mt-0">
+                <h6>3. Media</h6>
+                <div>
+                    <label class="form-label">Images</label>
+                    <input class="form-control" type="file" name="images" multiple>
+                    <% if (product.images && product.images.length > 0) { %>
+                        <div class="image-container">
+                            <% product.images.forEach(image => { %>
+                                <img src="/user_assets/imgs/shop/<%= image %>" alt="Product Image" width="100">
+                            <% }) %>
                         </div>
-                        <hr class="mb-4 mt-0">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <h6>2. Pricing</h6>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="mb-4">
-                                    <label class="form-label">Cost in USD</label>
-                                    <input type="text" placeholder="$00.0" class="form-control" name="price" value="<%= product.price %>" required>
-                                </div>
-                            </div>
-                        </div>
-                        <hr class="mb-4 mt-0">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <h6>3. Media</h6>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="mb-4">
-                                    <label class="form-label">Images</label>
-                                    <input class="form-control" type="file" name="images" multiple>
-                                    <% if (product.images && product.images.length > 0) { %>
-                                        <div class="image-container">
-                                            <% product.images.forEach(image => { %>
-                                                <img src="/user_assets/imgs/shop/<%= image %>" alt="Product Image" width="100">
-                                            <% }) %>
-                                        </div>
-                                    <% } %>
-                                </div>
-                                <div>
-                                    <button class="btn btn-md rounded font-sm hover-up" type="submit">Update</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <% } %>
+                </div>
+                <div>
+                    <button class="btn" type="submit">Update</button>
                 </div>
             </div>
         </div>
@@ -123,8 +158,4 @@
 </body>
 </html>
 
-
-
 <%- include("../layouts/admin_footer.ejs") %>
-
-

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
@@ -535,6 +536,7 @@ const getCheckoutPage = async (req, res) => {
 };
 
 
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
@@ -551,12 +553,12 @@ const placeOrder = async (req, res) => {
 
         const cart = await Cart.findOne({ userId }).populate('products.productId');
         if (!cart || cart.products.length === 0) {
-            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user });
+            return res.status(400).json({ message: 'Your cart is empty' });
         }
 
         const selectedShippingAddress = user.addresses.id(shippingAddressId);
         if (!selectedShippingAddress) {
-            return res.render('checkout', { message: 'Shipping address not found', messageType: 'error', cart, user });
+            return res.status(400).json({ message: 'Shipping address not found' });
         }
 
         const totalPrice = cart.products.reduce((total, item) => {
@@ -590,9 +592,16 @@ const placeOrder = async (req, res) => {
 };
 
 
+
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
+        console.log('Order ID:', orderId); // Log the orderId to check its value
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).render('orderConfirm', { order: null, message: 'Invalid order ID', messageType: 'error' });
+        }
+
         const order = await Order.findById(orderId).populate('products.productId');
 
         if (!order) {
@@ -605,6 +614,7 @@ const getOrderDetails = async (req, res) => {
         res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
     }
 };
+
 
 const cancelOrder = async (req, res) => {
     try {
@@ -760,12 +770,31 @@ const updateProfile = async (req, res) => {
         if (!user) {
             return res.status(404).send('User not found');
         }
+        
         user.name = name;
         user.mobile = mobile;
+
         if (password) {
-            user.password = password;
+            // Hash the new password before saving it
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
         }
+
         await user.save();
+
+        // Update session data
+        req.session.user = {
+            ...req.session.user,
+            name: user.name,
+            mobile: user.mobile,
+            email: user.email,  // Ensure all necessary fields are included
+            username: user.username,
+            isAdmin: user.isAdmin,
+            isBlocked: user.isBlocked
+        };
+
+        console.log('Updated user session data:', req.session.user);
+
         res.redirect('/profile');
     } catch (error) {
         console.error('Error updating profile:', error);

@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="user_assets/css/main.css?v=3.4">
 
 <div class="container" >
-    <div class="otp_wrap" style="margin-top: 150px; margin-left: 300px;">
+    <div class="otp_wrap">
         <div class="heading_s1">
             <h3 class="mb-30">Enter OTP</h3>
         </div>
@@ -13,7 +13,7 @@
         <form action="/verifyotp" method="post">
             <div class="form-group">
                 <input type="hidden" name="email" value="<%= email %>">
-                <input type="text" required name="otp" placeholder="Enter OTP" maxlength="6">
+                <input type="text" required name="otp" placeholder="Enter OTP" maxlength="6" class="otp-input">
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-fill-out btn-block hover-up" name="submit">Submit</button>
@@ -65,3 +65,48 @@
         }
     });
 </script>
+
+<style>
+    .otp_wrap {
+        background: url('/public/user_assets/imgs/shop/realyellow.jpg') center center/cover no-repeat;
+        padding: 30px;
+        border-radius: 15px;
+        width: 50%;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .otp-input {
+        width: 100px;
+        display: block;
+        margin: 10px auto;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    .btn-fill-out {
+        background-color: #ffcc00;
+        border-color: #ffcc00;
+        color: #fff;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+
+    .btn-fill-out:hover {
+        background-color: #e6b800;
+        border-color: #e6b800;
+    }
+
+    .alert {
+        margin-bottom: 20px;
+    }
+
+    .resend {
+        text-align: center;
+        margin-top: 20px;
+    }
+</style>

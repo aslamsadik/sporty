@@ -371,6 +371,7 @@ const getOrderManagementPage = async (req, res) => {
       res.status(500).send('Error fetching orders');
     }
   };
+  
 
 module.exports = {
     Admin_login,

@@ -169,12 +169,13 @@ const signUp = async (req, res) => {
 
         // Generate numeric OTP
         const otpCode = generateNumericOtp(6);
+        const hashedOtp = await bcrypt.hash(otpCode, 10); // Hash the OTP
 
         // Save user info to session
         req.session.signupData = { username, email, password: await bcrypt.hash(password, 10) };
 
         // Save OTP to the database
-        await Otp.create({ email, otp: otpCode });
+        await Otp.create({ email, otp: hashedOtp });
 
         // Send OTP via email
         const mailOptions = {
@@ -189,6 +190,7 @@ const signUp = async (req, res) => {
                 console.error('Error sending OTP email:', error);
                 return res.render('signupage', { message: 'Error sending OTP email', messageType: 'error' });
             }
+            console.log('OTP email sent:', info.response);
             // Render OTP page with a success message
             res.render('otp_page', { email, message: 'An OTP has been sent to your email. Please check your inbox.', messageType: 'success' });
         });
@@ -197,6 +199,7 @@ const signUp = async (req, res) => {
         res.render('signupage', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
+
 
 
 const verifyOtp = async (req, res) => {
@@ -222,7 +225,10 @@ const verifyOtp = async (req, res) => {
             });
         }
 
-        if (otpRecord.otp !== otp) {
+        console.log(`Stored OTP: ${otpRecord.otp}, Received OTP: ${otp.trim()}`);
+
+        const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otp);
+        if (!isMatch) {
             console.error('OTP mismatch for email:', email);
             return res.render('otp_page', {
                 email,
@@ -234,6 +240,7 @@ const verifyOtp = async (req, res) => {
         // Check if OTP is expired
         const now = new Date();
         const otpAge = (now - otpRecord.createdAt) / 1000; // Age in seconds
+        console.log(`OTP age for email ${email}: ${otpAge} seconds`);
         if (otpAge > 30) { // 30 seconds TTL
             console.error('OTP expired for email:', email);
             return res.render('otp_page', {
@@ -244,7 +251,7 @@ const verifyOtp = async (req, res) => {
         }
 
         // Retrieve signup data from session
-        const { username, password } = req.session.signupData;
+        const { username, password } = req.session.signupData || {};
 
         if (!username || !password) {
             console.error('Signup data missing from session for email:', email);
@@ -256,7 +263,7 @@ const verifyOtp = async (req, res) => {
         }
 
         // Save the new user to the database
-        const newUser = new User({ username, email, password, isVerified: true, isBlocked: false  });
+        const newUser = new User({ username, email, password, isVerified: true, isBlocked: false });
         await newUser.save();
 
         // Delete the OTP record from the database
@@ -277,6 +284,8 @@ const verifyOtp = async (req, res) => {
     }
 };
 
+
+
 const resendOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -286,10 +295,11 @@ const resendOtp = async (req, res) => {
         }
 
         const otpCode = generateNumericOtp(6);
+        const hashedOtp = await bcrypt.hash(otpCode, 10);
 
         await Otp.findOneAndUpdate(
             { email },
-            { otp: otpCode, createdAt: new Date() },
+            { otp: hashedOtp, createdAt: new Date() },
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
@@ -303,8 +313,7 @@ const resendOtp = async (req, res) => {
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Error sending OTP email:', error);
-                return res.status(500).json({ success:
-                    false, message: 'Error sending OTP email' });
+                return res.status(500).json({ success: false, message: 'Error sending OTP email' });
             }
             console.log('OTP email sent: ', info.response);
             res.status(200).json({ success: true, message: 'A new OTP has been sent to your email.' });
@@ -314,6 +323,8 @@ const resendOtp = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
+
 
 const login = async (req, res) => {
     try {

@@ -50,8 +50,10 @@
             </td>
             <td>
               <% 
-                const address = order.userId.addresses.find(address => address._id.equals(order.shippingAddressId));
-                if(address) { %>
+                const address = order.userId && order.userId.addresses 
+                                ? order.userId.addresses.find(address => address._id.equals(order.shippingAddressId))
+                                : null;
+                if (address) { %>
                 <%= address.firstName %> <%= address.lastName %>, 
                 <%= address.address1 %>, 
                 <%= address.city %>, 
@@ -104,6 +106,7 @@
 </body>
 
 </html>
+
 
 
 <%- include("../layouts/admin_footer.ejs") %>

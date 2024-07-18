@@ -17,26 +17,29 @@ const Admin_login = async (req, res) => {
     }
 };
 
-const Admin_loginFunction=async(req,res)=>{
+const Admin_loginFunction = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(email,password);
+        console.log(`Login attempt for admin: ${email}`);
+
         // Find the user by email
         const user = await User.findOne({ email });
 
         // Check if user exists and is an admin
         if (!user || !user.isAdmin || !user.isVerified) {
-            return res.render('admin_login', { message: 'Ony admin are allowed to enter', messageType: 'error' });
+            console.log('Unauthorized access attempt or user not found');
+            return res.render('admin_login', { message: 'Only verified admins are allowed to enter', messageType: 'error' });
         }
 
         // Compare the provided password with the stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log('Invalid password attempt');
             return res.render('admin_login', { message: 'Invalid email or password', messageType: 'error' });
         }
 
         // Store user data in session
-        req.session.user = { 
+        req.session.admin = { 
             userId: user._id, 
             email: user.email, 
             username: user.username,
@@ -44,10 +47,11 @@ const Admin_loginFunction=async(req,res)=>{
             isBlocked: user.isBlocked
         };
 
+        console.log('Admin logged in successfully');
         // Redirect to admin home page
-        return res.redirect('/admin/home');
+        return res.redirect('/admin/Admin_home');
     } catch (error) {
-        console.log(error.message);
+        console.log('Error during admin login:', error.message);
         res.status(500).send('Internal Server Error');
     }
 }
@@ -60,8 +64,9 @@ const Admin_logout = async (req, res) => {
                 console.error('Error destroying session:', err.message);
                 return res.status(500).send('Internal Server Error');
             }
+            console.log('Admin logged out successfully');
             // Redirect to the login page after logout
-            res.redirect('/');
+            res.redirect('/admin/login');
         });
     } catch (error) {
         console.error('Error logging out:', error.message);

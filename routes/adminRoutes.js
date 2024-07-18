@@ -3,6 +3,7 @@ const Admin_router = express.Router();
 const adminController = require('../controllers/adminController');
 const path = require('path');
 const multer = require('multer');
+const { isAdminAuthenticated, isAdminNotAuthenticated } = require('../middlewares/middleware');
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
@@ -17,32 +18,35 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Admin login and logout
-Admin_router.get('/login', adminController.Admin_login);
-Admin_router.post('/login', adminController.Admin_loginFunction);
-Admin_router.get('/logout', adminController.Admin_logout);
-Admin_router.get('/userManagement', adminController.Admin_userList);
-Admin_router.post('/toggleBlockUser/:id', adminController.Admin_toggleBlockUser);
-Admin_router.get('/home', adminController.Admin_home);
+Admin_router.get('/login', isAdminNotAuthenticated, adminController.Admin_login);
+Admin_router.post('/login', isAdminNotAuthenticated, adminController.Admin_loginFunction);
+Admin_router.get('/logout', isAdminAuthenticated, adminController.Admin_logout);
+
+// Admin home
+Admin_router.get('/Admin_home', isAdminAuthenticated, adminController.Admin_home);
+
+// User Management
+Admin_router.get('/userManagement', isAdminAuthenticated, adminController.Admin_userList);
+Admin_router.post('/toggleBlockUser/:id', isAdminAuthenticated, adminController.Admin_toggleBlockUser);
 
 // Product Management
-Admin_router.get('/productList', adminController.Admin_productList);
-Admin_router.get('/productManagement', adminController.Admin_addProductPage);
-Admin_router.post('/addProduct', upload.array('images', 3), adminController.Admin_addProduct);
-Admin_router.get('/editProduct/:id', adminController.Admin_editProductPage);
-Admin_router.post('/editProduct/:id', upload.array('images', 3), adminController.Admin_editProduct);
-Admin_router.post('/deleteProduct/:id', adminController.Admin_deleteProduct);
+Admin_router.get('/productList', isAdminAuthenticated, adminController.Admin_productList);
+Admin_router.get('/productManagement', isAdminAuthenticated, adminController.Admin_addProductPage);
+Admin_router.post('/addProduct', isAdminAuthenticated, upload.array('images', 3), adminController.Admin_addProduct);
+Admin_router.get('/editProduct/:id', isAdminAuthenticated, adminController.Admin_editProductPage);
+Admin_router.post('/editProduct/:id', isAdminAuthenticated, upload.array('images', 3), adminController.Admin_editProduct);
+Admin_router.post('/deleteProduct/:id', isAdminAuthenticated, adminController.Admin_deleteProduct);
 
 // Category Management
-Admin_router.get('/catagories/catagoryManagement', adminController.getCategoryPage);
-Admin_router.post('/catagories/add', adminController.addCategory);
-Admin_router.post('/catagories/edit/:id', adminController.editCategory);
-Admin_router.post('/catagories/delete/:id', adminController.deleteCategory);
+Admin_router.get('/catagories/catagoryManagement', isAdminAuthenticated, adminController.getCategoryPage);
+Admin_router.post('/catagories/add', isAdminAuthenticated, adminController.addCategory);
+Admin_router.post('/catagories/edit/:id', isAdminAuthenticated, adminController.editCategory);
+Admin_router.post('/catagories/delete/:id', isAdminAuthenticated, adminController.deleteCategory);
 
-//orderManagement
-Admin_router.get('/orders', adminController.getOrderManagementPage);
-Admin_router.post('/delete-order', adminController.deleteOrder);
-Admin_router.post('/update-order-status', adminController.updateOrderStatus);
-Admin_router.get('/view-order-details/:orderId', adminController.viewOrderDetails);
-
+// Order Management
+Admin_router.get('/orders', isAdminAuthenticated, adminController.getOrderManagementPage);
+Admin_router.post('/delete-order', isAdminAuthenticated, adminController.deleteOrder);
+Admin_router.post('/update-order-status', isAdminAuthenticated, adminController.updateOrderStatus);
+Admin_router.get('/view-order-details/:orderId', isAdminAuthenticated, adminController.viewOrderDetails);
 
 module.exports = Admin_router;

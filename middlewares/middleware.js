@@ -54,9 +54,29 @@ const isNotAuthenticated = (req, res, next) => {
     }
 };
 
+// Admin authentication
+const isAdminAuthenticated = (req, res, next) => {
+    if (req.session && req.session.admin) {
+        return next();
+    } else {
+        return res.redirect('/admin/login');
+    }
+};
+
+const isAdminNotAuthenticated = (req, res, next) => {
+    if (!req.session && !req.session.admin) {
+        return res.redirect('/admin/home');
+    } else {
+        return next();
+    }
+};
+
 module.exports = { 
     isBlockedMiddleware,
     addNoCacheHeaders,
     isAuthenticated,
-    isNotAuthenticated
+    isNotAuthenticated,
+    isAdminAuthenticated,
+    isAdminNotAuthenticated
+    
 };

@@ -371,6 +371,42 @@ const getOrderManagementPage = async (req, res) => {
       res.status(500).send('Error fetching orders');
     }
   };
+
+  // Delete order function
+const deleteOrder = async (req, res) => {
+    try {
+      const orderId = req.body.orderId;
+      await Order.findByIdAndDelete(orderId);
+      res.status(200).json({ message: 'Order deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      res.status(500).json({ message: 'Error deleting order' });
+    }
+  };
+  
+  // Update order status function
+  const updateOrderStatus = async (req, res) => {
+    try {
+      const { orderId, status } = req.body;
+      await Order.findByIdAndUpdate(orderId, { status });
+      res.status(200).json({ message: 'Order status updated successfully' });
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      res.status(500).json({ message: 'Error updating order status' });
+    }
+  };
+  
+  // View order details function
+  const viewOrderDetails = async (req, res) => {
+    try {
+      const orderId = req.params.orderId;
+      const order = await Order.findById(orderId).populate('userId');
+      res.status(200).json(order);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      res.status(500).json({ message: 'Error fetching order details' });
+    }
+  };
   
 
 module.exports = {
@@ -390,5 +426,8 @@ module.exports = {
     deleteCategory,
     Admin_loginFunction,
     Admin_logout,
-    getOrderManagementPage
+    getOrderManagementPage,
+    deleteOrder,
+    updateOrderStatus,
+    viewOrderDetails
 };

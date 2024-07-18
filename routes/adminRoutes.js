@@ -40,5 +40,9 @@ Admin_router.post('/catagories/delete/:id', adminController.deleteCategory);
 
 //orderManagement
 Admin_router.get('/orders', adminController.getOrderManagementPage);
+Admin_router.post('/delete-order', adminController.deleteOrder);
+Admin_router.post('/update-order-status', adminController.updateOrderStatus);
+Admin_router.get('/view-order-details/:orderId', adminController.viewOrderDetails);
+
 
 module.exports = Admin_router;

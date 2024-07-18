@@ -19,6 +19,11 @@
     .status-select {
       width: 150px;
     }
+
+    .address-column {
+      width: 250px; /* Adjust the width as needed */
+      word-wrap: break-word; /* Ensures long addresses wrap within the cell */
+    }
   </style>
 </head>
 
@@ -31,7 +36,7 @@
           <tr>
             <th>Order ID</th>
             <th>User</th>
-            <th>Shipping Address</th>
+            <th class="address-column">Shipping Address</th>
             <th>Total Price</th>
             <th>Status</th>
             <th>Actions</th>
@@ -48,7 +53,7 @@
                 N/A
               <% } %>
             </td>
-            <td>
+            <td class="address-column">
               <% 
                 const address = order.userId && order.userId.addresses 
                                 ? order.userId.addresses.find(address => address._id.equals(order.shippingAddressId))
@@ -88,24 +93,69 @@
 
   <script>
     function updateOrderStatus(orderId, status) {
-      // Add your AJAX request to update order status
-      console.log('Updating order', orderId, 'to status', status);
+      fetch(`/admin/update-order-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId, status }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message === 'Order status updated successfully') {
+          alert('Order status updated successfully');
+        } else {
+          console.error('Error updating order status');
+        }
+      })
+      .catch(error => console.error('Error:', error));
     }
 
     function viewOrderDetails(orderId) {
-      // Add your AJAX request to load order details
-      console.log('Viewing details for order', orderId);
-      document.getElementById('orderDetails').style.display = 'block';
+      fetch(`/admin/view-order-details/${orderId}`)
+      .then(response => response.json())
+      .then(data => {
+        const orderDetails = document.getElementById('orderDetails');
+        orderDetails.innerHTML = `
+          <h2>Order ID: ${data._id}</h2>
+          <p>User: ${data.userId ? data.userId.username : 'N/A'}</p>
+          <p>Shipping Address: ${data.shippingAddress}</p>
+          <p>Total Price: $${data.totalPrice}</p>
+          <p>Status: ${data.status}</p>
+          <h3>Products:</h3>
+          <ul>
+            ${data.products.map(product => `<li>${product.name} - Quantity: ${product.quantity}</li>`).join('')}
+          </ul>
+        `;
+        orderDetails.style.display = 'block';
+      })
+      .catch(error => console.error('Error:', error));
     }
 
     function deleteOrder(orderId) {
-      // Add your AJAX request to delete order
-      console.log('Deleting order', orderId);
+      fetch(`/admin/delete-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message === 'Order deleted successfully') {
+          location.reload(); // Reload the page to reflect the deletion
+        } else {
+          console.error('Error deleting order');
+        }
+      })
+      .catch(error => console.error('Error:', error));
     }
   </script>
 </body>
 
 </html>
+
+
 
 
 

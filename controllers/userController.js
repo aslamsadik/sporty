@@ -200,8 +200,6 @@ const signUp = async (req, res) => {
     }
 };
 
-
-
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -813,6 +811,115 @@ const updateProfile = async (req, res) => {
     }
 };
 
+// Forgot Password function
+const getforgotPassword = async (req, res) => {
+    try {
+        res.render("forgotPassword")
+    } catch (error) {
+        console.error('Error fetching forgotPassword page:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+  };
+
+  const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        console.log('Forgot password request received for email:', email);
+
+        // Check if the email exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            console.log('User not found');
+            return res.status(404).json({ message: 'User not found', messageType: 'error' });
+        }
+
+        // Generate a numeric OTP
+        const otpCode = generateNumericOtp(6);
+        const hashedOtp = await bcrypt.hash(otpCode, 10);
+
+        // Save OTP to the database
+        await Otp.findOneAndUpdate(
+            { email },
+            { otp: hashedOtp, createdAt: new Date() },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        // Send OTP via email
+        const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password Reset OTP',
+            text: `Your OTP code is ${otpCode}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending OTP email:', error);
+                return res.status(500).json({ message: 'Error sending OTP email', messageType: 'error' });
+            }
+            console.log('OTP email sent:', info.response);
+            res.status(200).json({ message: 'An OTP has been sent to your email. Please check your inbox.', messageType: 'success' });
+        });
+    } catch (error) {
+        console.error('Error during forgot password process:', error.message);
+        res.status(500).json({ message: 'Internal Server Error', messageType: 'error' });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        console.log('Reset password request received:', req.body);
+
+        // Input validation
+        if (!email || !otp || !newPassword) {
+            console.log('All fields are required');
+            return res.status(400).json({ message: 'All fields are required', messageType: 'error' });
+        }
+
+        const otpRecord = await Otp.findOne({ email });
+
+        if (!otpRecord) {
+            console.log('Invalid or expired OTP');
+            return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
+        }
+
+        const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otp);
+        if (!isMatch) {
+            console.log('Invalid or expired OTP');
+            return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
+        }
+
+        // Check if OTP is expired
+        const now = new Date();
+        const otpAge = (now - otpRecord.createdAt) / 1000; // Age in seconds
+        if (otpAge > 300) { // 5 minutes TTL
+            console.log('Invalid or expired OTP');
+            return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user's password
+        await User.findOneAndUpdate({ email }, { password: hashedPassword });
+        Otp.deleteOne({ email });
+
+        console.log('Password has been reset successfully for email:', email);
+        res.status(200).json({ message: 'Password has been reset successfully', messageType: 'success' });
+    } catch (error) {
+        console.error('Error during password reset process:', error.message);
+        res.status(500).json({ message: 'Internal Server Error', messageType: 'error' });
+    }
+};
 
 module.exports = {
     signUpPage,
@@ -840,5 +947,8 @@ module.exports = {
     deleteAddress,
     getEditAddressPage,
     getOrderListing,
-    updateProfile
+    updateProfile,
+    getforgotPassword,
+    forgotPassword,
+    resetPassword
 };

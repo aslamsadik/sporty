@@ -63,6 +63,10 @@ router.post('/editprofile', isAuthenticated, userController.updateProfile);
 //order
 router.get('/orders', isAuthenticated, userController.getOrderListing);
 
+// Forgot Password routes
+router.get('/forgotPassword', userController.getforgotPassword)
+router.post('/forgot-password', userController.forgotPassword);
+router.post('/reset-password', userController.resetPassword);
 
 
 

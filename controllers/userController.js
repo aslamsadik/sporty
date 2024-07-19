@@ -522,6 +522,45 @@ const clearCart = async (req, res) => {
     }
 };
 
+// Function to update the cart quantity
+const updateCart = async (req, res) => {
+    try {
+        const userId = req.session.user.userId;
+        const { productIds, quantities } = req.body;
+
+        // Find the user's cart
+        const cart = await Cart.findOne({ userId }).populate('products.productId');
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        // Loop through product IDs and update their quantities
+        for (let i = 0; i < productIds.length; i++) {
+            const productId = productIds[i];
+            const quantity = quantities[i];
+
+            // Find the product in the cart
+            const productIndex = cart.products.findIndex(product => product.productId._id.toString() === productId);
+            if (productIndex === -1) {
+                return res.status(404).json({ message: `Product with ID ${productId} not found in cart` });
+            }
+
+            // Update the quantity
+            cart.products[productIndex].quantity = parseInt(quantity);
+        }
+
+        // Recalculate total price and total quantity
+        cart.totalPrice = cart.products.reduce((acc, product) => acc + product.quantity * product.productId.price, 0);
+        cart.totalQuantity = cart.products.reduce((acc, product) => acc + product.quantity, 0);
+
+        await cart.save();
+        res.status(200).json({ message: 'Cart updated successfully', cart });
+    } catch (error) {
+        console.error('Error updating cart:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 const getCheckoutPage = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
@@ -544,20 +583,18 @@ const getCheckoutPage = async (req, res) => {
     }
 };
 
-
-
 const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
 
         if (!userId) {
-            throw new Error('User is not authenticated');
+            return res.status(401).json({ message: 'User is not authenticated' });
         }
 
         const { shippingAddressId, orderNotes, paymentMethod } = req.body;
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error('User not found');
+            return res.status(404).json({ message: 'User not found' });
         }
 
         const cart = await Cart.findOne({ userId }).populate('products.productId');
@@ -600,12 +637,9 @@ const placeOrder = async (req, res) => {
     }
 };
 
-
-
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        console.log('Order ID:', orderId); // Log the orderId to check its value
 
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
             return res.status(400).render('orderConfirm', { order: null, message: 'Invalid order ID', messageType: 'error' });
@@ -623,7 +657,6 @@ const getOrderDetails = async (req, res) => {
         res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
     }
 };
-
 
 const cancelOrder = async (req, res) => {
     try {
@@ -648,6 +681,7 @@ const cancelOrder = async (req, res) => {
         res.status(500).render('orderConfirm', { order: null, message: 'Error cancelling order. Please try again.', messageType: 'error' });
     }
 };
+
 
 const getProfilePage = async (req, res) => {
     try {
@@ -950,5 +984,6 @@ module.exports = {
     updateProfile,
     getforgotPassword,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updateCart
 };

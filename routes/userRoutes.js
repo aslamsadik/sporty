@@ -44,6 +44,7 @@ router.get('/cart', isAuthenticated, userController.getCart);
 router.post('/cart/add', isAuthenticated, userController.addToCart);
 router.post('/cart/remove', isAuthenticated, userController.removeFromCart);
 router.post('/cart/clear', isAuthenticated, userController.clearCart);
+router.post('/cart/update', isAuthenticated, userController.updateCart);
 
 // Checkout
 router.get('/checkout', isAuthenticated, userController.getCheckoutPage);

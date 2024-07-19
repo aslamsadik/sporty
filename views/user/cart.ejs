@@ -104,71 +104,62 @@
                                     </form>
                                 </div>
 
-                                <!-- Added Total Products Section -->
                                 <div class="total-products mb-4">
                                     <p>Total Products in Cart: <span id="total-products"><%= cart.totalQuantity %></span></p>
                                 </div>
 
                                 <div class="table-responsive">
-                                    <table class="table cart-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Product</th>
-                                                <th>Price</th>
-                                                <th>Quantity</th>
-                                                <th>Total</th>
-                                                <th>Remove</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="cart-items">
-                                            <% cart.products.forEach(product => { %>
-                                                <tr data-id="<%= product.productId._id %>">
-                                                    <td class="product-item">
-                                                        <a href="/product/<%= product.productId._id %>">
-                                                            <img src="/user_assets/imgs/shop/<%= product.productId.images[0] %>" alt="<%= product.productId.name %>">
-                                                            <span><%= product.productId.name %></span>
-                                                        </a>
-                                                    </td>
-                                                    <td class="product-price">$<%= product.productId.price %></td>
-                                                    <td class="product-quantity">
-                                                        <a href="#" class="qty-down" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-down"></i></a>
-                                                        <span id="qty-<%= product.productId._id %>"><%= product.quantity %></span>
-                                                        <a href="#" class="qty-up" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-up"></i></a>
-                                                    </td>
-                                                    <td class="product-total" id="item-total-<%= product.productId._id %>" data-price="<%= product.productId.price %>">$<%= (product.productId.price * product.quantity).toFixed(2) %></td>
-                                                    <td class="product-remove">
-                                                        <!-- Form to remove product from cart -->
-                                                        <form action="/cart/remove" method="post" class="remove-form">
-                                                            <input type="hidden" name="productId" value="<%= product.productId._id %>">
-                                                            <button type="submit" class="btn btn-danger"><i class="fi-rs-trash"></i></button>
-                                                        </form>
-                                                    </td>
+                                    <form action="/cart/update" method="POST" id="update-cart-form">
+                                        <table class="table cart-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Price</th>
+                                                    <th>Quantity</th>
+                                                    <th>Total</th>
+                                                    <th>Remove</th>
                                                 </tr>
-                                            <% }) %>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="cart-footer d-flex justify-content-between">
-                                    <div class="cart-total">
-                                        <p>Subtotal: <span id="cart-subtotal">$<%= cart.totalPrice.toFixed(2) %></span></p>
-                                        <p>Grand Total: <span id="cart-grand-total">$<%= cart.totalPrice.toFixed(2) %></span></p>
-                                    </div>
-                                    <div class="cart-actions">
-                                        <a href="/shop" class="btn btn-secondary">Continue Shopping</a>
-                                        <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
-                                    </div>
-                                    <!-- Pagination Controls -->
-                                    <div class="pagination">
-                                        <% if (cart.currentPage > 1) { %>
-                                            <a href="/cart?page=<%= cart.currentPage - 1 %>">Previous</a>
-                                        <% } %>
-                                        <% for (let i = 1; i <= cart.totalPages; i++) { %>
-                                            <a href="/cart?page=<%= i %>" class="<%= cart.currentPage === i ? 'active' : '' %>"><%= i %></a>
-                                        <% } %>
-                                        <% if (cart.currentPage < cart.totalPages) { %>
-                                            <a href="/cart?page=<%= cart.currentPage + 1 %>">Next</a>
-                                        <% } %>
-                                    </div>
+                                            </thead>
+                                            <tbody id="cart-items">
+                                                <% cart.products.forEach(product => { %>
+                                                    <tr data-id="<%= product.productId._id %>">
+                                                        <td class="product-item">
+                                                            <a href="/product/<%= product.productId._id %>">
+                                                                <img src="/user_assets/imgs/shop/<%= product.productId.images[0] %>" alt="<%= product.productId.name %>">
+                                                                <span><%= product.productId.name %></span>
+                                                            </a>
+                                                        </td>
+                                                        <td class="product-price">$<%= product.productId.price %></td>
+                                                        <td class="product-quantity">
+                                                            <a href="#" class="qty-down" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-down"></i></a>
+                                                            <span id="qty-<%= product.productId._id %>"><%= product.quantity %></span>
+                                                            <a href="#" class="qty-up" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-up"></i></a>
+                                                            <input type="hidden" name="productIds[]" value="<%= product.productId._id %>">
+                                                            <input type="hidden" name="quantities[]" id="input-qty-<%= product.productId._id %>" value="<%= product.quantity %>">
+                                                        </td>
+                                                        <td class="product-total" id="item-total-<%= product.productId._id %>" data-price="<%= product.productId.price %>">$<%= (product.productId.price * product.quantity).toFixed(2) %></td>
+                                                        <td class="product-remove">
+                                                            <form action="/cart/remove" method="post" class="remove-form">
+                                                                <input type="hidden" name="productId" value="<%= product.productId._id %>">
+                                                                <button type="submit" class="btn btn-danger"><i class="fi-rs-trash"></i></button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                        <div class="cart-footer d-flex justify-content-between">
+                                            <div class="cart-total">
+                                                <p>Subtotal: <span id="cart-subtotal">$<%= cart.totalPrice.toFixed(2) %></span></p>
+                                                <p>Grand Total: <span id="cart-grand-total">$<%= cart.totalPrice.toFixed(2) %></span></p>
+                                            </div>
+                                            <div class="cart-actions">
+                                                <a href="/shop" class="btn btn-secondary">Continue Shopping</a>
+                                                <button type="submit" class="btn btn-success">Update Cart</button>
+                                                <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
+                                            </div>
+                                        </div>
+                                    </form>                                    
                                 </div>
                             </div>
                         </div>
@@ -181,6 +172,7 @@
                             e.preventDefault();
                             const id = this.getAttribute('data-id');
                             const qtyElem = document.querySelector(`#qty-${id}`);
+                            const inputQtyElem = document.querySelector(`#input-qty-${id}`);
                             const itemTotalElem = document.querySelector(`#item-total-${id}`);
                             const price = parseFloat(itemTotalElem.getAttribute('data-price'));
                             let qty = parseInt(qtyElem.textContent);
@@ -192,6 +184,7 @@
                             }
 
                             qtyElem.textContent = qty;
+                            inputQtyElem.value = qty; // Update the hidden input value
                             itemTotalElem.textContent = `$${(price * qty).toFixed(2)}`;
 
                             // Update cart total and grand total
@@ -224,47 +217,39 @@
                                 const row = document.querySelector(`tr[data-id="${productId}"]`);
                                 row.remove();  // Remove the product row from the table
 
-                                //
-                            // Update total products in cart
-                            const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
-                                .reduce((acc, el) => acc + parseInt(el.textContent), 0);
-                            document.querySelector('#total-products').textContent = totalQuantity;
+                                const cartSubtotal = [...document.querySelectorAll('.product-total')]
+                                    .reduce((acc, el) => acc + parseFloat(el.textContent.replace('$', '')), 0);
+                                document.querySelector('#cart-subtotal').textContent = `$${cartSubtotal.toFixed(2)}`;
+                                document.querySelector('#cart-grand-total').textContent = `$${cartSubtotal.toFixed(2)}`;
+
+                                // Update total products in cart
+                                const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
+                                    .reduce((acc, el) => acc + parseInt(el.textContent), 0);
+                                document.querySelector('#total-products').textContent = totalQuantity;
+                            }
+                        });
+                    });
+
+                    document.querySelector('#clear-cart-form').addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const response = await fetch('/cart/clear', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            document.querySelector('#cart-items').innerHTML = '';
+                            document.querySelector('#cart-subtotal').textContent = '$0.00';
+                            document.querySelector('#cart-grand-total').textContent = '$0.00';
+                            document.querySelector('#total-products').textContent = '0';
                         }
                     });
-                });
+                </script>
+            </div>
+        </main>
+    </div>
+</body>
 
-                document.querySelector('#clear-cart-form').addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const response = await fetch('/cart/clear', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        document.querySelector('#cart-items').innerHTML = '';  // Clear the cart items
-                        document.querySelector('#cart-subtotal').textContent = '$0.00';
-                        document.querySelector('#cart-grand-total').textContent = '$0.00';
-                        document.querySelector('#total-products').textContent = '0';
-                    }
-                });
-
-                // Add to Cart
-                document.querySelector('#add-to-cart-form').addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const formData = new FormData(this);
-                    const response = await fetch('/cart/add', {
-                        method: 'POST',
-                        body: new URLSearchParams(formData)
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        // Optionally update cart details
-                    }
-                });
-            </script>
-        </div>
-    </main>
-</div>

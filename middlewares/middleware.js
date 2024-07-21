@@ -35,12 +35,28 @@ const addNoCacheHeaders = (req, res, next) => {
 };
 
 // Middleware to check if the user is authenticated
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = async (req, res, next) => {
     if (req.session.user) {
-        return next();
+        try {
+            const user = await User.findById(req.session.user.userId);
+            if (user) {
+                return next();
+            } else {
+                req.session.destroy((err) => {
+                    if (err) {
+                        return next(err);
+                    }
+                    console.log('User session exists but user not found in the database. Redirecting to signup page.');
+                    return res.redirect('/signup');
+                });
+            }
+        } catch (error) {
+            console.error('Error in isAuthenticated middleware:', error.message);
+            res.status(500).send('Internal Server Error');
+        }
     } else {
-        console.log('User not authenticated. Redirecting to login page.');
-        return res.redirect('/');
+        console.log('User not authenticated. Redirecting to signup page.');
+        return res.redirect('/signup');
     }
 };
 

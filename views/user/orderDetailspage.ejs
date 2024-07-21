@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details</title>
+     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles/evara.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="h3 mb-3 font-weight-normal">Order Details</h1>
+            </div>
+            <div class="card-body">
+                <div class="order-summary mb-4">
+                    <h2 class="h5">Order ID: <%= order._id %></h2>
+                    <p><strong>Status:</strong> <%= order.status %></p>
+                    <p><strong>Total Price:</strong> $<%= order.totalPrice.toFixed(2) %></p>
+                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                    <p><strong>Order Notes:</strong> <%= order.orderNotes %></p>
+                </div>
+                <div class="shipping-address mb-4">
+                    <h2 class="h5">Shipping Address</h2>
+                    <p><%= order.shippingAddressId.street %></p>
+                    <p><%= order.shippingAddressId.city %>, <%= order.shippingAddressId.state %> <%= order.shippingAddressId.zipCode %></p>
+                </div>
+                <div class="products mb-4">
+                    <h2 class="h5">Products</h2>
+                    <ul class="list-group">
+                        <% order.products.forEach(product => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="product-details d-flex align-items-center">
+                                    <img src="/user_assets/imgs/shop/<%= product.productId.images[0] %>" alt="<%= product.productId.name %>" width="100" class="img-thumbnail mr-3">
+                                    <div>
+                                        <p><strong>Name:</strong> <%= product.productId.name %></p>
+                                        <p><strong>Quantity:</strong> <%= product.quantity %></p>
+                                        <p><strong>Price:</strong> $<%= product.productId.price.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

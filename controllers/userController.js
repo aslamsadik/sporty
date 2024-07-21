@@ -282,8 +282,6 @@ const verifyOtp = async (req, res) => {
     }
 };
 
-
-
 const resendOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -321,7 +319,6 @@ const resendOtp = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 
 const login = async (req, res) => {
@@ -637,7 +634,7 @@ const placeOrder = async (req, res) => {
     }
 };
 
-const getOrderDetails = async (req, res) => {
+const getOrderConfirmpage = async (req, res) => {
     try {
         const orderId = req.params.orderId;
 
@@ -845,6 +842,25 @@ const updateProfile = async (req, res) => {
     }
 };
 
+const getOrderDetails = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        const order = await Order.findById(orderId)
+            .populate('products.productId')
+            .populate('shippingAddressId') // Ensure this matches the field in your schema
+            .exec();
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        res.render('orderDetailspage', { order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
 // Forgot Password function
 const getforgotPassword = async (req, res) => {
     try {
@@ -973,7 +989,7 @@ module.exports = {
     clearCart,
     getCheckoutPage,
     placeOrder,
-    getOrderDetails,
+    getOrderConfirmpage,
     cancelOrder,
     getaddresPage,
     addAddress,
@@ -985,5 +1001,6 @@ module.exports = {
     getforgotPassword,
     forgotPassword,
     resetPassword,
-    updateCart
+    updateCart,
+    getOrderDetails
 };

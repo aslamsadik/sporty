@@ -23,7 +23,7 @@ Admin_router.post('/login', isAdminNotAuthenticated, adminController.Admin_login
 Admin_router.get('/logout', isAdminAuthenticated, adminController.Admin_logout);
 
 // Admin home
-Admin_router.get('/Admin_home', isAdminAuthenticated, adminController.Admin_home);
+Admin_router.get('/admin_home', isAdminAuthenticated, adminController.Admin_home);
 
 // User Management
 Admin_router.get('/userManagement', isAdminAuthenticated, adminController.Admin_userList);

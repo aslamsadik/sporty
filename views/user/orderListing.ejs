@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <title>Order Listing</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/styles/evala.css">
+    <link rel="stylesheet" href="/styles/evara.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -67,8 +67,7 @@
             margin: 0;
         }
 
-        .cancel-button {
-            background-color: #dc3545;
+        .cancel-button, .view-button {
             color: #fff;
             border: none;
             padding: 10px 20px;
@@ -77,8 +76,20 @@
             transition: background-color 0.3s;
         }
 
+        .cancel-button {
+            background-color: #dc3545;
+        }
+
         .cancel-button:hover {
             background-color: #c82333;
+        }
+
+        .view-button {
+            background-color: #007bff;
+        }
+
+        .view-button:hover {
+            background-color: #0056b3;
         }
 
         .order-summary {
@@ -117,6 +128,7 @@
                         <p>Total Price: <strong>$<%= order.totalPrice %></strong></p>
                         <p>Order Date: <strong><%= new Date(order.createdAt).toLocaleDateString() %></strong></p>
                     </div>
+                    <a href="/orderDetails/<%= order._id %>" class="view-button">View Order</a>
                     <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
                 </div>
             <% }) %>
@@ -142,5 +154,6 @@
     </script>
 </body>
 </html>
+
 
 <%- include("../layouts/profile_footer.ejs") %>

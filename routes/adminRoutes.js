@@ -1,21 +1,9 @@
+// routes/adminRoutes.js
 const express = require('express');
 const Admin_router = express.Router();
 const adminController = require('../controllers/adminController');
-const path = require('path');
-const multer = require('multer');
 const { isAdminAuthenticated, isAdminNotAuthenticated } = require('../middlewares/middleware');
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../public/user_assets/imgs/shop')); // Path to the uploads folder
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // Ensure unique filenames
-    }
-});
-
-const upload = multer({ storage: storage });
+const upload = require('../config/multerConfig'); // Import the multer configuration
 
 // Admin login and logout
 Admin_router.get('/login', isAdminNotAuthenticated, adminController.Admin_login);
@@ -50,3 +38,4 @@ Admin_router.post('/update-order-status', isAdminAuthenticated, adminController.
 Admin_router.get('/view-order-details/:orderId', isAdminAuthenticated, adminController.viewOrderDetails);
 
 module.exports = Admin_router;
+

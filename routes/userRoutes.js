@@ -30,14 +30,14 @@ router.use(isBlockedMiddleware);
 // Define other routes as needed
 router.get('/signup', addNoCacheHeaders, isNotAuthenticated, userController.signUpPage);
 router.post('/signup', addNoCacheHeaders, isNotAuthenticated, userController.signUp);
-router.get('/', addNoCacheHeaders, isNotAuthenticated, userController.loginPage);
+router.get('/login', addNoCacheHeaders, isNotAuthenticated, userController.loginPage);
 router.post('/login', addNoCacheHeaders, isNotAuthenticated, userController.login);
 router.get('/logout', isAuthenticated, userController.logout);
 router.post('/verifyotp', addNoCacheHeaders, isNotAuthenticated, userController.verifyOtp);
 router.post('/resend-otp', userController.resendOtp);
 
 // Home and Shop pages accessible to guests
-router.get('/home', userController.HomePage);
+router.get('/', userController.HomePage);
 router.get('/shop', userController.getShopPage);
 router.get('/product/:id', userController.getProductDescriptionPage);
 

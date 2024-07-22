@@ -53,7 +53,7 @@ const logout = async (req, res) => {
                 return res.status(500).send('Internal Server Error');
             }
             // Redirect to the login page after logout
-            res.redirect('/');
+            res.redirect('/login');
         });
     } catch (error) {
         console.error('Error logging out:', error.message);
@@ -73,7 +73,7 @@ const HomePage = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
-        const { page = 1, sort = 'price', minPrice = 0, maxPrice = 1000, categories = [], brands = [] } = req.query;
+        const { page = 1, sort = 'price', minPrice, maxPrice, categories = [], brands = [] } = req.query;
         const ITEMS_PER_PAGE = 9;
 
         // Convert categories and brands to arrays if they are not already
@@ -81,12 +81,21 @@ const getShopPage = async (req, res) => {
         const brandArray = Array.isArray(brands) ? brands : [brands];
 
         // Create filter object
-        let filter = {
-            price: { $gte: minPrice, $lte: maxPrice }
-        };
+        let filter = {};
+
+        // Apply price filter only if minPrice and maxPrice are provided
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = minPrice;
+            if (maxPrice) filter.price.$lte = maxPrice;
+        }
+
+        // Apply category filter only if categories are selected
         if (categoryArray.length > 0 && categoryArray[0] !== '') {
             filter.category = { $in: categoryArray };
         }
+
+        // Apply brand filter only if brands are selected
         if (brandArray.length > 0 && brandArray[0] !== '') {
             filter.brand = { $in: brandArray };
         }
@@ -115,8 +124,8 @@ const getShopPage = async (req, res) => {
             totalPages,
             currentPage: parseInt(page),
             sort,
-            minPrice,
-            maxPrice,
+            minPrice: minPrice || 0,
+            maxPrice: maxPrice || '',
             selectedCategories: categoryArray,
             selectedBrands: brandArray
         });
@@ -271,7 +280,7 @@ const verifyOtp = async (req, res) => {
         req.session.signupData = null;
 
         // Redirect to login page with success message
-        res.redirect('/');
+        res.redirect('/login');
     } catch (error) {
         console.error('Error during OTP verification:', error.message);
         res.render('otp_page', {
@@ -362,7 +371,7 @@ const login = async (req, res) => {
         console.log('User session data set:', req.session.user);
 
         // Redirect to home page
-        res.redirect('/home');
+        res.redirect('/');
     } catch (error) {
         console.log(error.message);
         res.render('login', { message: 'Internal Server Error', messageType: 'error' });

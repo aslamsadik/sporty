@@ -17,7 +17,7 @@
                 <div class="col-lg-9">
                     <div class="shop-product-fillter">
                         <div class="totall-product">
-                            <p> We found <strong class="text-brand"><%= totalProducts %></strong> items for you!</p>
+                            <p>We found <strong class="text-brand"><%= totalProducts %></strong> items for you!</p>
                         </div>
                         <div class="sort-by-product-area">
                             <div class="sort-by-cover">
@@ -126,48 +126,80 @@
                                 <% } %>
                             </ul>
                         </nav>
-                    </div>                   
+                    </div>
                     <% } %>
                 </div>
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
-                    <div class="sidebar-widget mb-30">
-                        <h5 class="section-title style-1 mb-30 wow fadeIn animated">Filters</h5>
-                        <form id="filter-form" method="GET" action="/shop">
-                            <!-- Sort By Price -->
-                            <div class="filter-by-price mb-20">
-                                <label for="sort">Sort by Price:</label>
-                                <select id="sort" name="sort" class="form-control">
-                                    <option value="price" <%= sort === 'price' ? 'selected' : '' %>>Low to High</option>
-                                    <option value="-price" <%= sort === '-price' ? 'selected' : '' %>>High to Low</option>
-                                </select>
-                            </div>
-                            <!-- Filter By Category -->
-                            <div class="filter-by-category mb-20">
-                                <label>Category:</label>
-                                <% categories.forEach(cat => { %>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="categories" value="<%= cat %>" <%= selectedCategories.includes(cat) ? 'checked' : '' %> />
-                                        <label class="form-check-label"><%= cat %></label>
+                    <div class="widget-category mb-30">
+                        <h5 class="section-title style-1 mb-30">Category</h5>
+                        <ul class="categories">
+                            <form method="GET" action="/shop">
+                                <input type="hidden" name="sort" value="<%= sort %>" />
+                                <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                                <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                                <% categories.forEach(category => { %>
+                                    <li>
+                                        <input type="checkbox" name="categories" value="<%= category %>" <%= selectedCategories.includes(category) ? 'checked' : '' %> onchange="this.form.submit()" />
+                                        <label><%= category %></label>
+                                    </li>
+                                <% }); %>
+                            </form>
+                        </ul>
+                    </div>
+                    <div class="sidebar-widget price_range range mb-30">
+                        <div class="widget-header position-relative mb-20">
+                            <h5 class="widget-title mb-10">Filter by price</h5>
+                            <div class="bt-1 border-color-1"></div>
+                        </div>
+                        <div class="price-filter">
+                            <form method="GET" action="/shop">
+                                <div class="price-slider-amount">
+                                    <div class="label-input">
+                                        <span>Range:</span> 
+                                        <input type="text" id="amount" readonly="">
+                                        <input type="hidden" id="minPrice" name="minPrice" value="<%= minPrice %>">
+                                        <input type="hidden" id="maxPrice" name="maxPrice" value="<%= maxPrice %>">
                                     </div>
-                                <% }) %>
-                            </div>
-                            <input type="hidden" name="page" value="<%= currentPage %>" />
-                            <button type="submit" class="btn btn-primary">Apply Filters</button>
-                        </form>
+                                </div>
+                                <div id="slider-range" class="price-slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                                    <div class="ui-slider-range ui-widget-header ui-corner-all" style="left: 0%; width: 100%;"></div>
+                                    <span class="ui-slider-handle ui-state-default ui-corner-all" style="left: 0%;"></span>
+                                    <span class="ui-slider-handle ui-state-default ui-corner-all" style="left: 100%;"></span>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-default">
+                                    Filter
+                                </button>
+                                <input type="hidden" name="sort" value="<%= sort %>" />
+                                <% selectedCategories.forEach(category => { %>
+                                    <input type="hidden" name="categories" value="<%= category %>" />
+                                <% }); %>
+                                <% selectedBrands.forEach(brand => { %>
+                                    <input type="hidden" name="brands" value="<%= brand %>" />
+                                <% }); %>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="sidebar-widget product-sidebar  mb-30 p-30 bg-grey border-radius-10">
+                        <h5 class="section-title style-1 mb-30">Filter by brand</h5>
+                        <ul class="categories">
+                            <form method="GET" action="/shop">
+                                <input type="hidden" name="sort" value="<%= sort %>" />
+                                <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                                <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                                <% brands.forEach(brand => { %>
+                                    <li>
+                                        <input type="checkbox" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> onchange="this.form.submit()" />
+                                        <label><%= brand %></label>
+                                    </li>
+                                <% }); %>
+                            </form>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 </main>
-
-
-
-
-
-
-
-
 
 <!-- Preloader Start -->
 <div id="preloader-active">

@@ -1,5 +1,3 @@
-<!-- <link rel="stylesheet" href="user_assets/css/main.css?v=3.4"> -->
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -105,7 +103,7 @@
                                 </div>
 
                                 <div class="total-products mb-4">
-                                    <p>Total Products in Cart: <span id="total-products"><%= cart.totalQuantity %></span></p>
+                                    <p>Total Products in Cart: <span id="total-products"><%= cart.products.length %></span></p>
                                 </div>
 
                                 <div class="table-responsive">
@@ -141,7 +139,7 @@
                                                         <td class="product-remove">
                                                             <form action="/cart/remove" method="post" class="remove-form">
                                                                 <input type="hidden" name="productId" value="<%= product.productId._id %>">
-                                                                <button type="submit" class="btn btn-danger"><i class="fi-rs-trash"></i></button>
+                                                                <button type="submit" class="btn btn-danger remove-button"><i class="fi-rs-trash"></i></button>
                                                             </form>
                                                         </td>
                                                     </tr>
@@ -159,7 +157,7 @@
                                                 <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
                                             </div>
                                         </div>
-                                    </form>                                    
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -168,7 +166,7 @@
                 <script src="user_assets/js/main.js?v=3.4"></script>
                 <script>
                     document.querySelectorAll('.qty-up, .qty-down').forEach(btn => {
-                        btn.addEventListener('click', function(e) {
+                        btn.addEventListener('click', function (e) {
                             e.preventDefault();
                             const id = this.getAttribute('data-id');
                             const qtyElem = document.querySelector(`#qty-${id}`);
@@ -200,10 +198,11 @@
                         });
                     });
 
-                    document.querySelectorAll('.remove-form').forEach(form => {
-                        form.addEventListener('submit', async function(e) {
+                    document.querySelectorAll('.remove-button').forEach(button => {
+                        button.addEventListener('click', async function (e) {
                             e.preventDefault();
-                            const productId = this.querySelector('input[name="productId"]').value;
+                            const form = this.closest('form');
+                            const productId = form.querySelector('input[name="productId"]').value;
                             const response = await fetch('/cart/remove', {
                                 method: 'POST',
                                 headers: {
@@ -215,36 +214,38 @@
                             const result = await response.json();
                             if (result.success) {
                                 const row = document.querySelector(`tr[data-id="${productId}"]`);
-                                row.remove();  // Remove the product row from the table
+                                row.remove(); // Remove the product row from the table
 
                                 const cartSubtotal = [...document.querySelectorAll('.product-total')]
                                     .reduce((acc, el) => acc + parseFloat(el.textContent.replace('$', '')), 0);
                                 document.querySelector('#cart-subtotal').textContent = `$${cartSubtotal.toFixed(2)}`;
                                 document.querySelector('#cart-grand-total').textContent = `$${cartSubtotal.toFixed(2)}`;
 
-                                // Update total products in cart
                                 const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
                                     .reduce((acc, el) => acc + parseInt(el.textContent), 0);
                                 document.querySelector('#total-products').textContent = totalQuantity;
+                            } else {
+                                alert('Failed to remove the product from cart');
                             }
                         });
                     });
 
-                    document.querySelector('#clear-cart-form').addEventListener('submit', async function(e) {
+                    
+
+                    document.getElementById('clear-cart-form').addEventListener('submit', async function (e) {
                         e.preventDefault();
                         const response = await fetch('/cart/clear', {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
                                 'X-Requested-With': 'XMLHttpRequest'
                             }
                         });
                         const result = await response.json();
                         if (result.success) {
-                            document.querySelector('#cart-items').innerHTML = '';
-                            document.querySelector('#cart-subtotal').textContent = '$0.00';
-                            document.querySelector('#cart-grand-total').textContent = '$0.00';
-                            document.querySelector('#total-products').textContent = '0';
+                            alert('Cart cleared successfully');
+                            location.reload();
+                        } else {
+                            alert('Failed to clear the cart');
                         }
                     });
                 </script>
@@ -253,3 +254,4 @@
     </div>
 </body>
 
+</html>

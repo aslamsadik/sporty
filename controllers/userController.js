@@ -63,11 +63,49 @@ const logout = async (req, res) => {
 
 const HomePage = async (req, res) => {
     try {
-        const products = await Product.find();
+        const query = req.query.q; // Get the search query from the URL
+        let products;
+
+        if (query) {
+            // If there's a search query, filter products by name
+            products = await Product.find({ name: new RegExp(query, 'i') });
+        } else {
+            // If no search query, fetch all products
+            products = await Product.find();
+        }
+
         return res.render('home', { products, message: null, messageType: null });
     } catch (error) {
         console.log(error.message);
         res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+    }
+};
+
+
+const searchProducts = async (query) => {
+    try {
+    
+        const results = await Product.find({ name: { $regex: query, $options: 'i' } }); // Case-insensitive search
+        console.log('Search results:', results); // Log the search results
+        return results;
+    } catch (error) {
+        console.error('Error searching products:', error);
+        throw error;
+    }
+};
+
+const search = async (req, res) => {
+    try {
+        const query = req.query.q; // Assuming the search query is passed as a query parameter
+        console.log('Search query:', query); // Log the search query
+        if (!query) {
+            return res.render('searchResults', { results: [] });
+        }
+        const results = await searchProducts(query); // Replace with your actual search function
+        res.render('searchResults', { results }); // Ensure 'results' is passed to the view
+    } catch (error) {
+        console.error('Error performing search:', error);
+        res.status(500).send('Internal Server Error');
     }
 };
 
@@ -498,6 +536,7 @@ const removeFromCart = async (req, res) => {
 };
 
 
+
 const clearCart = async (req, res) => {
     try {
         const userId = req.session.user.userId;
@@ -527,6 +566,7 @@ const clearCart = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error clearing the cart' });
     }
 };
+
 
 // Function to update the cart quantity
 const updateCart = async (req, res) => {
@@ -566,6 +606,7 @@ const updateCart = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 const getCheckoutPage = async (req, res) => {
     try {
@@ -1011,5 +1052,6 @@ module.exports = {
     forgotPassword,
     resetPassword,
     updateCart,
-    getOrderDetails
+    getOrderDetails,
+    search
 };

@@ -38,6 +38,7 @@ router.post('/resend-otp', userController.resendOtp);
 
 // Home and Shop pages accessible to guests
 router.get('/', userController.HomePage);
+router.get('/search', userController.search);
 router.get('/shop', userController.getShopPage);
 router.get('/product/:id', userController.getProductDescriptionPage);
 

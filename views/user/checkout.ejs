@@ -1,166 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Checkout</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/user_assets/css/main.css"> <!-- Adjust the path as needed -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/user_assets/css/main.css" />
+    <!-- Adjust the path as needed -->
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f8f9fa;
-            padding-top: 50px;
-        }
-        .container {
-            max-width: 900px;
-        }
-        .error-message {
-            color: red;
-        }
-        .address-card {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .address-card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .address-card.active {
-            border-color: #007bff;
-            background-color: #f1f9ff;
-        }
-        .address-actions {
-            margin-top: 10px;
-            text-align: right;
-        }
-        .list-group-item {
-            border: none;
-            padding: 10px 0;
-        }
-        .order-summary .list-group-item {
-            border-top: 1px solid #ddd;
-            padding: 15px 0;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border: none;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f8f9fa;
+        padding-top: 50px;
+      }
+      .container {
+        max-width: 900px;
+      }
+      .error-message {
+        color: red;
+      }
+      .address-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+      .address-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .address-card.active {
+        border-color: #007bff;
+        background-color: #f1f9ff;
+      }
+      .address-actions {
+        margin-top: 10px;
+        text-align: right;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+      .list-group-item {
+        border: none;
+        padding: 10px 0;
+      }
+      .order-summary .list-group-item {
+        border-top: 1px solid #ddd;
+        padding: 15px 0;
+      }
+      .btn-primary {
+        background-color: #007bff;
+        border: none;
+      }
+      .btn-primary:hover {
+        background-color: #0056b3;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h2 class="mb-4 text-center">Checkout</h2>
+      <h2 class="mb-4 text-center">Checkout</h2>
 
-        <% if (message) { %>
-            <div class="alert alert-<%= messageType %>">
-                <%= message %>
+      <% if (message) { %>
+      <div class="alert alert-<%= messageType %>"><%= message %></div>
+      <% } %>
+
+      <form id="placeOrderForm" action="/place-order" method="POST">
+        <div class="row">
+          <div class="col-md-8">
+            <h4>Shipping Address</h4>
+            <% if (user && user.addresses && user.addresses.length > 0) { %>
+            <% user.addresses.forEach((address, index) => { %>
+            <div class="address-card <%= index === 0 ? 'active' : '' %>">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="shippingAddressId"
+                  id="address<%= index %>"
+                  value="<%= address._id %>"
+                  <%= index === 0 ? 'checked' : '' %>
+                />
+                <label class="form-check-label" for="address<%= index %>">
+                  <%= address.firstName %> <%= address.lastName %><br />
+                  <%= address.address1 %> <%= address.address2 %><br />
+                  <%= address.city %>, <%= address.state %> <%= address.zip
+                  %><br />
+                  <%= address.phone %><br />
+                  <%= address.email %>
+                </label>
+              </div>
+              <div class="address-actions">
+                <a
+                  href="/profile/edit-address/<%= address._id %>"
+                  class="btn btn-secondary btn-sm"
+                  >Edit</a
+                >
+              </div>
             </div>
-        <% } %>
+            <% }) %>
+            <a
+              href="/profile/add-addressPage"
+              class="btn btn-primary mt-3"
+              >Add Address</a
+            >
+            <% } else { %>
+            <p>No addresses found.</p>
+            <a href="/profile/add-addressPage" class="btn btn-primary"
+              >Add Address</a
+            >
+            <% } %>
 
-        <form id="placeOrderForm" action="/place-order" method="POST">
-            <div class="row">
-                <div class="col-md-8">
-                    <h4>Shipping Address</h4>
-                    <% if (user && user.addresses && user.addresses.length > 0) { %>
-                        <% user.addresses.forEach((address, index) => { %>
-                            <div class="address-card <%= index === 0 ? 'active' : '' %>">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="shippingAddressId" id="address<%= index %>" value="<%= address._id %>" <%= index === 0 ? 'checked' : '' %>>
-                                    <label class="form-check-label" for="address<%= index %>">
-                                        <%= address.firstName %> <%= address.lastName %><br>
-                                        <%= address.address1 %> <%= address.address2 %><br>
-                                        <%= address.city %>, <%= address.state %> <%= address.zip %><br>
-                                        <%= address.phone %><br>
-                                        <%= address.email %>
-                                    </label>
-                                </div>
-                            </div>
-                        <% }) %>
-                    <% } else { %>
-                        <p>No addresses found. Please add an address in your profile.</p>
-                    <% } %>
-
-                    <h4 class="mt-4">Payment Method</h4>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="Credit Card" checked>
-                        <label class="form-check-label" for="creditCard">Credit Card</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="PayPal">
-                        <label class="form-check-label" for="paypal">PayPal</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery">
-                        <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <h4>Order Summary</h4>
-                    <% if (cart && cart.products && cart.products.length > 0) { %>
-                        <ul class="list-group order-summary mb-3">
-                            <% cart.products.forEach(product => { %>
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="my-0"><%= product.productId.name %></h6>
-                                        <small class="text-muted">Quantity: <%= product.quantity %></small>
-                                    </div>
-                                    <span class="text-muted">$<%= (product.productId.price * product.quantity).toFixed(2) %></span>
-                                </li>
-                            <% }) %>
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Total (USD)</span>
-                                <strong>$<%= cart.products.reduce((total, product) => total + (product.productId.price * product.quantity), 0).toFixed(2) %></strong>
-                            </li>
-                        </ul>
-                    <% } else { %>
-                        <p>Your cart is empty.</p>
-                    <% } %>
-                </div>
+            <h4 class="mt-4">Payment Method</h4>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="paymentMethod"
+                id="creditCard"
+                value="Credit Card"
+                checked
+              />
+              <label class="form-check-label" for="creditCard"
+                >Credit Card</label
+              >
             </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="paymentMethod"
+                id="paypal"
+                value="PayPal"
+              />
+              <label class="form-check-label" for="paypal">PayPal</label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="paymentMethod"
+                id="cashOnDelivery"
+                value="Cash on Delivery"
+              />
+              <label class="form-check-label" for="cashOnDelivery"
+                >Cash on Delivery</label
+              >
+            </div>
+          </div>
 
-            <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">Place Order</button>
-        </form>
+          <div class="col-md-4">
+            <h4>Order Summary</h4>
+            <% if (cart && cart.products && cart.products.length > 0) { %>
+            <ul class="list-group order-summary mb-3">
+              <% cart.products.forEach(product => { %>
+              <li class="list-group-item d-flex justify-content-between">
+                <div>
+                  <h6 class="my-0"><%= product.productId.name %></h6>
+                  <small class="text-muted">Quantity: <%= product.quantity
+                  %></small>
+                </div>
+                <span class="text-muted">₹<%= (product.productId.price *
+                  product.quantity).toFixed(2) %></span>
+              </li>
+              <% }) %>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Total (USD)</span>
+                <strong>₹<%= cart.products.reduce((total, product) => total +
+                  (product.productId.price * product.quantity), 0).toFixed(2)
+                  %></strong>
+              </li>
+            </ul>
+            <% } else { %>
+            <p>Your cart is empty.</p>
+            <% } %>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg btn-block mt-4"
+          id="placeOrderButton"
+        >
+          Place Order
+        </button>
+      </form>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Highlight the selected address
-            $('input[name="shippingAddressId"]').on('change', function() {
-                $('.address-card').removeClass('active');
-                $(this).closest('.address-card').addClass('active');
-            });
-
-            // AJAX form submission for placing order
-            $('#placeOrderForm').on('submit', function(e) {
-                e.preventDefault();
-                var form = $(this);
-                $.ajax({
-                    type: 'POST',
-                    url: form.attr('action'),
-                    data: form.serialize(),
-                    success: function(response) {
-                        // Handle success response
-                        alert('Order placed successfully!');
-                        // Redirect to order confirmation page with order ID
-                        window.location.href = '/orderConfirm/' + response.orderId;
-                    },
-                    error: function(error) {
-                        // Handle error response
-                        alert('Error placing order. Please try again.');
-                    }
-                });
-            });
+      $(document).ready(function () {
+        // Highlight the selected address
+        $("input[name='shippingAddressId']").on("change", function () {
+          $(".address-card").removeClass("active");
+          $(this).closest(".address-card").addClass("active");
         });
+
+        // AJAX form submission for placing order
+        $("#placeOrderForm").on("submit", function (e) {
+          e.preventDefault();
+          var form = $(this);
+          $.ajax({
+            type: "POST",
+            url: form.attr("action"),
+            data: form.serialize(),
+            success: function (response) {
+              // Handle success response
+              alert("Order placed successfully!");
+              // Redirect to order confirmation page with order ID
+              window.location.href = "/orderConfirm/" + response.orderId;
+            },
+            error: function (error) {
+              // Handle error response
+              alert("Error placing order. Please try again.");
+            },
+          });
+        });
+      });
     </script>
-</body>
+  </body>
 </html>

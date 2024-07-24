@@ -127,7 +127,7 @@
                                                                 <span><%= product.productId.name %></span>
                                                             </a>
                                                         </td>
-                                                        <td class="product-price">$<%= product.productId.price %></td>
+                                                        <td class="product-price">₹<%= product.productId.price %></td>
                                                         <td class="product-quantity">
                                                             <a href="#" class="qty-down" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-down"></i></a>
                                                             <span id="qty-<%= product.productId._id %>"><%= product.quantity %></span>
@@ -148,8 +148,8 @@
                                         </table>
                                         <div class="cart-footer d-flex justify-content-between">
                                             <div class="cart-total">
-                                                <p>Subtotal: <span id="cart-subtotal">$<%= cart.totalPrice.toFixed(2) %></span></p>
-                                                <p>Grand Total: <span id="cart-grand-total">$<%= cart.totalPrice.toFixed(2) %></span></p>
+                                                <p>Subtotal: <span id="cart-subtotal">₹<%= cart.totalPrice.toFixed(2) %></span></p>
+                                                <p>Grand Total: <span id="cart-grand-total">₹<%= cart.totalPrice.toFixed(2) %></span></p>
                                             </div>
                                             <div class="cart-actions">
                                                 <a href="/shop" class="btn btn-secondary">Continue Shopping</a>
@@ -163,6 +163,27 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal HTML -->
+                <div class="modal fade" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cartModalLabel">Notification</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="cart-modal-body">
+                                <!-- Message will be inserted here dynamically -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <script src="user_assets/js/main.js?v=3.4"></script>
                 <script>
                     document.querySelectorAll('.qty-up, .qty-down').forEach(btn => {
@@ -224,13 +245,13 @@
                                 const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
                                     .reduce((acc, el) => acc + parseInt(el.textContent), 0);
                                 document.querySelector('#total-products').textContent = totalQuantity;
+
+                                showModal('Product removed from the cart successfully.');
                             } else {
-                                alert('Failed to remove the product from cart');
+                                showModal('Failed to remove the product from cart.');
                             }
                         });
                     });
-
-                    
 
                     document.getElementById('clear-cart-form').addEventListener('submit', async function (e) {
                         e.preventDefault();
@@ -242,16 +263,24 @@
                         });
                         const result = await response.json();
                         if (result.success) {
-                            alert('Cart cleared successfully');
+                            showModal('Cart cleared successfully.');
                             location.reload();
                         } else {
-                            alert('Failed to clear the cart');
+                            showModal('Failed to clear the cart.');
                         }
                     });
+
+                    // Function to show the modal
+                    function showModal(message) {
+                        const modalBody = document.getElementById('cart-modal-body');
+                        modalBody.textContent = message;
+                        $('#cartModal').modal('show');
+                    }
                 </script>
             </div>
         </main>
     </div>
 </body>
+
 
 </html>

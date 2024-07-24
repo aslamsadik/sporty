@@ -416,7 +416,6 @@ const login = async (req, res) => {
     }
 };
 
-
 // Get Cart
 const getCart = async (req, res) => {
     try {
@@ -453,7 +452,7 @@ const getCart = async (req, res) => {
         });
     } catch (error) {
         console.error('Error getting cart:', error.message);
-        // res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
+        res.status(500).render('error', { message: 'Internal Server Error', messageType: 'error' });
     }
 };
 
@@ -487,7 +486,8 @@ const addToCart = async (req, res) => {
 
         // Recalculate total price
         cart.totalPrice = cart.products.reduce((total, item) => {
-            return total + (productPrice * item.quantity);
+            const itemPrice = item.productId.equals(productId) ? productPrice : item.productId.price;
+            return total + (itemPrice * item.quantity);
         }, 0);
 
         // Save the updated cart
@@ -499,9 +499,6 @@ const addToCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
-
-
 
 const removeFromCart = async (req, res) => {
     try {
@@ -600,7 +597,8 @@ const updateCart = async (req, res) => {
         cart.totalQuantity = cart.products.reduce((acc, product) => acc + product.quantity, 0);
 
         await cart.save();
-        res.status(200).json({ message: 'Cart updated successfully', cart });
+        // res.status(200).json({ message: 'Cart updated successfully', cart });
+        res.redirect('/cart', {message:"cart updated sucessfully"},cart)
     } catch (error) {
         console.error('Error updating cart:', error);
         res.status(500).json({ message: 'Internal server error' });

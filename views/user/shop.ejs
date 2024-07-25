@@ -3,15 +3,49 @@
 <%- include("../layouts/header.ejs") %>
 
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop</title>
+    <link rel="stylesheet" href="/path/to/your/styles.css"> <!-- Ensure you include your main stylesheet -->
+    <style>
+        .form-check {
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-check-input {
+            margin-right: 0.5rem;
+        }
+        
+        .form-check-label {
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .price-slider-amount {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        #slider-range {
+            margin-top: 10px;
+        }
+        
+        .price-filter .btn {
+            margin-top: 10px;
+        }
+
+        .sort-by-product-wrap {
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
 <main class="main">
-    <!-- <div class="page-header breadcrumb-wrap">
-        <div class="container">
-            <div class="breadcrumb">
-                <a href="/" rel="nofollow">Home</a>
-                <span></span> Shop
-            </div>
-        </div>
-    </div> -->
     <section class="mt-50 mb-50">
         <div class="container">
             <div class="row">
@@ -23,7 +57,7 @@
                         <div class="sort-by-product-area">
                             <div class="sort-by-cover">
                                 <form method="GET" action="/shop">
-                                    <div class="sort-by-product-wrap">
+                                    <div class="sort-by-product-wrap d-flex align-items-center">
                                         <div class="sort-by">
                                             <span><i class="fi-rs-apps"></i>Sort by:</span>
                                         </div>
@@ -133,19 +167,17 @@
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
                     <div class="widget-category mb-30">
                         <h5 class="section-title style-1 mb-30">Category</h5>
-                        <ul class="categories">
-                            <form method="GET" action="/shop">
-                                <input type="hidden" name="sort" value="<%= sort %>" />
-                                <input type="hidden" name="minPrice" value="<%= minPrice %>" />
-                                <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
-                                <% categories.forEach(category => { %>
-                                    <li>
-                                        <input type="checkbox" name="categories" value="<%= category %>" <%= selectedCategories.includes(category) ? 'checked' : '' %> onchange="this.form.submit()" />
-                                        <label><%= category %></label>
-                                    </li>
-                                <% }); %>
-                            </form>
-                        </ul>
+                        <form method="GET" action="/shop" class="d-flex flex-wrap">
+                            <input type="hidden" name="sort" value="<%= sort %>" />
+                            <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                            <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                            <% categories.forEach(category => { %>
+                                <div class="form-check mb-2 me-2">
+                                    <input type="checkbox" class="form-check-input" name="categories" value="<%= category %>" <%= selectedCategories.includes(category) ? 'checked' : '' %> onchange="this.form.submit()" />
+                                    <label class="form-check-label"><%= category %></label>
+                                </div>
+                            <% }); %>
+                        </form>
                     </div>
                     <div class="sidebar-widget price_range range mb-30">
                         <div class="widget-header position-relative mb-20">
@@ -180,28 +212,25 @@
                             </form>
                         </div>
                     </div>
-                    <div class="sidebar-widget product-sidebar  mb-30 p-30 bg-grey border-radius-10">
+                    <div class="sidebar-widget product-sidebar mb-30 p-30 bg-grey border-radius-10">
                         <h5 class="section-title style-1 mb-30">Filter by brand</h5>
-                        <ul class="categories">
-                            <form method="GET" action="/shop">
-                                <input type="hidden" name="sort" value="<%= sort %>" />
-                                <input type="hidden" name="minPrice" value="<%= minPrice %>" />
-                                <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
-                                <% brands.forEach(brand => { %>
-                                    <li>
-                                        <input type="checkbox" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> onchange="this.form.submit()" />
-                                        <label><%= brand %></label>
-                                    </li>
-                                <% }); %>
-                            </form>
-                        </ul>
+                        <form method="GET" action="/shop" class="d-flex flex-wrap">
+                            <input type="hidden" name="sort" value="<%= sort %>" />
+                            <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                            <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                            <% brands.forEach(brand => { %>
+                                <div class="form-check mb-2 me-2">
+                                    <input type="checkbox" class="form-check-input" name="brands" value="<%= brand %>" <%= selectedBrands.includes(brand) ? 'checked' : '' %> onchange="this.form.submit()" />
+                                    <label class="form-check-label"><%= brand %></label>
+                                </div>
+                            <% }); %>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 </main>
-
 <!-- Preloader Start -->
 <div id="preloader-active">
     <div class="preloader d-flex align-items-center justify-content-center">
@@ -243,3 +272,8 @@
 <script src="./user_assets/js/shop.js?v=3.4"></script>
 </body>
 </html>
+
+</body>
+</html>
+
+

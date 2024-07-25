@@ -465,6 +465,13 @@ const addToCart = async (req, res) => {
 
         let cart = await Cart.findOne({ userId });
 
+        // Fetch the product price
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        const productPrice = product.price;
+
         if (cart) {
             // Check if product already exists in cart
             const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
@@ -480,13 +487,11 @@ const addToCart = async (req, res) => {
             cart = new Cart({ userId, products: [{ productId, quantity }] });
         }
 
-        // Fetch the product price
-        const product = await Product.findById(productId);
-        const productPrice = product ? product.price : 0;
+        // Recalculate total price by populating product details
+        cart = await cart.populate('products.productId');
 
-        // Recalculate total price
         cart.totalPrice = cart.products.reduce((total, item) => {
-            const itemPrice = item.productId.equals(productId) ? productPrice : item.productId.price;
+            const itemPrice = item.productId.price; // Ensure this is populated
             return total + (itemPrice * item.quantity);
         }, 0);
 
@@ -499,6 +504,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
 
 const removeFromCart = async (req, res) => {
     try {
@@ -531,7 +537,6 @@ const removeFromCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 
 const clearCart = async (req, res) => {

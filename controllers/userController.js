@@ -419,16 +419,13 @@ const login = async (req, res) => {
 // Get Cart
 const getCart = async (req, res) => {
     try {
-        const userId = req.session.user.userId; // Extract userId from session
-        const page = parseInt(req.query.page, 10) || 1; // Get the current page from the query parameters (default to 1)
-        const limit = 5; // Number of items per page
-        const skip = (page - 1) * limit; // Calculate the number of items to skip for pagination
+        const userId = req.session.user.userId;
+        const page = parseInt(req.query.page, 10) || 1; // Current page
+        const limit = 5; // Items per page
+        const skip = (page - 1) * limit; // Items to skip
 
-        // Fetch the cart for the logged-in user and populate product details
         let cart = await Cart.findOne({ userId }).populate('products.productId');
-
         if (!cart) {
-            // If no cart exists, create a new one with empty products and zero totalPrice
             cart = { products: [], totalPrice: 0 };
         }
 
@@ -437,10 +434,8 @@ const getCart = async (req, res) => {
         const totalItems = cart.products.length;
         const totalPages = Math.ceil(totalItems / limit);
 
-        // Ensure totalPrice is a number and format it
         cart.totalPrice = parseFloat(cart.totalPrice.toFixed(2));
 
-        // Render the cart view with the cart object and pagination details
         res.render('cart', {
             cart: {
                 products: paginatedProducts,
@@ -456,6 +451,7 @@ const getCart = async (req, res) => {
     }
 };
 
+
 // Add to Cart
 const addToCart = async (req, res) => {
     try {
@@ -463,31 +459,31 @@ const addToCart = async (req, res) => {
         const productId = req.body.productId;
         const quantity = parseInt(req.body.quantity, 10) || 1; // Ensure quantity is an integer
 
-        let cart = await Cart.findOne({ userId });
-
-        // Fetch the product price
+        // Fetch the product details
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
-        const productPrice = product.price;
+
+        // Retrieve the user's cart
+        let cart = await Cart.findOne({ userId });
 
         if (cart) {
-            // Check if product already exists in cart
+            // Check if the product already exists in the cart
             const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
             if (productIndex > -1) {
-                // Update quantity
+                // Update quantity of existing product
                 cart.products[productIndex].quantity += quantity;
             } else {
                 // Add new product to cart
                 cart.products.push({ productId, quantity });
             }
         } else {
-            // Create new cart for user
+            // Create a new cart for the user if it doesn't exist
             cart = new Cart({ userId, products: [{ productId, quantity }] });
         }
 
-        // Recalculate total price by populating product details
+        // Recalculate the total price by populating product details
         cart = await cart.populate('products.productId');
 
         cart.totalPrice = cart.products.reduce((total, item) => {
@@ -498,12 +494,14 @@ const addToCart = async (req, res) => {
         // Save the updated cart
         await cart.save();
 
+        // Return a success response
         res.status(200).json({ success: true, message: 'Product added to cart successfully' });
     } catch (error) {
         console.error('Error adding to cart:', error.message);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
 
 
 const removeFromCart = async (req, res) => {

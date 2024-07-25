@@ -19,6 +19,14 @@
 <!-- Template CSS -->
 <link rel="stylesheet" href="/user_assets/css/main.css?v=3.4">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">  
+<!-- Include Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+<!-- Include Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
 </head>
 
@@ -619,7 +627,6 @@
                                         <div class="progress">
                                             <span>2 star</span>
                                             <div class="progress-bar" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">65%</div>
-                                       
                                         </div>
                                         <div class="progress mb-30">
                                             <span>1 star</span>
@@ -630,53 +637,93 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Pagination -->
+                        <div class="pagination-area mt-15 mb-15">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-start">
+                                    <li class="page-item">
+                                        <a class="page-link" href="#"><i class="fi-rs-arrow-small-left"></i></a>
+                                    </li>
+                                    <li class="page-item"><a class="page-link" href="#">01</a></li>
+                                    <li class="page-item active"><a class="page-link" href="#">02</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">03</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">04</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">05</a></li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#"><i class="fi-rs-arrow-small-right"></i></a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
     
-    <!-- External JavaScript for image zoom effect -->
-    <script>
-        // Wait for the document to fully load before running the script
-        document.addEventListener("DOMContentLoaded", function () {
-            const mainImage = document.getElementById('main-product-image');
-            const thumbnailImages = document.querySelectorAll('.thumbnail-image');
+    <!-- Modal Structure -->
+    <div class="modal" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">Cart Notification</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- The content will be inserted dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <a href="/cart" class="btn btn-primary">Go to Cart</a>
+                </div>
+            </div>
+        </div>
+    </div>
     
-            // Add event listeners to each thumbnail image
-            thumbnailImages.forEach(function(thumbnail) {
-                thumbnail.addEventListener('mouseover', function() {
-                    const imageUrl = thumbnail.getAttribute('src');
-                    mainImage.setAttribute('src', imageUrl);
-                });
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    
+    <!-- Include Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    
+    <script>
+        document.getElementById('add-to-cart-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting the default way
+            const productId = this.dataset.productId;
+    
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const modalBody = document.querySelector('#cartModal .modal-body');
+                if (data.success) {
+                    modalBody.innerHTML = 'Product added to cart successfully!';
+                } else {
+                    modalBody.innerHTML = 'Failed to add product to cart. Please try again.';
+                }
+                // Show the modal
+                $('#cartModal').modal('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const modalBody = document.querySelector('#cartModal .modal-body');
+                modalBody.innerHTML = 'An error occurred. Please try again.';
+                // Show the modal
+                $('#cartModal').modal('show');
             });
         });
-
-        document.getElementById('add-to-cart-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the form from submitting the default way
-        const productId = this.dataset.productId;
-
-        fetch('/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ productId: productId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Product added to cart successfully!');
-            } else {
-                alert('Failed to add product to cart. Please try again.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        });
-    });
     </script>
+    
     
     <%- include("../layouts/footer.ejs") %>
     

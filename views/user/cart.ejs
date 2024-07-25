@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -80,7 +79,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="mobile-header-active mobile-header-wrapper-style">
         <!-- Mobile header content -->
@@ -103,7 +101,7 @@
                                 </div>
 
                                 <div class="total-products mb-4">
-                                    <p>Total Products in Cart: <span id="total-products"><%= cart.products.length %></span></p>
+                                    <p>Total Products in Cart: <span id="total-products"><%= cart.totalQuantity %></span></p>
                                 </div>
 
                                 <div class="table-responsive">
@@ -135,7 +133,7 @@
                                                             <input type="hidden" name="productIds[]" value="<%= product.productId._id %>">
                                                             <input type="hidden" name="quantities[]" id="input-qty-<%= product.productId._id %>" value="<%= product.quantity %>">
                                                         </td>
-                                                        <td class="product-total" id="item-total-<%= product.productId._id %>" data-price="<%= product.productId.price %>">$<%= (product.productId.price * product.quantity).toFixed(2) %></td>
+                                                        <td class="product-total" id="item-total-<%= product.productId._id %>" data-price="<%= product.productId.price %>">₹<%= (product.productId.price * product.quantity).toFixed(2) %></td>
                                                         <td class="product-remove">
                                                             <form action="/cart/remove" method="post" class="remove-form">
                                                                 <input type="hidden" name="productId" value="<%= product.productId._id %>">
@@ -159,6 +157,21 @@
                                         </div>
                                     </form>
                                 </div>
+
+                                <!-- Pagination -->
+                                <!-- Pagination -->
+<div class="pagination">
+    <% if (cart.currentPage > 1) { %>
+        <a href="?page=<%= cart.currentPage - 1 %>">Previous</a>
+    <% } %>
+    <% for (let i = 1; i <= cart.totalPages; i++) { %>
+        <a href="?page=<%= i %>" class="<%= i === cart.currentPage ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+    <% if (cart.currentPage < cart.totalPages) { %>
+        <a href="?page=<%= cart.currentPage + 1 %>">Next</a>
+    <% } %>
+</div>
+
                             </div>
                         </div>
                     </div>
@@ -186,6 +199,7 @@
 
                 <script src="user_assets/js/main.js?v=3.4"></script>
                 <script>
+                    // Your existing script
                     document.querySelectorAll('.qty-up, .qty-down').forEach(btn => {
                         btn.addEventListener('click', function (e) {
                             e.preventDefault();
@@ -204,13 +218,13 @@
 
                             qtyElem.textContent = qty;
                             inputQtyElem.value = qty; // Update the hidden input value
-                            itemTotalElem.textContent = `$${(price * qty).toFixed(2)}`;
+                            itemTotalElem.textContent = `₹${(price * qty).toFixed(2)}`;
 
                             // Update cart total and grand total
                             const cartSubtotal = [...document.querySelectorAll('.product-total')]
-                                .reduce((acc, el) => acc + parseFloat(el.textContent.replace('$', '')), 0);
-                            document.querySelector('#cart-subtotal').textContent = `$${cartSubtotal.toFixed(2)}`;
-                            document.querySelector('#cart-grand-total').textContent = `$${cartSubtotal.toFixed(2)}`;
+                                .reduce((acc, el) => acc + parseFloat(el.textContent.replace('₹', '')), 0);
+                            document.querySelector('#cart-subtotal').textContent = `₹${cartSubtotal.toFixed(2)}`;
+                            document.querySelector('#cart-grand-total').textContent = `₹${cartSubtotal.toFixed(2)}`;
 
                             // Update total products in cart
                             const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
@@ -238,9 +252,9 @@
                                 row.remove(); // Remove the product row from the table
 
                                 const cartSubtotal = [...document.querySelectorAll('.product-total')]
-                                    .reduce((acc, el) => acc + parseFloat(el.textContent.replace('$', '')), 0);
-                                document.querySelector('#cart-subtotal').textContent = `$${cartSubtotal.toFixed(2)}`;
-                                document.querySelector('#cart-grand-total').textContent = `$${cartSubtotal.toFixed(2)}`;
+                                    .reduce((acc, el) => acc + parseFloat(el.textContent.replace('₹', '')), 0);
+                                document.querySelector('#cart-subtotal').textContent = `₹${cartSubtotal.toFixed(2)}`;
+                                document.querySelector('#cart-grand-total').textContent = `₹${cartSubtotal.toFixed(2)}`;
 
                                 const totalQuantity = [...document.querySelectorAll('.product-quantity span')]
                                     .reduce((acc, el) => acc + parseInt(el.textContent), 0);
@@ -281,6 +295,4 @@
         </main>
     </div>
 </body>
-
-
 </html>

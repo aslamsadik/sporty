@@ -94,7 +94,7 @@ const searchProducts = async (query) => {
     }
 };
 
-search = async (req, res) => {
+const search = async (req, res) => {
     try {
         // Get the search query and category from the request
         const { search, category } = req.query;
@@ -844,7 +844,9 @@ const deleteAddress = async (req, res) => {
 
 const getOrderListing = async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.session.user?.userId}).populate('products.productId');
+        const orders = await Order.find({ userId: req.session.user?.userId })
+            .sort({ createdAt: -1 }) // Sort orders by createdAt in descending order
+            .populate('products.productId');
 
         const ordersWithProductDetails = orders.map(order => {
             order.products = order.products.map(product => ({

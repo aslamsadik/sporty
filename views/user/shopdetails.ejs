@@ -460,16 +460,6 @@
     
    
     <main class="main">
-        <!-- <div class="page-header breadcrumb-wrap">
-            <div class="container">
-                <div class="breadcrumb">
-                    <a href="/" rel="nofollow">Home</a>
-                </div>
-                <div class="breadcrumb" style="margin-left: 50px;">
-                    <a href="/shop" rel="nofollow">shop</a>
-                </div>
-            </div>
-        </div> -->
         <section class="mt-50 mb-50">
             <div class="container">
                 <div class="row">
@@ -530,11 +520,6 @@
                                         </div>
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <div class="detail-extralink">
-                                            <!-- <div class="detail-qty border radius">
-                                                <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                                <span class="qty-val">1</span>
-                                                <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                            </div> -->
                                             <div class="product-extra-link2">
                                                 <form id="add-to-cart-form" data-product-id="<%= product._id %>">
                                                     <input type="hidden" name="productId" value="<%= product._id %>">
@@ -542,11 +527,6 @@
                                                 </form>
                                             </div>
                                         </div>
-                                        <!-- <ul class="product-meta font-xs color-grey mt-50">
-                                            <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
-                                            <li class="mb-5">Tags: <a href="#" rel="tag">Cloth</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
-                                            <li>Availability:<span class="in-stock text-success ml-5">8 Items In Stock</span></li>
-                                        </ul> -->
                                     </div>
                                 </div>
                             </div>
@@ -661,6 +641,8 @@
         </section>
     </main>
     
+    
+    
     <!-- Modal Structure -->
     <div class="modal" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -722,6 +704,19 @@
                 $('#cartModal').modal('show');
             });
         });
+         // Select the main image element
+         const mainProductImage = document.getElementById('main-product-image');
+    
+    // Select all thumbnail images
+    const thumbnailImages = document.querySelectorAll('.thumbnail-image');
+
+    // Add hover event listeners to each thumbnail image
+    thumbnailImages.forEach(thumbnail => {
+        thumbnail.addEventListener('mouseenter', function() {
+            // On hover, change the src of the main image to the src of the hovered thumbnail
+            mainProductImage.src = this.src;
+        });
+    });
     </script>
     
     

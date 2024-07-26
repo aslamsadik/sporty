@@ -37,11 +37,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .order-card h2 {
-            margin-top: 0;
-            color: #007bff;
-        }
-
         .product {
             display: flex;
             align-items: center;
@@ -109,14 +104,15 @@
                 <div class="order-card">
                     <% order.products.forEach(product => { %>
                         <div class="product">
-                            <% if (product.images && product.images.length > 0) { %>
-                                <img src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="<%= product.name %>">
+                            <!-- <% if (product.images && product.images.length > 0) { %> -->
+                                <!-- <img src="/user_assets/imgs/shop/<%= product.images[0] %>" alt="<%= product.name %>"> -->
                             <% } else { %>
                                 <img src="/user_assets/imgs/shop/default.jpg" alt="Default Image">
                             <% } %>
                             <div class="product-info">
                                 <p><strong><%= product.name %></strong></p>
                                 <p>Price: $<%= product.price %></p>
+                                <p>Quantity: <%= product.quantity %></p>
                             </div>
                         </div>
                     <% }) %>

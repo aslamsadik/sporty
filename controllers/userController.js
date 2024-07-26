@@ -845,8 +845,8 @@ const deleteAddress = async (req, res) => {
 const getOrderListing = async (req, res) => {
     try {
         const orders = await Order.find({ userId: req.session.user?.userId })
-            .sort({ createdAt: -1 }) // Sort orders by createdAt in descending order
-            .populate('products.productId');
+            .populate('products.productId')
+            .sort({ createdAt: -1 });
 
         const ordersWithProductDetails = orders.map(order => {
             order.products = order.products.map(product => ({
@@ -858,12 +858,16 @@ const getOrderListing = async (req, res) => {
             return order;
         });
 
+        // Debugging output to check if images are correctly populated
+        console.log(ordersWithProductDetails);
+
         res.render('orderListing', { orders: ordersWithProductDetails });
     } catch (error) {
         console.error('Error fetching orders:', error);
         res.status(500).send('Server Error');
     }
 };
+
 
 const updateProfile = async (req, res) => {
     const { name, mobile, password } = req.body;
@@ -923,17 +927,16 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
-// Forgot Password function
 const getforgotPassword = async (req, res) => {
     try {
-        res.render("forgotPassword")
+        res.render("forgotPassword");
     } catch (error) {
         console.error('Error fetching forgotPassword page:', error.message);
         res.status(500).send('Internal Server Error');
     }
-  };
+};
 
-  const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         console.log('Forgot password request received for email:', email);
@@ -950,11 +953,17 @@ const getforgotPassword = async (req, res) => {
         const hashedOtp = await bcrypt.hash(otpCode, 10);
 
         // Save OTP to the database
-        await Otp.findOneAndUpdate(
+        const otpRecord = await Otp.findOneAndUpdate(
             { email },
             { otp: hashedOtp, createdAt: new Date() },
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
+
+        // Log OTP save result
+        if (!otpRecord) {
+            console.error('Failed to save OTP to the database');
+            return res.status(500).json({ message: 'Failed to save OTP', messageType: 'error' });
+        }
 
         // Send OTP via email
         const transporter = nodemailer.createTransport({
@@ -986,26 +995,19 @@ const getforgotPassword = async (req, res) => {
     }
 };
 
+
 const resetPassword = async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
         console.log('Reset password request received:', req.body);
 
-        // Input validation
         if (!email || !otp || !newPassword) {
             console.log('All fields are required');
             return res.status(400).json({ message: 'All fields are required', messageType: 'error' });
         }
 
         const otpRecord = await Otp.findOne({ email });
-
         if (!otpRecord) {
-            console.log('Invalid or expired OTP');
-            return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
-        }
-
-        const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otp);
-        if (!isMatch) {
             console.log('Invalid or expired OTP');
             return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
         }
@@ -1014,16 +1016,23 @@ const resetPassword = async (req, res) => {
         const now = new Date();
         const otpAge = (now - otpRecord.createdAt) / 1000; // Age in seconds
         if (otpAge > 300) { // 5 minutes TTL
-            console.log('Invalid or expired OTP');
+            await Otp.deleteOne({ email }); // Delete expired OTP
+            console.log('Expired OTP');
+            return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
+        }
+
+        const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otp);
+        if (!isMatch) {
+            console.log('Invalid OTP');
             return res.status(400).json({ message: 'Invalid or expired OTP', messageType: 'error' });
         }
 
         // Hash the new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        // Update user's password
+        // Update user's password and delete OTP
         await User.findOneAndUpdate({ email }, { password: hashedPassword });
-        Otp.deleteOne({ email });
+        await Otp.deleteOne({ email }); // Delete OTP after successful reset
 
         console.log('Password has been reset successfully for email:', email);
         res.status(200).json({ message: 'Password has been reset successfully', messageType: 'success' });
@@ -1032,6 +1041,7 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error', messageType: 'error' });
     }
 };
+
 
 module.exports = {
     signUpPage,

@@ -129,6 +129,34 @@
             color: red;
             margin-top: 5px;
         }
+
+        .address-card, .order-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .address-card h5, .order-card h5 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .address-card p, .order-card p {
+            color: #666;
+        }
+
+        .address-card .btn, .order-card .btn {
+            background-color: black;
+            color: white;
+            border-radius: 5px;
+            padding: 10px 20px;
+        }
+
+        .address-card .btn:hover, .order-card .btn:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -155,12 +183,12 @@
                                     </div>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="orders-tab" href="/orders" role="tab" aria-controls="orders" aria-selected="false">
+                                    <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false">
                                         <i class="bi bi-box2-fill" style="font-size: 1rem;"></i> Orders
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="address-tab" href="/profile/add-addressPage" role="tab" aria-controls="address" aria-selected="true">
+                                    <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#manageAddress" role="tab" aria-controls="address" aria-selected="true">
                                         <i class="bi bi-houses" style="font-size: 1rem;"></i> Manage Address
                                     </a>
                                 </li>
@@ -202,24 +230,31 @@
                                 </div>
                             </div>
 
-                            <div class="tab-pane fade" id="manageAddress" role="tabpanel" aria-labelledby="address-tab">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5>Manage Address</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="card mt-2 mb-3 black-border">
-                                                <div class="card-body">
-                                                    <p>Address details go here.</p>
-                                                    <a href="/addAddress" class="btn btn-sm btn-fill-out">Add New Address</a>
-                                                    <button class="btn btn-sm btn-fill-out" onclick="deleteAddress('')">Delete</button>
-                                                </div>
-                                            </div>
+                            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                                <div class="order-card">
+                                    <h5>Order List</h5>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <p>Order details go here.</p>
+                                            <a href="/orders" class="btn btn-sm btn-fill-out">View Order Details</a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="tab-pane fade" id="manageAddress" role="tabpanel" aria-labelledby="address-tab">
+                                <div class="address-card">
+                                    <h5>Manage Address</h5>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <p>Address details go here.</p>
+                                            <a href="/profile/add-addressPage" class="btn btn-sm btn-fill-out">Add New Address</a>
+                                            <!-- <button class="btn btn-sm btn-fill-out" onclick="deleteAddress('')">Delete</button> -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
 
                             <div class="tab-pane fade" id="accountdetails" role="tabpanel" aria-labelledby="account-detail-tab">
                                 <div class="card">

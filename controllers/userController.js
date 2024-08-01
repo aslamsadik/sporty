@@ -462,7 +462,6 @@ const getCart = async (req, res) => {
 };
 
 
-// Add to Cart
 const addToCart = async (req, res) => {
     try {
         const userId = req.session.user.userId;
@@ -473,6 +472,10 @@ const addToCart = async (req, res) => {
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        if (product.stock < quantity) {
+            return res.status(400).json({ success: false, message: 'Not enough stock available' });
         }
 
         // Retrieve the user's cart
@@ -504,6 +507,10 @@ const addToCart = async (req, res) => {
         // Save the updated cart
         await cart.save();
 
+        // Update product stock
+        product.stock -= quantity;
+        await product.save();
+
         // Return a success response
         res.status(200).json({ success: true, message: 'Product added to cart successfully' });
     } catch (error) {
@@ -511,6 +518,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
 
 
 
@@ -664,6 +672,36 @@ const placeOrder = async (req, res) => {
             return res.status(400).json({ message: 'Shipping address not found' });
         }
 
+        let isOutOfStock = false;
+        const updatedProducts = [];
+
+        // Check stock for each product in the cart
+        for (const item of cart.products) {
+            const product = await Product.findById(item.productId._id);
+
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            if (product.stock < item.quantity) {
+                isOutOfStock = true;
+                break;
+            }
+
+            // Reduce the stock for the product
+            product.stock -= item.quantity;
+            await product.save();
+
+            updatedProducts.push({
+                productId: product._id,
+                quantity: item.quantity
+            });
+        }
+
+        if (isOutOfStock) {
+            return res.status(400).json({ message: 'One or more products are out of stock' });
+        }
+
         const totalPrice = cart.products.reduce((total, item) => {
             const product = item.productId;
             return total + (product.price * item.quantity);
@@ -671,10 +709,7 @@ const placeOrder = async (req, res) => {
 
         const order = new Order({
             userId,
-            products: cart.products.map(item => ({
-                productId: item.productId._id,
-                quantity: item.quantity
-            })),
+            products: updatedProducts,
             shippingAddressId,
             totalPrice,
             paymentMethod,
@@ -693,6 +728,7 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ message: `Error placing order: ${error.message}` });
     }
 };
+
 
 const getOrderConfirmpage = async (req, res) => {
     try {

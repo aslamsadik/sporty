@@ -248,7 +248,29 @@
       </form>
     </div>
 
+      <!-- Modal Structure -->
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content bg-danger text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Error message will be inserted here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script>
       $(document).ready(function () {
         // Highlight the selected address
@@ -256,7 +278,7 @@
           $(".address-card").removeClass("active");
           $(this).closest(".address-card").addClass("active");
         });
-
+    
         // AJAX form submission for placing order
         $("#placeOrderForm").on("submit", function (e) {
           e.preventDefault();
@@ -271,9 +293,16 @@
               // Redirect to order confirmation page with order ID
               window.location.href = "/orderConfirm/" + response.orderId;
             },
-            error: function (error) {
-              // Handle error response
-              alert("Error placing order. Please try again.");
+            error: function (xhr) {
+              // Extract error message
+              var errorMessage = "Error placing order. Please try again.";
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+              }
+    
+              // Show error message in modal
+              $("#modalBody").text(errorMessage);
+              $("#errorModal").modal('show');
             },
           });
         });

@@ -204,40 +204,31 @@ const Admin_editProductPage = async (req, res) => {
 
 const Admin_editProduct = async (req, res) => {
     try {
-        const { name, description, price, brand, category } = req.body;
+        const { name, description, price, brand, category, stock } = req.body;
         const productId = req.params.id;
         const images = req.files ? req.files.map(file => file.filename) : [];
 
-        // Find the product to update
+        // Find the product to be updated
         const product = await Product.findById(productId);
         if (!product) {
             return res.redirect('/admin/productList?message=Product not found&messageType=error');
         }
 
-        // Check if a product with the same name already exists, excluding the current product
-        const existingProduct = await Product.findOne({ name, _id: { $ne: productId } });
-        if (existingProduct) {
-            return res.redirect(`admin/editProduct/${productId}?message=Product with the same name already exists.&messageType=error`);
-        }
-
-        // Check if the category exists
-        const validCategory = await Category.findOne({ name: category });
-        if (!validCategory) {
-            return res.redirect(`admin/editProduct/${productId}?message=Category does not exist.&messageType=error`);
-        }
-
-        // Update the product details
+        // Update product details
         product.name = name;
         product.description = description;
         product.price = price;
         product.brand = brand;
         product.category = category;
+        product.stock = stock; // Update stock
+
         if (images.length > 0) {
-            product.images = images;
+            product.images = images.slice(0, 3); // Only update images if new ones are uploaded
         }
 
         await product.save();
-        res.redirect('/admin/productList?message=Product updated successfully.&messageType=success');
+
+        res.redirect('/admin/productList');
     } catch (error) {
         console.error(error.message);
         res.redirect(`/admin/editProduct/${req.params.id}?message=Internal Server Error&messageType=error`);

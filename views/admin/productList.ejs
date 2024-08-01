@@ -65,8 +65,12 @@
                     <div class="col-lg-2 col-sm-2 col-4 col-status">
                         <span class="badge rounded-pill alert-success">Active</span>
                     </div>
-                    <div class="col-lg-1 col-sm-2 col-4 col-date">
-                        <span>02.11.2022</span>
+                    <div class="col-lg-1 col-sm-2 col-4 col-stock">
+                        <% if (product.stock < 1) { %>
+                        <span class="text-danger">Out of Stock</span>
+                        <% } else { %>
+                        <span><%= product.stock %> in Stock</span>
+                        <% } %>
                     </div>
                     <div class="col-lg-2 col-sm-2 col-4 col-action text-end">
                         <a href="/admin/editProduct/<%= product._id %>" class="btn btn-sm font-sm rounded btn-brand">
@@ -108,6 +112,7 @@
         </nav>
     </div>
 </section>
+
 
 
        

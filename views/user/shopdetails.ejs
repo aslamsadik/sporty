@@ -518,12 +518,24 @@
                                                 <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                             </ul>
                                         </div>
+                                        
+                                        <!-- Out of Stock Message -->
+                                        <% if (product.stock === 0) { %>
+                                            <div class="alert alert-danger" role="alert">
+                                                This product is currently out of stock.
+                                            </div>
+                                        <% } %>
+    
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <div class="detail-extralink">
                                             <div class="product-extra-link2">
                                                 <form id="add-to-cart-form" data-product-id="<%= product._id %>">
                                                     <input type="hidden" name="productId" value="<%= product._id %>">
-                                                    <button type="submit" class="button button-add-to-cart">Add to cart</button>
+                                                    <% if (product.stock > 0) { %>
+                                                        <button type="submit" class="button button-add-to-cart">Add to cart</button>
+                                                    <% } else { %>
+                                                        <button type="button" class="button button-add-to-cart" disabled>Out of Stock</button>
+                                                    <% } %>
                                                 </form>
                                             </div>
                                         </div>
@@ -622,8 +634,6 @@
             </div>
         </section>
     </main>
-    
-    
     
     <!-- Modal Structure -->
     <div class="modal" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">

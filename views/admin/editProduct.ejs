@@ -5,6 +5,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Edit Product</title>
+    <script>
+        function validateForm(event) {
+            const imageInputs = document.querySelector('input[type="file"][name="images"]');
+            if (imageInputs.files.length > 3) {
+                event.preventDefault();
+                alert('You can upload a maximum of 3 images per product.');
+            }
+        }
+    </script>
     <style>
         body {
             font-family: 'Nunito', sans-serif;
@@ -67,6 +76,7 @@
             margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            width: 100px; /* Set width for better consistency */
         }
         .error-message {
             color: red;
@@ -83,8 +93,12 @@
 </head>
 <body>
 <section class="content-main">
-    <div class="content-header">
-        <h2 class="content-title">Edit Product</h2>
+    <div class="row">
+        <div class="col-6">
+            <div class="content-header">
+                <h2 class="content-title">Edit Product</h2>
+            </div>
+        </div>
     </div>
     <% if (message) { %>
         <div class="<%= messageType === 'error' ? 'error-message' : '' %>">
@@ -92,69 +106,95 @@
         </div>
     <% } %>
     <form action="/admin/editProduct/<%= product._id %>" method="POST" enctype="multipart/form-data" onsubmit="validateForm(event)">
-        <div class="card">
-            <div class="card-body">
-                <h6>1. General info</h6>
-                <div>
-                    <label class="form-label">Product title</label>
-                    <input type="text" placeholder="Type here" class="form-control" name="name" value="<%= product.name %>" required>
-                </div>
-                <div>
-                    <label class="form-label">Description</label>
-                    <textarea placeholder="Type here" class="form-control" rows="4" name="description" required><%= product.description %></textarea>
-                </div>
-                <div>
-                    <label class="form-label">Brand name</label>
-                    <select class="form-select" name="brand" required>
-                        <option value="Adidas" <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
-                        <option value="Nike" <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
-                        <option value="Puma" <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label">Select Category</label>
-                    <select class="form-select" name="category" required>
-                        <option value="" disabled>Select a category</option>
-                        <% categories.forEach(cat => { %>
-                            <option value="<%= cat.name %>" <%= product.category === cat.name ? 'selected' : '' %>><%= cat.name %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <hr class="mb-4 mt-0">
-                <h6>2. Pricing</h6>
-                <div>
-                    <label class="form-label">Cost in USD</label>
-                    <input type="text" placeholder="$00.0" class="form-control" name="price" value="<%= product.price %>" required>
-                </div>
-                <hr class="mb-4 mt-0">
-                <h6>3. Media</h6>
-                <div>
-                    <label class="form-label">Images</label>
-                    <input class="form-control" type="file" name="images" multiple>
-                    <% if (product.images && product.images.length > 0) { %>
-                        <div class="image-container">
-                            <% product.images.forEach(image => { %>
-                                <img src="/user_assets/imgs/shop/<%= image %>" alt="Product Image" width="100">
-                            <% }) %>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>1. General info</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Product title</label>
+                                    <input type="text" placeholder="Type here" class="form-control" name="name" value="<%= product.name %>" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Description</label>
+                                    <textarea placeholder="Type here" class="form-control" rows="4" name="description" required><%= product.description %></textarea>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Brand name</label>
+                                    <select class="form-select" name="brand">
+                                        <option value="Adidas" <%= product.brand === 'Adidas' ? 'selected' : '' %>>Adidas</option>
+                                        <option value="Nike" <%= product.brand === 'Nike' ? 'selected' : '' %>>Nike</option>
+                                        <option value="Puma" <%= product.brand === 'Puma' ? 'selected' : '' %>>Puma</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    <% } %>
-                </div>
-                <div>
-                    <button class="btn" type="submit">Update</button>
+                        <hr class="mb-4 mt-0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>2. Pricing</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Cost in USD</label>
+                                    <input type="text" placeholder="$00.0" class="form-control" name="price" value="<%= product.price %>" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Stock</label>
+                                    <input type="number" min="0" placeholder="Enter stock quantity" class="form-control" name="stock" value="<%= product.stock %>" required>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="mb-4 mt-0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>3. Category</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Select Category</label>
+                                    <select class="form-select" name="category" required>
+                                        <option value="" disabled>Select a category</option>
+                                        <% categories.forEach(category => { %>
+                                            <option value="<%= category.name %>" <%= category.name === product.category ? 'selected' : '' %>><%= category.name %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="mb-4 mt-0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>4. Media</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-4">
+                                    <label class="form-label">Images</label>
+                                    <input class="form-control" type="file" name="images" multiple>
+                                    <% if (product.images && product.images.length > 0) { %>
+                                        <p>Current Images:</p>
+                                        <div class="image-container">
+                                            <% product.images.forEach(image => { %>
+                                                <img src="/user_assets/imgs/shop/<%= image %>" alt="Product Image" width="100">
+                                            <% }) %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <div>
+                                    <button class="btn btn-md rounded font-sm hover-up" type="submit">Update Product</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </form>
 </section>
-<script>
-    function validateForm(event) {
-        const imageInputs = document.querySelector('input[type="file"][name="images"]');
-        if (imageInputs.files.length > 3) {
-            event.preventDefault();
-            alert('You can upload a maximum of 3 images per product.');
-        }
-    }
-</script>
 </body>
 </html>
 

@@ -124,10 +124,9 @@ const Admin_addProductPage = async (req, res) => {
     }
 };
 
-
 const Admin_addProduct = async (req, res) => {
     try {
-        const { name, description, price, brand, category } = req.body;
+        const { name, description, price, brand, category, stock } = req.body;
         const images = req.files.map(file => file.filename);
 
         // Check if a product with the same name already exists
@@ -161,7 +160,7 @@ const Admin_addProduct = async (req, res) => {
             });
         }
 
-        const newProduct = new Product({ name, description, price, brand, category, images });
+        const newProduct = new Product({ name, description, price, brand, category, stock, images });
         await newProduct.save();
 
         res.redirect('/admin/productList');

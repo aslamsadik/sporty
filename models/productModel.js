@@ -24,7 +24,12 @@ const productSchema = new mongoose.Schema({
     images: {
         type: [String],
         validate: [arrayLimit, '{PATH} exceeds the limit of 3'],
-    }
+    },
+    stock: { 
+        type: Number, 
+        required: true, 
+        default: 0 
+    } 
 });
 
 function arrayLimit(val) {

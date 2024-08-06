@@ -352,57 +352,78 @@ const deleteCategory = async (req, res) => {
 
 const getOrderManagementPage = async (req, res) => {
     try {
-      const orders = await Order.find().populate({
-        path: 'userId',
-        select: 'username addresses',
-      }).exec();
-  
-      // Log the orders to verify data
-      console.log(JSON.stringify(orders, null, 2));
-  
-      res.render('orderManagement', { orders });
+        const orders = await Order.find()
+            .populate('userId', 'username') // Populate the user's username
+            .populate('products.productId')
+            .populate('shippingAddressId')
+            .sort({ createdAt: -1 });
+
+        const ordersWithDetails = orders.map(order => ({
+            ...order.toObject(),
+            shippingAddress: order.shippingAddressId ? `${order.shippingAddressId.street}, ${order.shippingAddressId.city}` : 'N/A'
+        }));
+
+        res.render('orderManagement', { orders: ordersWithDetails });
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      res.status(500).send('Error fetching orders');
+        console.error('Error fetching orders:', error);
+        res.status(500).send('Server Error');
     }
-  };
+};
+
 
   // Delete order function
-const deleteOrder = async (req, res) => {
+  const deleteOrder = async (req, res) => {
     try {
-      const orderId = req.body.orderId;
-      await Order.findByIdAndDelete(orderId);
-      res.status(200).json({ message: 'Order deleted successfully' });
+        const { orderId } = req.body;
+
+        await Order.findByIdAndDelete(orderId);
+
+        res.json({ message: 'Order deleted successfully' });
     } catch (error) {
-      console.error('Error deleting order:', error);
-      res.status(500).json({ message: 'Error deleting order' });
+        console.error('Error deleting order:', error);
+        res.status(500).json({ message: 'Failed to delete order' });
     }
-  };
+};
+
   
   // Update order status function
   const updateOrderStatus = async (req, res) => {
     try {
-      const { orderId, status } = req.body;
-      await Order.findByIdAndUpdate(orderId, { status });
-      res.status(200).json({ message: 'Order status updated successfully' });
+        const { orderId, status } = req.body;
+
+        await Order.findByIdAndUpdate(orderId, { status });
+
+        res.json({ message: 'Order status updated successfully' });
     } catch (error) {
-      console.error('Error updating order status:', error);
-      res.status(500).json({ message: 'Error updating order status' });
+        console.error('Error updating order status:', error);
+        res.status(500).json({ message: 'Failed to update order status' });
     }
-  };
+};
+
   
   // View order details function
-  const viewOrderDetails = async (req, res) => {
+const viewOrderDetails = async (req, res) => {
     try {
       const orderId = req.params.orderId;
-      const order = await Order.findById(orderId).populate('userId');
-      res.status(200).json(order);
+      const order = await Order.findById(orderId)
+        .populate('userId', 'username')
+        .populate('products.productId')
+        .populate('shippingAddressId');
+        
+      const orderDetails = {
+        ...order.toObject(),
+        shippingAddress: order.shippingAddressId ? `${order.shippingAddressId.street}, ${order.shippingAddressId.city}` : 'N/A'
+      };
+  
+      res.status(200).json(orderDetails);
     } catch (error) {
       console.error('Error fetching order details:', error);
       res.status(500).json({ message: 'Error fetching order details' });
     }
   };
   
+
+
 
 module.exports = {
     Admin_login,

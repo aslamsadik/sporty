@@ -880,29 +880,40 @@ const deleteAddress = async (req, res) => {
 
 const getOrderListing = async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.session.user?.userId })
+        // Ensure the user is logged in and has a session
+        if (!req.session.user || !req.session.user.userId) {
+            return res.status(401).send('Unauthorized');
+        }
+
+        // Fetch orders for the logged-in user and sort them by creation date in descending order
+        const orders = await Order.find({ userId: req.session.user.userId })
             .populate('products.productId')
             .sort({ createdAt: -1 });
 
+        // Map the order products to include detailed product information
         const ordersWithProductDetails = orders.map(order => {
-            order.products = order.products.map(product => ({
-                name: product.productId.name,
-                images: product.productId.images,
-                price: product.productId.price,
-                quantity: product.quantity
-            }));
-            return order;
+            return {
+                ...order.toObject(),
+                products: order.products.map(product => ({
+                    name: product.productId.name,
+                    images: product.productId.images,
+                    price: product.productId.price,
+                    quantity: product.quantity
+                }))
+            };
         });
 
         // Debugging output to check if images are correctly populated
-        console.log(ordersWithProductDetails);
+        console.log('Orders with product details:', ordersWithProductDetails);
 
+        // Render the order listing page with populated orders
         res.render('orderListing', { orders: ordersWithProductDetails });
     } catch (error) {
         console.error('Error fetching orders:', error);
         res.status(500).send('Server Error');
     }
 };
+
 
 
 const updateProfile = async (req, res) => {
@@ -947,10 +958,11 @@ const updateProfile = async (req, res) => {
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
+        
+        // Fetch order details, including product and shipping address information
         const order = await Order.findById(orderId)
             .populate('products.productId')
-            .populate('shippingAddressId') // Ensure this matches the field in your schema
-            .exec();
+            .populate('shippingAddressId');
 
         if (!order) {
             return res.status(404).send('Order not found');
@@ -958,10 +970,11 @@ const getOrderDetails = async (req, res) => {
 
         res.render('orderDetailspage', { order });
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching order details:', error);
         res.status(500).send('Server Error');
     }
 };
+
 
 const getforgotPassword = async (req, res) => {
     try {

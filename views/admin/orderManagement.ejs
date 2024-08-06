@@ -7,6 +7,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Management</title>
+  <!-- Bootstrap CSS -->
+
+<!-- Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
   <style>
     .table-container {
       margin: 20px 0;
@@ -48,9 +55,9 @@
             <td><%= order._id %></td>
             <td>
               <% if(order.userId) { %>
-                <%= order.userId.username %>
+              <%= order.userId.username %>
               <% } else { %>
-                N/A
+              N/A
               <% } %>
             </td>
             <td class="address-column">
@@ -59,13 +66,13 @@
                                 ? order.userId.addresses.find(address => address._id.equals(order.shippingAddressId))
                                 : null;
                 if (address) { %>
-                <%= address.firstName %> <%= address.lastName %>, 
-                <%= address.address1 %>, 
-                <%= address.city %>, 
-                <%= address.state %> 
-                <%= address.zip %>
+              <%= address.firstName %> <%= address.lastName %>,
+              <%= address.address1 %>,
+              <%= address.city %>,
+              <%= address.state %>
+              <%= address.zip %>
               <% } else { %>
-                N/A
+              N/A
               <% } %>
             </td>
             <td>$<%= order.totalPrice %></td>
@@ -74,84 +81,104 @@
                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
               </select>
             </td>
             <td>
-              <button class="btn btn-primary btn-sm" onclick="viewOrderDetails('<%= order._id %>')">View</button>
+              <button class="btn btn-info btn-sm" onclick="viewOrderDetails('<%= order._id %>')">View</button>
               <button class="btn btn-danger btn-sm" onclick="deleteOrder('<%= order._id %>')">Delete</button>
             </td>
           </tr>
-          <% }); %>
+          <% }) %>
         </tbody>
       </table>
     </div>
-    <div class="order-details" id="orderDetails" style="display: none;">
-      <!-- Order details will be loaded here -->
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="orderDetails">
+          <!-- Order details will be inserted here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    function updateOrderStatus(orderId, status) {
+    function updateOrderStatus(orderId, newStatus) {
       fetch(`/admin/update-order-status`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ orderId, status }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message === 'Order status updated successfully') {
-          alert('Order status updated successfully');
-        } else {
-          console.error('Error updating order status');
-        }
-      })
-      .catch(error => console.error('Error:', error));
+        body: JSON.stringify({ orderId, status: newStatus })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            alert('Order status updated successfully');
+          } else {
+            alert('Failed to update order status');
+          }
+        });
+    }
+
+    function deleteOrder(orderId) {
+      if (confirm("Are you sure you want to delete this order?")) {
+        fetch(`/admin/delete-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ orderId })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.message) {
+              alert('Order deleted successfully');
+              window.location.reload();
+            } else {
+              alert('Failed to delete order');
+            }
+          });
+      }
     }
 
     function viewOrderDetails(orderId) {
       fetch(`/admin/view-order-details/${orderId}`)
-      .then(response => response.json())
-      .then(data => {
-        const orderDetails = document.getElementById('orderDetails');
-        orderDetails.innerHTML = `
-          <h2>Order ID: ${data._id}</h2>
-          <p>User: ${data.userId ? data.userId.username : 'N/A'}</p>
-          <p>Shipping Address: ${data.shippingAddress}</p>
-          <p>Total Price: $${data.totalPrice}</p>
-          <p>Status: ${data.status}</p>
-          <h3>Products:</h3>
-          <ul>
-            ${data.products.map(product => `<li>${product.name} - Quantity: ${product.quantity}</li>`).join('')}
-          </ul>
-        `;
-        orderDetails.style.display = 'block';
-      })
-      .catch(error => console.error('Error:', error));
-    }
-
-    function deleteOrder(orderId) {
-      fetch(`/admin/delete-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orderId }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message === 'Order deleted successfully') {
-          location.reload(); // Reload the page to reflect the deletion
-        } else {
-          console.error('Error deleting order');
-        }
-      })
-      .catch(error => console.error('Error:', error));
+        .then(response => response.json())
+        .then(data => {
+          const orderDetails = document.getElementById('orderDetails');
+          orderDetails.innerHTML = `
+            <h2>Order ID: ${data._id}</h2>
+            <p>User: ${data.userId ? data.userId.username : 'N/A'}</p>
+            <p>Shipping Address: ${data.shippingAddress ? data.shippingAddress : 'N/A'}</p>
+            <p>Total Price: $${data.totalPrice}</p>
+            <p>Status: ${data.status}</p>
+            <h3>Products:</h3>
+            <ul>
+              ${data.products.map(product => `<li>${product.productId.name} - Quantity: ${product.quantity}</li>`).join('')}
+            </ul>
+          `;
+          // Show the modal
+          $('#orderDetailsModal').modal('show');
+        })
+        .catch(error => console.error('Error:', error));
     }
   </script>
 </body>
+
 
 </html>
 

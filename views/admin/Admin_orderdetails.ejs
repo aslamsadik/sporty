@@ -1,0 +1,27 @@
+<!-- orderDetails.ejs -->
+<body>
+    <div class="container">
+        <h1>Order Details</h1>
+        <p><strong>Order ID:</strong> <%= order._id %></p>
+        <p><strong>User:</strong> <%= order.userId.username %></p>
+        <p><strong>Total Price:</strong> $<%= order.totalPrice %></p>
+        <p><strong>Status:</strong> <%= order.status %></p>
+        <h3>Products:</h3>
+        <ul>
+            <% order.products.forEach(product => { %>
+                <li>
+                    <strong><%= product.productId.name %></strong>
+                    - Quantity: <%= product.quantity %> 
+                    - Price: $<%= product.productId.price %>
+                </li>
+            <% }) %>
+        </ul>
+        <h3>Shipping Address:</h3>
+        <p>
+            <%= order.shippingAddressId.street %>, 
+            <%= order.shippingAddressId.city %>, 
+            <%= order.shippingAddressId.state %> 
+            <%= order.shippingAddressId.zip %>
+        </p>
+    </div>
+</body>

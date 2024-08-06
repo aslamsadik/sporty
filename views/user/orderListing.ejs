@@ -122,7 +122,9 @@
                         <p>Order Date: <strong><%= new Date(order.createdAt).toLocaleDateString() %></strong></p>
                     </div>
                     <a href="/orderDetails/<%= order._id %>" class="view-button">View Order</a>
-                    <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                    <% if (order.status === 'Pending') { %>
+                        <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                    <% } %>
                 </div>
             <% }) %>
         <% } %>
@@ -146,6 +148,7 @@
         }
     </script>
 </body>
+
 </html>
 
 <%- include("../layouts/profile_footer.ejs") %>

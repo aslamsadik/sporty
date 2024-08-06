@@ -124,6 +124,8 @@
                     <a href="/orderDetails/<%= order._id %>" class="view-button">View Order</a>
                     <% if (order.status === 'Pending') { %>
                         <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                    <% } else if (order.status === 'Delivered') { %>
+                        <button class="return-button" onclick="returnProduct('<%= order._id %>')">Return Product</button>
                     <% } %>
                 </div>
             <% }) %>
@@ -144,6 +146,26 @@
                             alert('Failed to cancel the order');
                         }
                     });
+            }
+        }
+
+        function returnProduct(orderId) {
+            const reason = prompt('Please enter a reason for returning the product:');
+            if (reason) {
+                fetch(`/order/return/${orderId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Return request submitted successfully');
+                        window.location.reload();
+                    } else {
+                        alert('Failed to submit return request');
+                    }
+                });
             }
         }
     </script>

@@ -975,7 +975,31 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
+const returnOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { reason } = req.body;
 
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({ success: false, message: 'Only delivered products can be returned.' });
+        }
+
+        order.returnRequested = true;
+        order.returnReason = reason;
+        order.status = 'Return Requested'; // Updating status for user's view
+        await order.save();
+
+        res.json({ success: true, message: 'Return request submitted successfully.' });
+    } catch (error) {
+        console.error('Error requesting return:', error);
+        res.status(500).json({ success: false, message: 'Failed to request return.' });
+    }
+};
 const getforgotPassword = async (req, res) => {
     try {
         res.render("forgotPassword");
@@ -1124,5 +1148,6 @@ module.exports = {
     resetPassword,
     updateCart,
     getOrderDetails,
-    search
+    search,
+    returnOrder
 };

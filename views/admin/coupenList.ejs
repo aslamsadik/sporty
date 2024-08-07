@@ -1,0 +1,50 @@
+
+<%- include("../layouts/admin_header.ejs") %>
+
+<body>
+    <section class="content-main">
+        <div class="row">
+            <div class="col-6">
+                <div class="content-header">
+                    <h2 class="content-title">Coupon List</h2>
+                </div>
+            </div>
+            <div class="col-6 text-end">
+                <a href="/admin/addCouponPage" class="btn btn-primary">Add New Coupon</a>
+            </div>
+        </div>
+    
+        <% if (coupons && coupons.length > 0) { %>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Coupon Code</th>
+                        <th>Discount</th>
+                        <th>Expiration Date</th>
+                        <th>Usage Limit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% coupons.forEach(coupon => { %>
+                        <tr>
+                            <td><%= coupon.code %></td>
+                            <td><%= coupon.discount %>%</td>
+                            <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
+                            <td><%= coupon.usageLimit %></td>
+                            <td>
+                                <a href="/admin/editCoupon/<%= coupon._id %>" class="btn btn-sm btn-secondary">Edit</a>
+                                <form action="/admin/deleteCoupon/<%= coupon._id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } else { %>
+            <p>No coupons found.</p>
+        <% } %>
+    </section>
+    </body>
+    <%- include("../layouts/admin_footer.ejs") %>

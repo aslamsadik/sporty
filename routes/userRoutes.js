@@ -73,4 +73,8 @@ router.get('/forgotPassword', userController.getforgotPassword);
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 
+// Apply coupon
+router.post('/checkout/apply-coupon', userController.applyCoupon);
+
+
 module.exports = router;

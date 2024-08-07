@@ -3,6 +3,7 @@ const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel');
 const Order = require('../models/orderShema'); // Adjust the path as necessary
+const Coupon = require('../models/coupenModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -400,8 +401,7 @@ const getOrderManagementPage = async (req, res) => {
     }
 };
 
-  
-  // View order details function
+// View order details function
 const viewOrderDetails = async (req, res) => {
     try {
       const orderId = req.params.orderId;
@@ -422,6 +422,103 @@ const viewOrderDetails = async (req, res) => {
     }
   };
   
+  const getAddCouponPage = async (req, res) => {
+    try {
+        // Set your message and messageType based on your logic
+        const message = 'Your message here';
+        const messageType = 'success'; // or 'error' based on your logic
+
+        res.render('addCoupen', { message, messageType });
+    } catch (error) {
+        console.error(error.message);
+    }
+};
+
+
+const addCoupon = async (req, res) => {
+    try {
+        const { code, discountType, discountValue, expirationDate, usageLimit } = req.body;
+
+        // Create a new coupon with the data from the form
+        const newCoupon = new Coupon({
+            code,
+            discountType,
+            discountValue,
+            expirationDate,
+            usageLimit: usageLimit || 1, // Default to 1 if not provided
+        });
+
+        await newCoupon.save();
+        console.log('Coupon added:', newCoupon);
+
+        // Redirect with success message
+        res.redirect('/admin/couponList?message=Coupon added successfully!&messageType=success');
+    } catch (error) {
+        console.error('Error adding coupon:', error.message);
+
+        // Redirect with error message
+        res.redirect('/admin/addCouponPage?message=Error adding coupon.&messageType=error');
+    }
+};
+
+
+
+const getCouponList = async (req, res) => {
+    try {
+        const coupons = await Coupon.find({});
+        const { message, messageType } = req.query; // Get message and type from query params
+        res.render('coupenList', { coupons, message, messageType });
+    } catch (error) {
+        res.render('coupenList', { coupons: [], message: 'Error fetching coupons.', messageType: 'error' });
+    }
+};
+
+const getEditCouponPage = async (req, res) => {
+    try {
+        const coupon = await Coupon.findById(req.params.id);
+        const { message, messageType } = req.query; // Get message and type from query params
+        res.render('editCoupen', { coupon, message, messageType });
+    } catch (error) {
+        res.redirect('/admin/couponList?message=Error fetching coupon details.&messageType=error');
+    }
+};
+
+
+const editCoupon = async (req, res) => {
+    try {
+        const { code, discountType, discountValue, expirationDate, usageLimit } = req.body;
+
+        await Coupon.findByIdAndUpdate(req.params.id, {
+            code,
+            discountType,
+            discountValue,
+            expirationDate,
+            usageLimit
+        });
+
+        // Redirect with success message
+        res.redirect(`/admin/couponList?message=Coupon updated successfully!&messageType=success`);
+    } catch (error) {
+        console.error('Error updating coupon:', error.message);
+
+        // Redirect with error message
+        res.redirect(`/admin/editCoupon/${req.params.id}?message=Error updating coupon.&messageType=error`);
+    }
+};
+
+const deleteCoupon = async (req, res) => {
+    try {
+        await Coupon.findByIdAndDelete(req.params.id);
+
+        // Redirect with success message
+        res.redirect('/admin/couponList?message=Coupon deleted successfully!&messageType=success');
+    } catch (error) {
+        console.error('Error deleting coupon:', error.message);
+
+        // Redirect with error message
+        res.redirect('/admin/couponList?message=Error deleting coupon.&messageType=error');
+    }
+};
 
 
 
@@ -445,5 +542,11 @@ module.exports = {
     getOrderManagementPage,
     deleteOrder,
     updateOrderStatus,
-    viewOrderDetails
+    viewOrderDetails,
+    getAddCouponPage,
+    addCoupon,
+    getCouponList,
+    getEditCouponPage,
+    editCoupon,
+    deleteCoupon
 };

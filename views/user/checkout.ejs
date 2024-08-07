@@ -73,59 +73,37 @@
   </head>
   <body>
     <!-- navbar -->
-      <div class="header-nav d-none d-lg-flex">
-                        
-                        <div class="main-menu main-menu-padding-1 main-menu-lh-2 d-none d-lg-block">
-                            <nav>
-                                <ul>
-                                    <li><a class="active" href="/">Home <i class="fi-rs-angle-down"></i></a>
-                                        <ul class="sub-menu">
-                                            <li><a href="index.html">Home 1</a></li>
-                                            <li><a href="index-2.html">Home 2</a></li>
-                                            <li><a href="index-3.html">Home 3</a></li>
-                                            <li><a href="index-4.html">Home 4</a></li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="/shop">Shop</a>
-                                    </li>
-                                    <!-- <li><a href="shop-grid-right.html">Catagory<i class="fi-rs-angle-down"></i></a>
-                                        <ul class="sub-menu">
-                                            <li><a href="shop-grid-right.html">Shop Grid – Right Sidebar</a></li>
-                                            <li><a href="shop-grid-left.html">Shop Grid – Left Sidebar</a></li>
-                                            <li><a href="shop-list-right.html">Shop List – Right Sidebar</a></li>
-                                            <li><a href="shop-list-left.html">Shop List – Left Sidebar</a></li>
-                                            <li><a href="shop-fullwidth.html">Shop - Wide</a></li>
-                                            <li><a href="#">Single Product <i class="fi-rs-angle-right"></i></a>
-                                                <ul class="level-menu">
-                                                    <li><a href="shop-product-right.html">Product – Right Sidebar</a></li>
-                                                    <li><a href="shop-product-left.html">Product – Left Sidebar</a></li>
-                                                    <li><a href="shop-product-full.html">Product – No sidebar</a></li>
-                                                </ul>
-                                            </li>
-                                            <li><a href="shop-filter.html">Shop – Filter</a></li>
-                                            <li><a href="shop-wishlist.html">Shop – Wishlist</a></li>
-                                            <li><a href="shop-cart.html">Shop – Cart</a></li>
-                                            <li><a href="shop-checkout.html">Shop – Checkout</a></li>
-                                            <li><a href="shop-compare.html">Shop – Compare</a></li>
-                                        </ul>
-                                    </li> -->
-                                    
-                                    <li>
-                                        <a href="/cart">Cart</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-     <!-- navbar ends -->
+    <div class="header-nav d-none d-lg-flex">
+      <div class="main-menu main-menu-padding-1 main-menu-lh-2 d-none d-lg-block">
+        <nav>
+          <ul>
+            <li>
+              <a class="active" href="/">Home <i class="fi-rs-angle-down"></i></a>
+              <ul class="sub-menu">
+                <li><a href="index.html">Home 1</a></li>
+                <li><a href="index-2.html">Home 2</a></li>
+                <li><a href="index-3.html">Home 3</a></li>
+                <li><a href="index-4.html">Home 4</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="/shop">Shop</a>
+            </li>
+            <li>
+              <a href="/cart">Cart</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <!-- navbar ends -->
     <div class="container">
       <h2 class="mb-4 text-center">Checkout</h2>
-
+  
       <% if (message) { %>
       <div class="alert alert-<%= messageType %>"><%= message %></div>
       <% } %>
-
+  
       <form id="placeOrderForm" action="/place-order" method="POST">
         <div class="row">
           <div class="col-md-8">
@@ -134,82 +112,44 @@
             <% user.addresses.forEach((address, index) => { %>
             <div class="address-card <%= index === 0 ? 'active' : '' %>">
               <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="radio"
-                  name="shippingAddressId"
-                  id="address<%= index %>"
-                  value="<%= address._id %>"
-                  <%= index === 0 ? 'checked' : '' %>
-                />
+                <input class="form-check-input" type="radio" name="shippingAddressId" id="address<%= index %>"
+                  value="<%= address._id %>" <%= index === 0 ? 'checked' : '' %> />
                 <label class="form-check-label" for="address<%= index %>">
                   <%= address.firstName %> <%= address.lastName %><br />
                   <%= address.address1 %> <%= address.address2 %><br />
-                  <%= address.city %>, <%= address.state %> <%= address.zip
-                  %><br />
+                  <%= address.city %>, <%= address.state %> <%= address.zip %><br />
                   <%= address.phone %><br />
                   <%= address.email %>
                 </label>
               </div>
               <div class="address-actions">
-                <a
-                  href="/profile/edit-address/<%= address._id %>"
-                  class="btn btn-secondary btn-sm"
-                  >Edit</a
-                >
+                <a href="/profile/edit-address/<%= address._id %>" class="btn btn-secondary btn-sm">Edit</a>
               </div>
             </div>
             <% }) %>
-            <a
-              href="/profile/add-addressPage"
-              class="btn btn-primary mt-3"
-              >Add Address</a
-            >
+            <a href="/profile/add-addressPage" class="btn btn-primary mt-3">Add Address</a>
             <% } else { %>
             <p>No addresses found.</p>
-            <a href="/profile/add-addressPage" class="btn btn-primary"
-              >Add Address</a
-            >
+            <a href="/profile/add-addressPage" class="btn btn-primary">Add Address</a>
             <% } %>
-
+  
             <h4 class="mt-4">Payment Method</h4>
             <div class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                name="paymentMethod"
-                id="creditCard"
-                value="Credit Card"
-                checked
-              />
-              <label class="form-check-label" for="creditCard"
-                >Credit Card</label
-              >
+              <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="Credit Card"
+                checked />
+              <label class="form-check-label" for="creditCard">Credit Card</label>
             </div>
             <div class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                name="paymentMethod"
-                id="paypal"
-                value="PayPal"
-              />
+              <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="PayPal" />
               <label class="form-check-label" for="paypal">PayPal</label>
             </div>
             <div class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                name="paymentMethod"
-                id="cashOnDelivery"
-                value="Cash on Delivery"
-              />
-              <label class="form-check-label" for="cashOnDelivery"
-                >Cash on Delivery</label
-              >
+              <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery"
+                value="Cash on Delivery" />
+              <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
             </div>
           </div>
-
+  
           <div class="col-md-4">
             <h4>Order Summary</h4>
             <% if (cart && cart.products && cart.products.length > 0) { %>
@@ -218,56 +158,59 @@
               <li class="list-group-item d-flex justify-content-between">
                 <div>
                   <h6 class="my-0"><%= product.productId.name %></h6>
-                  <small class="text-muted">Quantity: <%= product.quantity
-                  %></small>
+                  <small class="text-muted">Quantity: <%= product.quantity %></small>
                 </div>
-                <span class="text-muted">₹<%= (product.productId.price *
-                  product.quantity).toFixed(2) %></span>
+                <span class="text-muted">₹<%= (product.productId.price * product.quantity).toFixed(2) %></span>
               </li>
               <% }) %>
               <li class="list-group-item d-flex justify-content-between">
                 <span>Total (USD)</span>
                 <strong>₹<%= cart.products.reduce((total, product) => total +
-                  (product.productId.price * product.quantity), 0).toFixed(2)
-                  %></strong>
+                  (product.productId.price * product.quantity), 0).toFixed(2) %></strong>
               </li>
             </ul>
             <% } else { %>
             <p>Your cart is empty.</p>
             <% } %>
+  
+            <!-- Coupon Section -->
+            <div class="coupon-section mt-4">
+              <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code" />
+              <button type="button" class="btn btn-primary mt-2" onclick="applyCoupon()">Apply Coupon</button>
+              <div id="discountAmount" class="mt-2"></div>
+            </div>
+            <!-- End Coupon Section -->
+  
           </div>
         </div>
-
-        <button
-          type="submit"
-          class="btn btn-primary btn-lg btn-block mt-4"
-          id="placeOrderButton"
-        >
+  
+        <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">
           Place Order
         </button>
       </form>
     </div>
-
-      <!-- Modal Structure -->
-<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content bg-danger text-white">
-      <div class="modal-header">
-        <h5 class="modal-title" id="errorModalLabel">Error</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body" id="modalBody">
-        <!-- Error message will be inserted here -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+  
+    <!-- Modal Structure -->
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content bg-danger text-white">
+          <div class="modal-header">
+            <h5 class="modal-title" id="errorModalLabel">Error</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="modalBody">
+            <!-- Error message will be inserted here -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-
+  
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -278,7 +221,7 @@
           $(".address-card").removeClass("active");
           $(this).closest(".address-card").addClass("active");
         });
-    
+  
         // AJAX form submission for placing order
         $("#placeOrderForm").on("submit", function (e) {
           e.preventDefault();
@@ -299,7 +242,7 @@
               if (xhr.responseJSON && xhr.responseJSON.message) {
                 errorMessage = xhr.responseJSON.message;
               }
-    
+  
               // Show error message in modal
               $("#modalBody").text(errorMessage);
               $("#errorModal").modal('show');
@@ -307,6 +250,33 @@
           });
         });
       });
+  
+      function applyCoupon() {
+        const code = document.getElementById('couponCode').value;
+        fetch('/checkout/apply-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById('discountAmount').textContent = `Discount Applied: ₹${data.discountAmount}`;
+              // Update the total price with the discount
+              updateTotalPrice(data.discountAmount);
+            } else {
+              alert(data.message);
+            }
+          });
+      }
+  
+      function updateTotalPrice(discountAmount) {
+        const totalElement = document.querySelector('.order-summary strong');
+        let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
+        let newTotal = currentTotal - discountAmount;
+        totalElement.textContent = `₹${newTotal.toFixed(2)}`;
+      }
     </script>
   </body>
+  
 </html>

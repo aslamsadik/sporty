@@ -37,6 +37,15 @@ Admin_router.post('/delete-order', isAdminAuthenticated, adminController.deleteO
 Admin_router.post('/update-order-status', isAdminAuthenticated, adminController.updateOrderStatus);
 Admin_router.get('/view-order-details/:orderId', isAdminAuthenticated, adminController.viewOrderDetails);
 
+//coupen ,anagement
+Admin_router.get('/addCouponPage', adminController.getAddCouponPage);
+Admin_router.post('/addCoupon', adminController.addCoupon);
+Admin_router.get('/couponList', adminController.getCouponList);
+Admin_router.get('/editCoupon/:id', adminController.getEditCouponPage);
+Admin_router.post('/editCoupon/:id', adminController.editCoupon);
+Admin_router.post('/deleteCoupon/:id', adminController.deleteCoupon);
+
+
 
 module.exports = Admin_router;
 

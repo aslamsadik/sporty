@@ -4,6 +4,7 @@ const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderShema');
+const Coupon = require('../models/coupenModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -1115,6 +1116,37 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// Apply a coupon during checkout
+const applyCoupon = async (req, res) => {
+    try {
+        const { code } = req.body;
+        const coupon = await Coupon.findOne({ code, expirationDate: { $gte: new Date() } });
+
+        if (!coupon) {
+            return res.status(404).json({ success: false, message: 'Invalid or expired coupon' });
+        }
+
+        if (coupon.usageLimit <= coupon.usedCount) {
+            return res.status(400).json({ success: false, message: 'Coupon usage limit exceeded' });
+        }
+
+        // Calculate discount based on coupon type
+        let discountAmount = 0;
+        if (coupon.discountType === 'percentage') {
+            discountAmount = (req.cart.totalPrice * coupon.discountValue) / 100;
+        } else if (coupon.discountType === 'fixed') {
+            discountAmount = coupon.discountValue;
+        }
+
+        // Ensure discount does not exceed the cart total
+        discountAmount = Math.min(discountAmount, req.cart.totalPrice);
+
+        res.json({ success: true, discountAmount });
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 
 module.exports = {
     signUpPage,
@@ -1149,5 +1181,6 @@ module.exports = {
     updateCart,
     getOrderDetails,
     search,
-    returnOrder
+    returnOrder,
+    applyCoupon
 };

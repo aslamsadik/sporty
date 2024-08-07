@@ -1,0 +1,84 @@
+<%- include("../layouts/admin_header.ejs") %>
+
+<body>
+    <section class="content-main">
+        <div class="row">
+            <div class="col-6">
+                <div class="content-header">
+                    <h2 class="content-title">Edit Coupon</h2>
+                </div>
+            </div>
+        </div>
+        <% if (message) { %>
+            <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
+                <%= message %>
+            </div>
+        <% } %>
+        
+        <form action='/admin/editCoupon/:id' method="POST" onsubmit="validateCouponForm(event)">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>1. Coupon Details</h6>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-4">
+                                        <label class="form-label">Coupon Code</label>
+                                        <input type="text" placeholder="Enter coupon code" class="form-control" name="code" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Discount Type</label>
+                                        <select class="form-select" name="discountType" required>
+                                            <option value="" disabled selected>Select discount type</option>
+                                            <option value="percentage">Percentage</option>
+                                            <option value="fixed">Fixed</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Discount Value</label>
+                                        <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" min="0" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Expiration Date</label>
+                                        <input type="date" class="form-control" name="expirationDate" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Usage Limit</label>
+                                        <input type="number" placeholder="e.g., 100" class="form-control" name="usageLimit" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-md rounded font-sm hover-up" type="submit">Edit Coupon</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>        
+    </section>
+    
+    <script>
+        function validateCouponForm(event) {
+            const discountInput = document.querySelector('input[name="discount"]');
+            const discount = parseFloat(discountInput.value);
+    
+            // Validate discount
+            if (isNaN(discount) || discount < 0 || discount > 100) {
+                event.preventDefault(); // Prevent form submission if validation fails
+                alert("Discount must be a number between 0 and 100.");
+                discountInput.focus();
+                return false;
+            }
+    
+            // If validation is passed, the form will be submitted
+            return true;
+        }
+    </script>
+    
+    </body>
+    
+    <%- include("../layouts/admin_footer.ejs") %>

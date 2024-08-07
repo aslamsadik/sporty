@@ -461,8 +461,6 @@ const addCoupon = async (req, res) => {
     }
 };
 
-
-
 const getCouponList = async (req, res) => {
     try {
         const coupons = await Coupon.find({});
@@ -482,7 +480,6 @@ const getEditCouponPage = async (req, res) => {
         res.redirect('/admin/couponList?message=Error fetching coupon details.&messageType=error');
     }
 };
-
 
 const editCoupon = async (req, res) => {
     try {
@@ -519,7 +516,6 @@ const deleteCoupon = async (req, res) => {
         res.redirect('/admin/couponList?message=Error deleting coupon.&messageType=error');
     }
 };
-
 
 
 module.exports = {

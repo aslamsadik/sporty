@@ -29,7 +29,7 @@
                     <% coupons.forEach(coupon => { %>
                         <tr>
                             <td><%= coupon.code %></td>
-                            <td><%= coupon.discount %>%</td>
+                            <td><%= coupon.discountValue %>%</td>
                             <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
                             <td><%= coupon.usageLimit %></td>
                             <td>
@@ -46,5 +46,6 @@
             <p>No coupons found.</p>
         <% } %>
     </section>
-    </body>
+</body>
+
     <%- include("../layouts/admin_footer.ejs") %>

@@ -177,8 +177,9 @@
             <div class="coupon-section mt-4">
               <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code" />
               <button type="button" class="btn btn-primary mt-2" onclick="applyCoupon()">Apply Coupon</button>
-              <div id="discountAmount" class="mt-2"></div>
-            </div>
+              <div id="couponMessage" class="mt-2"></div>
+          </div>
+          
             <!-- End Coupon Section -->
   
           </div>
@@ -252,30 +253,45 @@
       });
   
       function applyCoupon() {
-        const code = document.getElementById('couponCode').value;
-        fetch('/checkout/apply-coupon', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
-        })
-          .then(response => response.json())
-          .then(data => {
+    const couponCode = document.getElementById('couponCode').value;
+    const totalElement = document.querySelector('.order-summary strong');
+    let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
+
+    fetch('/checkout/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode, totalPrice: currentTotal })
+    })
+        .then(response => response.json())
+        .then(data => {
+            const couponMessageElement = document.getElementById('couponMessage');
             if (data.success) {
-              document.getElementById('discountAmount').textContent = `Discount Applied: ₹${data.discountAmount}`;
-              // Update the total price with the discount
-              updateTotalPrice(data.discountAmount);
+                couponMessageElement.textContent = `Discount Applied: ₹${data.discountAmount}`;
+                updateTotalPrice(data.discountAmount, data.discountType, data.discountValue);
             } else {
-              alert(data.message);
+                couponMessageElement.textContent = data.message;
             }
-          });
-      }
-  
-      function updateTotalPrice(discountAmount) {
-        const totalElement = document.querySelector('.order-summary strong');
-        let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
-        let newTotal = currentTotal - discountAmount;
-        totalElement.textContent = `₹${newTotal.toFixed(2)}`;
-      }
+        })
+        .catch(error => {
+            console.error('Error applying coupon:', error);
+            document.getElementById('couponMessage').textContent = 'Error applying coupon';
+        });
+}
+
+function updateTotalPrice(discountAmount, discountType, discountValue) {
+    const totalElement = document.querySelector('.order-summary strong');
+    let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
+
+    let newTotal;
+    if (discountType === 'percentage') {
+        newTotal = currentTotal - (currentTotal * (discountValue / 100));
+    } else if (discountType === 'fixed') {
+        newTotal = currentTotal - discountValue;
+    }
+
+    totalElement.textContent = `₹${newTotal.toFixed(2)}`;
+}
+
     </script>
   </body>
   

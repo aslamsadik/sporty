@@ -657,7 +657,7 @@ const placeOrder = async (req, res) => {
             return res.status(401).json({ message: 'User is not authenticated' });
         }
 
-        const { shippingAddressId, orderNotes, paymentMethod } = req.body;
+        const { shippingAddressId, orderNotes, paymentMethod, discountAmount } = req.body;
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -703,10 +703,15 @@ const placeOrder = async (req, res) => {
             return res.status(400).json({ message: 'One or more products are out of stock' });
         }
 
-        const totalPrice = cart.products.reduce((total, item) => {
+        let totalPrice = cart.products.reduce((total, item) => {
             const product = item.productId;
             return total + (product.price * item.quantity);
         }, 0);
+
+        // Subtract the discount amount from the total price
+        if (discountAmount) {
+            totalPrice -= discountAmount;
+        }
 
         const order = new Order({
             userId,
@@ -1116,37 +1121,45 @@ const resetPassword = async (req, res) => {
     }
 };
 
-// Apply a coupon during checkout
 const applyCoupon = async (req, res) => {
     try {
-        const { code } = req.body;
-        const coupon = await Coupon.findOne({ code, expirationDate: { $gte: new Date() } });
+        const { couponCode, totalPrice } = req.body;
+        const coupon = await Coupon.findOne({ code: couponCode });
 
         if (!coupon) {
-            return res.status(404).json({ success: false, message: 'Invalid or expired coupon' });
+            return res.json({ success: false, message: 'Invalid coupon code' });
         }
 
-        if (coupon.usageLimit <= coupon.usedCount) {
-            return res.status(400).json({ success: false, message: 'Coupon usage limit exceeded' });
+        if (new Date(coupon.expirationDate) < new Date()) {
+            return res.json({ success: false, message: 'Coupon expired' });
         }
 
-        // Calculate discount based on coupon type
+        if (coupon.usedCount >= coupon.usageLimit) {
+            return res.json({ success: false, message: 'Coupon usage limit reached' });
+        }
+
+        // Calculate the discount
         let discountAmount = 0;
         if (coupon.discountType === 'percentage') {
-            discountAmount = (req.cart.totalPrice * coupon.discountValue) / 100;
+            discountAmount = totalPrice * (coupon.discountValue / 100);
         } else if (coupon.discountType === 'fixed') {
             discountAmount = coupon.discountValue;
         }
 
-        // Ensure discount does not exceed the cart total
-        discountAmount = Math.min(discountAmount, req.cart.totalPrice);
-
-        res.json({ success: true, discountAmount });
+        return res.json({ 
+            success: true, 
+            message: 'Coupon applied successfully',
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue,
+            discountAmount: discountAmount
+        });
     } catch (error) {
-        console.error('Error applying coupon:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error(error.message);
+        res.json({ success: false, message: 'Error applying coupon' });
     }
 };
+
+
 
 module.exports = {
     signUpPage,

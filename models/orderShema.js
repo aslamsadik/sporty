@@ -10,6 +10,7 @@ const orderSchema = new mongoose.Schema({
     ],
     shippingAddressId: { type: mongoose.Schema.Types.ObjectId, required: true },
     totalPrice: { type: Number, required: true },
+    discountAmount: { type: Number, default: 0 }, // Add this line
     paymentMethod: { type: String, required: true },
     orderNotes: { type: String },
     status: { type: String, default: 'Pending' },

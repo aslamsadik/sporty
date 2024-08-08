@@ -89,14 +89,16 @@
                 <% if (order.products && order.products.length > 0) { %>
                   <% order.products.forEach(item => { %>
                     <li class="list-group-item">
-                      <%= item.productId.name %> - Quantity: <span><%= item.quantity %></span> - Price: <span>$<%= item.productId.price.toFixed(2) %></span>
+                      <%= item.productId.name %> - Quantity: <span><%= item.quantity %></span> - Price: <span>₹<%= item.productId.price.toFixed(2) %></span>
                     </li>
                   <% }); %>
                 <% } else { %>
                   <li class="list-group-item">No products found.</li>
                 <% } %>
               </ul>
-              <p class="card-text mt-3">Total Amount: <span>$<%= order.totalPrice.toFixed(2) %></span></p>
+              <p class="card-text mt-3">Subtotal: <span>₹<%= (order.totalPrice + order.discountAmount).toFixed(2) %></span></p>
+              <p class="card-text">Discount Applied: <span>₹<%= order.discountAmount.toFixed(2) %></span></p>
+              <p class="card-text">Total Amount after Discount: <span>₹<%= order.totalPrice.toFixed(2) %></span></p>
             <% } else { %>
               <p class="card-text">No order details available.</p>
             <% } %>
@@ -111,10 +113,12 @@
       </div>
     </div>
   </div>
-  <div class="return-link">
-    <a href="/"><i class="fas fa-home"></i> Return to Home Page</a>
+  <div class="return-link text-center mt-4">
+    <a href="/" class="btn btn-secondary"><i class="fas fa-home"></i> Return to Home Page</a>
   </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="/user_assets/js/main.js"></script> <!-- Adjust the path as needed -->
 </body>
+
 </html>

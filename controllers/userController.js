@@ -657,7 +657,8 @@ const placeOrder = async (req, res) => {
             return res.status(401).json({ message: 'User is not authenticated' });
         }
 
-        const { shippingAddressId, orderNotes, paymentMethod, discountAmount } = req.body;
+        const { shippingAddressId, orderNotes, paymentMethod, couponCode } = req.body;
+
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -703,21 +704,57 @@ const placeOrder = async (req, res) => {
             return res.status(400).json({ message: 'One or more products are out of stock' });
         }
 
-        let totalPrice = cart.products.reduce((total, item) => {
+        // Calculate total price before discount
+        let totalPriceBeforeDiscount = cart.products.reduce((total, item) => {
             const product = item.productId;
             return total + (product.price * item.quantity);
         }, 0);
 
-        // Subtract the discount amount from the total price
-        if (discountAmount) {
-            totalPrice -= discountAmount;
+        let discountAmount = 0;
+
+        // Check if a valid coupon code is applied
+        if (couponCode) {
+            const coupon = await Coupon.findOne({ code: couponCode });
+
+            if (!coupon || coupon.usedCount >= coupon.usageLimit || coupon.expirationDate < new Date()) {
+                return res.status(400).json({ message: 'Invalid or expired coupon code' });
+            }
+
+            if (coupon.discountType === 'percentage') {
+                discountAmount = totalPriceBeforeDiscount * (coupon.discountValue / 100);
+            } else if (coupon.discountType === 'fixed') {
+                discountAmount = coupon.discountValue;
+            }
+
+            // Ensure discount does not exceed the total price
+            if (discountAmount > totalPriceBeforeDiscount) {
+                discountAmount = totalPriceBeforeDiscount;
+            }
+
+            // Increment the used count of the coupon
+            coupon.usedCount += 1;
+            await coupon.save();
         }
+
+        // Calculate final total price after discount
+        let totalPrice = totalPriceBeforeDiscount - discountAmount;
+
+        // Ensure total price is not negative
+        if (totalPrice < 0) {
+            totalPrice = 0;
+        }
+
+        // Log for debugging
+        console.log('Total Price Before Discount:', totalPriceBeforeDiscount);
+        console.log('Discount Amount:', discountAmount);
+        console.log('Total Price After Discount:', totalPrice);
 
         const order = new Order({
             userId,
             products: updatedProducts,
             shippingAddressId,
-            totalPrice,
+            totalPrice, // Ensure this is the discounted total
+            discountAmount, // Save the discount amount
             paymentMethod,
             orderNotes,
             status: 'Pending',
@@ -1122,23 +1159,15 @@ const resetPassword = async (req, res) => {
 };
 
 const applyCoupon = async (req, res) => {
+    const { couponCode, totalPrice } = req.body;
+
     try {
-        const { couponCode, totalPrice } = req.body;
         const coupon = await Coupon.findOne({ code: couponCode });
 
-        if (!coupon) {
-            return res.json({ success: false, message: 'Invalid coupon code' });
+        if (!coupon || coupon.expirationDate < new Date() || coupon.usedCount >= coupon.usageLimit) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired coupon code' });
         }
 
-        if (new Date(coupon.expirationDate) < new Date()) {
-            return res.json({ success: false, message: 'Coupon expired' });
-        }
-
-        if (coupon.usedCount >= coupon.usageLimit) {
-            return res.json({ success: false, message: 'Coupon usage limit reached' });
-        }
-
-        // Calculate the discount
         let discountAmount = 0;
         if (coupon.discountType === 'percentage') {
             discountAmount = totalPrice * (coupon.discountValue / 100);
@@ -1146,19 +1175,22 @@ const applyCoupon = async (req, res) => {
             discountAmount = coupon.discountValue;
         }
 
-        return res.json({ 
-            success: true, 
-            message: 'Coupon applied successfully',
+        // Ensure discount does not exceed the total price
+        if (discountAmount > totalPrice) {
+            discountAmount = totalPrice;
+        }
+
+        res.json({
+            success: true,
+            discountAmount: discountAmount,
             discountType: coupon.discountType,
-            discountValue: coupon.discountValue,
-            discountAmount: discountAmount
+            discountValue: coupon.discountValue
         });
     } catch (error) {
-        console.error(error.message);
-        res.json({ success: false, message: 'Error applying coupon' });
+        console.error('Error applying coupon:', error.message);
+        res.status(500).json({ success: false, message: 'Error applying coupon' });
     }
 };
-
 
 
 module.exports = {

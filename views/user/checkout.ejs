@@ -289,30 +289,37 @@
 
 // Function to apply coupon
 function applyCoupon() {
-        const couponCode = document.getElementById('couponCode').value;
-        const totalElement = document.querySelector('.order-summary strong');
-        let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
+    const couponCode = document.getElementById('couponCode').value.trim();
+    const totalElement = document.querySelector('.order-summary strong');
+    let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
 
-        fetch('/checkout/apply-coupon', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ couponCode, totalPrice: currentTotal })
-        })
-            .then(response => response.json())
-            .then(data => {
-                const couponMessageElement = document.getElementById('couponMessage');
-                if (data.success) {
-                    couponMessageElement.textContent = `Discount Applied: ₹${data.discountAmount}`;
-                    updateTotalPrice(data.discountAmount, data.discountType, data.discountValue);
-                } else {
-                    couponMessageElement.textContent = data.message;
-                }
-            })
-            .catch(error => {
-                console.error('Error applying coupon:', error);
-                document.getElementById('couponMessage').textContent = 'Error applying coupon';
-            });
+    if (!couponCode) {
+        document.getElementById('couponMessage').textContent = 'Please enter a coupon code.';
+        return;
     }
+
+    fetch('/checkout/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode, totalPrice: currentTotal })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const couponMessageElement = document.getElementById('couponMessage');
+        if (data.success) {
+            couponMessageElement.textContent = `Discount Applied: ₹${data.discountAmount}`;
+            updateTotalPrice(data.discountAmount, data.discountType, data.discountValue);
+            document.getElementById('couponCodeInput').value = couponCode; // Store coupon code
+        } else {
+            couponMessageElement.textContent = data.message;
+        }
+    })
+    .catch(error => {
+        console.error('Error applying coupon:', error);
+        document.getElementById('couponMessage').textContent = 'Error applying coupon';
+    });
+}
+
 
     function updateTotalPrice(discountAmount, discountType, discountValue) {
         const totalElement = document.querySelector('.order-summary strong');

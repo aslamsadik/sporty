@@ -639,15 +639,23 @@ const getCheckoutPage = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!cart || cart.products.length === 0) {
-            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user });
+            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user, coupons: [] });
         }
 
-        res.render('checkout', { message: null, messageType: null, cart, user });
+        // Fetch available coupons that are not expired and within usage limits using aggregation pipeline
+        const currentDate = new Date();
+        const coupons = await Coupon.aggregate([
+            { $match: { expirationDate: { $gte: currentDate } } },
+            { $match: { $expr: { $lt: ["$usedCount", "$usageLimit"] } } }
+        ]);
+
+        res.render('checkout', { message: null, messageType: null, cart, user, coupons });
     } catch (error) {
         console.error('Error fetching checkout page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 const placeOrder = async (req, res) => {
     try {
@@ -737,7 +745,7 @@ const placeOrder = async (req, res) => {
       }
   
       // Calculate final total price after discount
-      let totalPrice = totalPriceBeforeDiscount - discountAmount;
+      let totalPrice = Math.round(totalPriceBeforeDiscount - discountAmount);
   
       // Ensure total price is not negative
       if (totalPrice < 0) {
@@ -746,7 +754,7 @@ const placeOrder = async (req, res) => {
   
       // Log for debugging
       console.log('Total Price Before Discount:', totalPriceBeforeDiscount);
-      console.log('Discount Amount:', discountAmount);
+      console.log('Discount Amount:',Math.round(discountAmount));
       console.log('Total Price After Discount:', totalPrice);
   
       const order = new Order({
@@ -1208,6 +1216,7 @@ const applyCoupon = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error applying coupon' });
     }
 };
+
 
 
 module.exports = {

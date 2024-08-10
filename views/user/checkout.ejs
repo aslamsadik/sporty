@@ -69,6 +69,51 @@
         position: relative;
         margin-left: 250px;
       }
+
+      /* Styling for coupon section */
+.coupon-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coupon-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.coupon-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.coupon-info {
+  flex: 1;
+}
+
+.coupon-code {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.coupon-discount {
+  font-size: 0.9rem;
+  color: #28a745;
+}
+
+.coupon-expiry {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.btn-outline-primary {
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+
     </style>
   </head>
   <body>
@@ -194,7 +239,33 @@
             <% } else { %>
               <p>Your cart is empty.</p>
             <% } %>
-      
+            <!-- Coupons Section -->
+<!-- Coupons Section -->
+<div class="coupons-section mt-4">
+  <h4 class="text-center">Available Coupons</h4>
+  <div id="couponsContainer" class="coupon-container">
+    <% if (coupons && coupons.length > 0) { %>
+      <% coupons.forEach((coupon) => { %>
+        <div class="coupon-item card mb-2">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div class="coupon-info">
+              <strong class="coupon-code">Code: <%= coupon.code %></strong><br>
+              <span class="coupon-discount">
+                <%= coupon.discountType === 'percentage' ? coupon.discountValue + '% off' : '₹' + coupon.discountValue + ' off' %>
+              </span><br>
+              <small class="coupon-expiry">Expires: <%= new Date(coupon.expirationDate).toLocaleDateString() %></small>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('<%= coupon.code %>')">Copy</button>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <p class="text-center">No available coupons at the moment.</p>
+    <% } %>
+  </div>
+</div>
+
+
             <!-- Coupon Section -->
             <div class="coupon-section mt-4">
               <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code" />
@@ -320,8 +391,7 @@ function applyCoupon() {
     });
 }
 
-
-    function updateTotalPrice(discountAmount, discountType, discountValue) {
+function updateTotalPrice(discountAmount, discountType, discountValue) {
         const totalElement = document.querySelector('.order-summary strong');
         let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
 
@@ -342,7 +412,51 @@ function applyCoupon() {
         event.preventDefault(); // Prevent form submission
         applyCoupon();
     });
+
+    // coupen
+
+    // Function to fetch and display available coupons
+    function fetchCoupons() {
+        fetch('/coupons')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('couponsContainer');
+                if (data.success && data.coupons.length > 0) {
+                    data.coupons.forEach(coupon => {
+                        const couponElement = document.createElement('div');
+                        couponElement.className = 'coupon-item';
+                        couponElement.innerHTML = `
+                            <div class="coupon-code">Code: <strong>${coupon.code}</strong></div>
+                            <div class="coupon-details">
+                                Type: ${coupon.discountType}, Value: ₹${coupon.discountValue.toFixed(2)}
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${coupon.code}')">Copy Code</button>
+                        `;
+                        container.appendChild(couponElement);
+                    });
+                } else {
+                    container.innerHTML = '<p>No available coupons.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching coupons:', error);
+                document.getElementById('couponsContainer').innerHTML = '<p>Error loading coupons.</p>';
+            });
+    }
+
+    // Function to copy coupon code to clipboard
+    function copyToClipboard(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        alert('Coupon code copied: ' + code);
+    }).catch(err => {
+        console.error('Error copying code: ', err);
+    });
+}
+
+
+    // Fetch and display coupons on page load
+    document.addEventListener('DOMContentLoaded', fetchCoupons);
 </script>
-  </body>
+</body>
   
 </html>

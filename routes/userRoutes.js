@@ -76,5 +76,9 @@ router.post('/reset-password', userController.resetPassword);
 // Apply coupon
 router.post('/checkout/apply-coupon', userController.applyCoupon);
 
+// Wishlist routes
+router.post('/wishlist/add', isAuthenticated, userController.addToWishlist);
+router.post('/wishlist/remove', isAuthenticated, userController.removeFromWishlist);
+router.get('/wishlist', isAuthenticated, userController.getWishlist);
 
 module.exports = router;

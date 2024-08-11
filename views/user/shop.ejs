@@ -102,9 +102,13 @@
                                             <a aria-label="Quick view" class="action-btn hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal">
                                                 <i class="fi-rs-search"></i>
                                             </a>
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="/shop-wishlist.html">
-                                                <i class="fi-rs-heart"></i>
-                                            </a>
+                                            <form action="/wishlist/add" method="POST" class="d-inline">
+                                                <input type="hidden" name="productId" value="<%= product._id %>">
+                                                <button type="submit" class="action-btn hover-up" aria-label="Add To Wishlist">
+                                                    <i class="fi-rs-heart"></i>
+                                                </button>
+                                            </form>
+                                            
                                             <a aria-label="Compare" class="action-btn hover-up" href="/shop-compare.html">
                                                 <i class="fi-rs-shuffle"></i>
                                             </a>

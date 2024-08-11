@@ -5,6 +5,7 @@ const Product = require('../models/productModel');
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderShema');
 const Coupon = require('../models/coupenModel');
+const Wishlist = require('../models/wishlistModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -1217,8 +1218,58 @@ const applyCoupon = async (req, res) => {
     }
 };
 
+// Get user's wishlist
+const getWishlist = async (req, res) => {
+    try {
+        const wishlist = await Wishlist.findOne({ user: req.session.user?.userId }).populate('products');
+        res.render('wishList', { wishlist });
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).json({ success: false, message: 'Failed to retrieve wishlist' });
+    }
+};
 
+// Add product to wishlist
+const addToWishlist = async (req, res) => {
+    try {
+        const productId = req.body.productId;
+        const userId =await User.findById(req.session.user?.userId);
 
+        let wishlist = await Wishlist.findOne({ user: userId });
+        if (!wishlist) {
+            wishlist = new Wishlist({ user: userId, products: [] });
+        }
+
+        if (!wishlist.products.includes(productId)) {
+            wishlist.products.push(productId);
+            await wishlist.save();
+            return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+        } else {
+            return res.status(400).json({ success: false, message: 'Product already in wishlist' });
+        }
+    } catch (err) {
+        console.error('Error adding product to wishlist:', err);
+        return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+    }
+};
+
+  // Remove product from wishlist
+  const removeFromWishlist = async (req, res) => {
+    try {
+      const wishlist = await Wishlist.findOne({ user: req.session.user?.userId });
+      if (wishlist) {
+        wishlist.products = wishlist.products.filter(productId => productId.toString() !== req.body.productId);
+        await wishlist.save();
+        res.status(200).json({ success: true, message: 'Product removed from wishlist' });
+      } else {
+        res.status(404).json({ success: false, message: 'Wishlist not found' });
+      }
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Failed to remove product from wishlist' });
+    }
+  };
+  
+  
 module.exports = {
     signUpPage,
     loginPage,
@@ -1253,5 +1304,8 @@ module.exports = {
     getOrderDetails,
     search,
     returnOrder,
-    applyCoupon
+    applyCoupon,
+    addToWishlist,
+    removeFromWishlist,
+    getWishlist
 };

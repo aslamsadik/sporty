@@ -6,6 +6,7 @@ const Cart = require('../models/cartModel');
 const Order = require('../models/orderShema');
 const Coupon = require('../models/coupenModel');
 const Wishlist = require('../models/wishlistModel');
+const Wallet = require('../models/walletModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -660,129 +661,148 @@ const getCheckoutPage = async (req, res) => {
 
 const placeOrder = async (req, res) => {
     try {
-      const userId = req.session.user?.userId;
-  
-      if (!userId) {
-        return res.status(401).json({ message: 'User is not authenticated' });
-      }
-  
-      const { shippingAddressId, orderNotes, paymentMethod, couponCode } = req.body;
-  
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      const cart = await Cart.findOne({ userId }).populate('products.productId');
-      if (!cart || cart.products.length === 0) {
-        return res.status(400).json({ message: 'Your cart is empty' });
-      }
-  
-      const selectedShippingAddress = user.addresses.id(shippingAddressId);
-      if (!selectedShippingAddress) {
-        return res.status(400).json({ message: 'Shipping address not found' });
-      }
-  
-      let isOutOfStock = false;
-      const updatedProducts = [];
-  
-      // Check stock for each product in the cart
-      for (const item of cart.products) {
-        const product = await Product.findById(item.productId._id);
-  
-        if (!product) {
-          return res.status(404).json({ message: 'Product not found' });
+        const userId = req.session.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User is not authenticated' });
         }
-  
-        if (product.stock < item.quantity) {
-          isOutOfStock = true;
-          break;
+
+        const { shippingAddressId, orderNotes, paymentMethod, couponCode } = req.body;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
-  
-        // Reduce the stock for the product
-        product.stock -= item.quantity;
-        await product.save();
-  
-        updatedProducts.push({
-          productId: product._id,
-          quantity: item.quantity,
+
+        const cart = await Cart.findOne({ userId }).populate('products.productId');
+        if (!cart || cart.products.length === 0) {
+            return res.status(400).json({ message: 'Your cart is empty' });
+        }
+
+        const selectedShippingAddress = user.addresses.id(shippingAddressId);
+        if (!selectedShippingAddress) {
+            return res.status(400).json({ message: 'Shipping address not found' });
+        }
+
+        let isOutOfStock = false;
+        const updatedProducts = [];
+
+        // Check stock for each product in the cart
+        for (const item of cart.products) {
+            const product = await Product.findById(item.productId._id);
+
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            if (product.stock < item.quantity) {
+                isOutOfStock = true;
+                break;
+            }
+
+            // Reduce the stock for the product
+            product.stock -= item.quantity;
+            await product.save();
+
+            updatedProducts.push({
+                productId: product._id,
+                quantity: item.quantity,
+            });
+        }
+
+        if (isOutOfStock) {
+            return res.status(400).json({ message: 'One or more products are out of stock' });
+        }
+
+        // Calculate total price before discount
+        let totalPriceBeforeDiscount = cart.products.reduce((total, item) => {
+            const product = item.productId;
+            return total + product.price * item.quantity;
+        }, 0);
+
+        let discountAmount = 0;
+
+        // Check if a valid coupon code is applied
+        if (couponCode) {
+            const coupon = await Coupon.findOne({ code: couponCode });
+
+            if (!coupon || coupon.usedCount >= coupon.usageLimit || coupon.expirationDate < new Date()) {
+                return res.status(400).json({ message: 'Invalid or expired coupon code' });
+            }
+
+            if (coupon.discountType === 'percentage') {
+                discountAmount = totalPriceBeforeDiscount * (coupon.discountValue / 100);
+            } else if (coupon.discountType === 'fixed') {
+                discountAmount = coupon.discountValue;
+            }
+
+            // Ensure discount does not exceed the total price
+            if (discountAmount > totalPriceBeforeDiscount) {
+                discountAmount = totalPriceBeforeDiscount;
+            }
+
+            // Increment the used count of the coupon
+            coupon.usedCount += 1;
+            await coupon.save();
+        }
+
+        // Calculate final total price after discount
+        let totalPrice = Math.round(totalPriceBeforeDiscount - discountAmount);
+
+        // Ensure total price is not negative
+        if (totalPrice < 0) {
+            totalPrice = 0;
+        }
+
+        // Log for debugging
+        console.log('Total Price Before Discount:', totalPriceBeforeDiscount);
+        console.log('Discount Amount:', Math.round(discountAmount));
+        console.log('Total Price After Discount:', totalPrice);
+
+        // Check and deduct from wallet if payment method is wallet
+        if (paymentMethod === 'wallet') {
+            const wallet = await Wallet.findOne({ user: userId });
+
+            if (!wallet || wallet.balance < totalPrice) {
+                return res.status(400).json({ message: 'Insufficient wallet balance' });
+            }
+
+            // Deduct amount from wallet
+            wallet.balance -= totalPrice;
+            wallet.transactions.push({
+                amount: totalPrice,
+                type: 'debit',
+                description: 'Order placed',
+            });
+
+            await wallet.save();
+        }
+
+        const order = new Order({
+            userId,
+            products: updatedProducts,
+            shippingAddressId, // Correctly use shippingAddressId
+            totalPrice, // Ensure this is the discounted total
+            discountAmount, // Save the discount amount
+            couponCode, // Save the coupon code used
+            paymentMethod,
+            orderNotes,
+            status: 'Pending',
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
-      }
-  
-      if (isOutOfStock) {
-        return res.status(400).json({ message: 'One or more products are out of stock' });
-      }
-  
-      // Calculate total price before discount
-      let totalPriceBeforeDiscount = cart.products.reduce((total, item) => {
-        const product = item.productId;
-        return total + product.price * item.quantity;
-      }, 0);
-  
-      let discountAmount = 0;
-  
-      // Check if a valid coupon code is applied
-      if (couponCode) {
-        const coupon = await Coupon.findOne({ code: couponCode });
-  
-        if (!coupon || coupon.usedCount >= coupon.usageLimit || coupon.expirationDate < new Date()) {
-          return res.status(400).json({ message: 'Invalid or expired coupon code' });
-        }
-  
-        if (coupon.discountType === 'percentage') {
-          discountAmount = totalPriceBeforeDiscount * (coupon.discountValue / 100);
-        } else if (coupon.discountType === 'fixed') {
-          discountAmount = coupon.discountValue;
-        }
-  
-        // Ensure discount does not exceed the total price
-        if (discountAmount > totalPriceBeforeDiscount) {
-          discountAmount = totalPriceBeforeDiscount;
-        }
-  
-        // Increment the used count of the coupon
-        coupon.usedCount += 1;
-        await coupon.save();
-      }
-  
-      // Calculate final total price after discount
-      let totalPrice = Math.round(totalPriceBeforeDiscount - discountAmount);
-  
-      // Ensure total price is not negative
-      if (totalPrice < 0) {
-        totalPrice = 0;
-      }
-  
-      // Log for debugging
-      console.log('Total Price Before Discount:', totalPriceBeforeDiscount);
-      console.log('Discount Amount:',Math.round(discountAmount));
-      console.log('Total Price After Discount:', totalPrice);
-  
-      const order = new Order({
-        userId,
-        products: updatedProducts,
-        shippingAddressId, // Correctly use shippingAddressId
-        totalPrice, // Ensure this is the discounted total
-        discountAmount, // Save the discount amount
-        couponCode, // Save the coupon code used
-        paymentMethod,
-        orderNotes,
-        status: 'Pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-  
-      await order.save();
-      await Cart.deleteOne({ userId });
-  
-      res.json({ success: true, orderId: order._id });
+
+        await order.save();
+        await Cart.deleteOne({ userId });
+
+        res.json({ success: true, orderId: order._id });
     } catch (error) {
-      console.error('Error placing order:', error.message);
-      res.status(500).json({ message: `Error placing order: ${error.message}` });
+        console.error('Error placing order:', error.message);
+        res.status(500).json({ message: `Error placing order: ${error.message}` });
     }
-  };
+};
   
-  const getOrderConfirmpage = async (req, res) => {
+const getOrderConfirmpage = async (req, res) => {
     try {
         const orderId = req.params.orderId;
 
@@ -819,6 +839,18 @@ const cancelOrder = async (req, res) => {
         order.status = 'Cancelled';
         order.updatedAt = new Date();
         await order.save();
+
+        // Refund to wallet if payment was through wallet
+        if (order.paymentMethod === 'wallet') {
+            const wallet = await Wallet.findOne({ user: order.userId });
+            wallet.balance += order.totalPrice;
+            wallet.transactions.push({
+                amount: order.totalPrice,
+                type: 'credit',
+                description: 'Order cancelled and refunded',
+            });
+            await wallet.save();
+        }
 
         res.redirect(`/orderConfirm/${orderId}`);
     } catch (error) {
@@ -1046,12 +1078,23 @@ const returnOrder = async (req, res) => {
         order.status = 'Return Requested'; // Updating status for user's view
         await order.save();
 
+        // Refund to wallet
+        const wallet = await Wallet.findOne({ user: order.userId });
+        wallet.balance += order.totalPrice;
+        wallet.transactions.push({
+            amount: order.totalPrice,
+            type: 'credit',
+            description: 'Order returned and refunded',
+        });
+        await wallet.save();
+
         res.json({ success: true, message: 'Return request submitted successfully.' });
     } catch (error) {
         console.error('Error requesting return:', error);
         res.status(500).json({ success: false, message: 'Failed to request return.' });
     }
 };
+
 const getforgotPassword = async (req, res) => {
     try {
         res.render("forgotPassword");
@@ -1218,17 +1261,6 @@ const applyCoupon = async (req, res) => {
     }
 };
 
-// Get user's wishlist
-const getWishlist = async (req, res) => {
-    try {
-        const wishlist = await Wishlist.findOne({ user: req.session.user?.userId }).populate('products');
-        res.render('wishList', { wishlist });
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ success: false, message: 'Failed to retrieve wishlist' });
-    }
-};
-
 // Add product to wishlist
 const addToWishlist = async (req, res) => {
     try {
@@ -1269,7 +1301,103 @@ const addToWishlist = async (req, res) => {
     }
   };
   
-  
+  const getWishlist = async (req, res) => {
+    try {
+        const wishlist = await Wishlist.findOne({ user: req.session.user?.userId }).populate('products');
+        res.render('wishList', { wishlist });
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).json({ success: false, message: 'Failed to retrieve wishlist' });
+    }
+};
+
+const getWalletDetails = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).send('User not authenticated');
+        }
+
+        const userId = req.session.user.userId;
+        let wallet = await Wallet.findOne({ user: userId });
+
+        // If wallet doesn't exist, create one
+        if (!wallet) {
+            wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
+            await wallet.save();
+        }
+
+        console.log('Wallet Details:', wallet);  // Log the wallet details for debugging
+
+        res.render('wallet', { wallet });
+    } catch (error) {
+        console.log('Error retrieving wallet details:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+const addFunds = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).send('User not authenticated');
+        }
+
+        const userId = req.session.user.userId;
+        const { amount, description } = req.body;
+
+        let wallet = await Wallet.findOne({ user: userId });
+
+        if (!wallet) {
+            wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
+        }
+
+        wallet.balance += amount;
+        wallet.transactions.push({
+            amount,
+            type: 'credit',
+            description,
+        });
+
+        await wallet.save();
+
+        res.redirect('/wallet');
+    } catch (error) {
+        console.log('Error adding funds:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+const deductFunds = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).send('User not authenticated');
+        }
+
+        const userId = req.session.user.userId;
+        const { amount, description } = req.body;
+
+        let wallet = await Wallet.findOne({ user: userId });
+
+        if (!wallet || wallet.balance < amount) {
+            return res.status(400).send('Insufficient funds in wallet');
+        }
+
+        wallet.balance -= amount;
+        wallet.transactions.push({
+            amount,
+            type: 'debit',
+            description,
+        });
+
+        await wallet.save();
+
+        res.redirect('/wallet');
+    } catch (error) {
+        console.log('Error deducting funds:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+
 module.exports = {
     signUpPage,
     loginPage,
@@ -1307,5 +1435,8 @@ module.exports = {
     applyCoupon,
     addToWishlist,
     removeFromWishlist,
-    getWishlist
+    getWishlist,
+    getWalletDetails,
+    addFunds,
+    deductFunds
 };

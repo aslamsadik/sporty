@@ -2,68 +2,131 @@
 
 <main class="main">
   <section class="mt-50 mb-50">
-      <div class="container">
-          <div class="row">
-              <div class="col-12">
-                  <div class="table-responsive">
-                      <% if (wishlist && wishlist.products.length > 0) { %>
-                          <table class="table shopping-summery text-center">
-                              <thead>
-                                  <tr class="main-heading">
-                                      <th scope="col" colspan="2">Product</th>
-                                      <th scope="col">Price</th>
-                                      <th scope="col">Stock Status</th>
-                                      <th scope="col">Action</th>
-                                      <th scope="col">Remove</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  <% wishlist.products.forEach(product => { %>
-                                      <tr>
-                                          <td class="image product-thumbnail">
-                                              <img src="<%= product.images.length > 0 ? `/user_assets/imgs/shop/${product.images[0]}` : '/user_assets/imgs/shop/default-image.jpg' %>" alt="#">
-                                          </td>
-                                          <td class="product-des product-name">
-                                              <h5 class="product-name"><a href="/product/<%= product._id %>"><%= product.name %></a></h5>
-                                              <p class="font-xs"><%= product.description %></p>
-                                          </td>
-                                          <td class="price" data-title="Price"><span>₹<%= product.price %></span></td>
-                                          <td class="text-center" data-title="Stock">
-                                              <% if (product.stock > 0) { %>
-                                                  <span class="color3 font-weight-bold">In Stock</span>
-                                              <% } else { %>
-                                                  <span class="text-danger font-weight-bold">Out of stock</span>
-                                              <% } %>
-                                          </td>
-                                          <td class="text-right" data-title="Cart">
-                                              <% if (product.stock > 0) { %>
-                                                  <form action="/cart/add" method="POST">
-                                                      <input type="hidden" name="productId" value="<%= product._id %>">
-                                                      <button type="submit" class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</button>
-                                                  </form>
-                                              <% } else { %>
-                                                  <button class="btn btn-sm btn-secondary" disabled><i class="fi-rs-headset mr-5"></i>Out of Stock</button>
-                                              <% } %>
-                                          </td>
-                                          <td class="action" data-title="Remove">
-                                              <form action="/wishlist/remove" method="POST">
-                                                  <input type="hidden" name="productId" value="<%= product._id %>">
-                                                  <button type="submit" class="btn btn-sm btn-danger"><i class="fi-rs-trash"></i></button>
-                                              </form>
-                                          </td>
-                                      </tr>
-                                  <% }); %>
-                              </tbody>
-                          </table>
-                      <% } else { %>
-                          <p>Your wishlist is empty.</p>
-                      <% } %>
-                  </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <!-- Modal Structure -->
+          <div id="messageModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Wishlist Notification</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p id="modalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
               </div>
+            </div>
           </div>
+
+          <!-- Wishlist Table -->
+          <div class="table-responsive">
+            <% if (wishlist && wishlist.products.length > 0) { %>
+              <table class="table shopping-summery text-center">
+                <thead>
+                  <tr class="main-heading">
+                    <th scope="col" colspan="2">Product</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Stock Status</th>
+                    <th scope="col">Action</th>
+                    <th scope="col">Remove</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% wishlist.products.forEach(product => { %>
+                    <tr>
+                      <td class="image product-thumbnail">
+                        <img src="<%= product.images.length > 0 ? `/user_assets/imgs/shop/${product.images[0]}` : '/user_assets/imgs/shop/default-image.jpg' %>" alt="#">
+                      </td>
+                      <td class="product-des product-name">
+                        <h5 class="product-name"><a href="/product/<%= product._id %>"><%= product.name %></a></h5>
+                        <p class="font-xs"><%= product.description %></p>
+                      </td>
+                      <td class="price" data-title="Price"><span>₹<%= product.price %></span></td>
+                      <td class="text-center" data-title="Stock">
+                        <% if (product.stock > 0) { %>
+                          <span class="color3 font-weight-bold">In Stock</span>
+                        <% } else { %>
+                          <span class="text-danger font-weight-bold">Out of stock</span>
+                        <% } %>
+                      </td>
+                      <td class="text-right" data-title="Cart">
+                        <% if (product.stock > 0) { %>
+                            <form class="add-to-cart-form" action="/cart/add" method="POST" data-product-id="<%= product._id %>">
+                                <input type="hidden" name="productId" value="<%= product._id %>">
+                                <button type="submit" class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</button>
+                            </form>
+                        <% } else { %>
+                            <button class="btn btn-sm btn-secondary" disabled><i class="fi-rs-headset mr-5"></i>Out of Stock</button>
+                        <% } %>
+                    </td>
+                    
+                      <td class="action" data-title="Remove">
+                        <form class="remove-from-wishlist-form" data-product-id="<%= product._id %>" action="/wishlist/remove" method="POST">
+                          <input type="hidden" name="productId" value="<%= product._id %>">
+                          <button type="submit" class="button button-remove-from-wishlist">Remove</button>
+                      </form>
+                      
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            <% } else { %>
+              <p>Your wishlist is empty.</p>
+            <% } %>
+          </div>
+        </div>
       </div>
+    </div>
   </section>
 </main>
+
+<!-- Ensure jQuery and Bootstrap JS are included -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const showMessageModal = (message) => {
+      document.getElementById("modalMessage").innerText = message;
+      $('#messageModal').modal('show');
+    };
+
+    document.querySelectorAll(".addToCartForm, .removeFromWishlistForm").forEach(form => {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch(this.action, {
+          method: "POST",
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showMessageModal(data.message);
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            showMessageModal(data.message);
+          }
+        })
+        .catch(error => {
+          showMessageModal("An error occurred. Please try again.");
+        });
+      });
+    });
+  });
+</script>
+
+
+
 
 
 

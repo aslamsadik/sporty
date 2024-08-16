@@ -81,4 +81,12 @@ router.post('/wishlist/add', isAuthenticated, userController.addToWishlist);
 router.post('/wishlist/remove', isAuthenticated, userController.removeFromWishlist);
 router.get('/wishlist', isAuthenticated, userController.getWishlist);
 
+// Route to get wallet details
+router.get('/wallet',isAuthenticated, userController.getWalletDetails);
+// Route to add funds to the wallet
+router.post('/wallet/add-funds', userController.addFunds);
+// Route to deduct funds from the wallet
+router.post('/wallet/deduct-funds', userController.deductFunds);
+
+
 module.exports = router;

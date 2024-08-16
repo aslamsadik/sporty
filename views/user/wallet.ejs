@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet</title>
+    <!-- Include Bootstrap CSS for styling -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <main class="main">
+        <section class="mt-50 mb-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <!-- Modal Structure -->
+                        <div id="messageModal" class="modal fade" tabindex="-1" role="dialog">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Wallet Notification</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p id="modalMessage"></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Wallet Details -->
+                        <div class="wallet-details">
+                            <h1>Wallet Details</h1>
+                            <p>Balance: ₹<%= wallet.balance.toFixed(2) %></p>
+                        </div>
+    
+                        <!-- Add Funds Form -->
+                        <div class="add-funds mt-4">
+                            <h2>Add Funds</h2>
+                            <form action="/wallet/add-funds" method="POST">
+                                <div class="form-group">
+                                    <input type="number" name="amount" step="0.01" min="0" class="form-control" placeholder="Amount" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="description" class="form-control" placeholder="Description" required>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Funds</button>
+                            </form>
+                        </div>
+    
+                        <!-- Deduct Funds Form -->
+                        <div class="deduct-funds mt-4">
+                            <h2>Deduct Funds</h2>
+                            <form action="/wallet/deduct-funds" method="POST">
+                                <div class="form-group">
+                                    <input type="number" name="amount" step="0.01" min="0" class="form-control" placeholder="Amount" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="description" class="form-control" placeholder="Description" required>
+                                </div>
+                                <button type="submit" class="btn btn-danger">Deduct Funds</button>
+                            </form>
+                        </div>
+    
+                        <!-- Transaction History -->
+                        <div class="transaction-history mt-4">
+                            <h2>Transaction History</h2>
+                            <div class="table-responsive">
+                                <% if (wallet && wallet.transactions && wallet.transactions.length > 0) { %>
+                                    <table class="table table-bordered text-center">
+                                        <thead>
+                                            <tr class="main-heading">
+                                                <th scope="col">Date</th>
+                                                <th scope="col">Type</th>
+                                                <th scope="col">Amount</th>
+                                                <th scope="col">Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% wallet.transactions.forEach(transaction => { %>
+                                                <tr>
+                                                    <td><%= transaction.date.toDateString() %></td>
+                                                    <td><%= transaction.type %></td>
+                                                    <td>₹<%= transaction.amount.toFixed(2) %></td>
+                                                    <td><%= transaction.description %></td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                <% } else { %>
+                                    <p>Your wallet is empty.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Include jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

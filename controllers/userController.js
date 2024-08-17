@@ -781,7 +781,8 @@ const placeOrder = async (req, res) => {
         const order = new Order({
             userId,
             products: updatedProducts,
-            shippingAddressId, // Correctly use shippingAddressId
+            shippingAddress: selectedShippingAddress,
+            shippingAddressId, // Ensure this is included in the order
             totalPrice, // Ensure this is the discounted total
             discountAmount, // Save the discount amount
             couponCode, // Save the coupon code used
@@ -801,6 +802,7 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ message: `Error placing order: ${error.message}` });
     }
 };
+
   
 const getOrderConfirmpage = async (req, res) => {
     try {

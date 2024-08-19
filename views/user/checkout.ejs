@@ -28,7 +28,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
       position: relative;
-      max-width: 400px; /* Adjust the width here */
+      max-width: 400px;
     }
     .address-card:hover {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -191,6 +191,9 @@
             <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery" />
             <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
           </div>
+
+          <!-- Razorpay Button -->
+          <button type="button" class="btn btn-primary btn-lg btn-block mt-4" id="razorpayButton">Pay with Razorpay</button>
         </div>
   
         <div class="summary-section">
@@ -215,81 +218,81 @@
             <p>Your cart is empty.</p>
           <% } %>
   
-          <!-- Coupons Section -->
-          <div class="coupons-section mt-4">
-            <h4 class="text-center">Available Coupons</h4>
-            <div id="couponsContainer" class="coupon-container">
-              <% if (coupons && coupons.length > 0) { %>
-                <% coupons.forEach((coupon) => { %>
-                  <div class="coupon-item card mb-2">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                      <div class="coupon-info">
-                        <strong class="coupon-code"><%= coupon.code %></strong><br>
-                        <span class="coupon-discount">
-                          <%= coupon.discountType === 'percentage' ? coupon.discountValue + '% off' : '₹' + coupon.discountValue + ' off' %>
-                        </span><br>
-                        <small class="coupon-expiry">Expires: <%= new Date(coupon.expirationDate).toLocaleDateString() %></small>
-                      </div>
-                      <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('<%= coupon.code %>')">Copy</button>
+         <!-- Coupons Section -->
+         <div class="coupons-section mt-4">
+          <h4 class="text-center">Available Coupons</h4>
+          <div id="couponsContainer" class="coupon-container">
+            <% if (coupons && coupons.length > 0) { %>
+              <% coupons.forEach((coupon) => { %>
+                <div class="coupon-item card mb-2">
+                  <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="coupon-info">
+                      <strong class="coupon-code"><%= coupon.code %></strong><br>
+                      <span class="coupon-discount">
+                        <%= coupon.discountType === 'percentage' ? coupon.discountValue + '% off' : '₹' + coupon.discountValue + ' off' %>
+                      </span><br>
+                      <small class="coupon-expiry">Expires: <%= new Date(coupon.expirationDate).toLocaleDateString() %></small>
                     </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('<%= coupon.code %>')">Copy</button>
                   </div>
-                <% }) %>
-              <% } else { %>
-                <p class="text-center">No available coupons at the moment.</p>
-              <% } %>
-            </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p class="text-center">No available coupons at the moment.</p>
+            <% } %>
           </div>
-  
-          <!-- Coupon Section -->
-          <div class="coupon-section mt-4">
-            <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code" />
-            <button type="button" class="btn btn-primary mt-2" onclick="applyCoupon()">Apply Coupon</button>
-            <div id="couponMessage" class="mt-2"></div>
-          </div>
-          <!-- End Coupon Section -->
-  
-          <!-- Hidden fields for order -->
-          <input
-            type="hidden"
-            id="totalPrice"
-            name="totalPrice"
-            value="<%= cart ? cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0) : 0 %>"
-          />
-          <input type="hidden" id="discountAmount" name="discountAmount" value="0" />
-          <input type="hidden" id="couponCodeInput" name="couponCode" />
-          <!-- End hidden fields -->
+        </div>
+         <!-- Coupon Section -->
+         <div class="coupon-section mt-4">
+          <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code" />
+          <button type="button" class="btn btn-primary mt-2" onclick="applyCoupon()">Apply Coupon</button>
+          <div id="couponMessage" class="mt-2"></div>
+        </div>
+        <!-- End Coupon Section -->
+
+          <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
         </div>
       </div>
-  
-      <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">Place Order</button>
     </form>
   </div>
-  
-  <!-- Modal Structure -->
-  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content bg-danger text-white">
-        <div class="modal-header">
-          <h5 class="modal-title" id="errorModalLabel">Error</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body" id="modalBody">
-          <!-- Error message will be inserted here -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script>
-     $(document).ready(function () {
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    document.getElementById('razorpayButton').onclick = function (e) {
+      e.preventDefault();
+
+      var options = {
+        "key": "<%= razorpayKeyId %>", // Replace with your Razorpay key ID
+        "amount": "<%= cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0).toFixed(2) %>" * 100, // Amount in paise
+        "currency": "INR",
+        "name": "Your Company Name",
+        "description": "Test Transaction",
+        "image": "/your_logo.png", // Replace with your company logo
+        "order_id": "<%= razorpayOrderId %>", // Replace with the order ID generated in the backend
+        "handler": function (response) {
+          // Handle the response from Razorpay
+          alert(response.razorpay_payment_id);
+          alert(response.razorpay_order_id);
+          alert(response.razorpay_signature);
+
+          // After successful payment, submit the form
+          document.getElementById('placeOrderForm').submit();
+        },
+        "prefill": {
+          "name": "<%= user.username %>",
+          "email": "<%= user.email %>",
+          "contact": "<%= user.phone %>"
+        },
+        "theme": {
+          "color": "#3399cc"
+        }
+      };
+
+      var rzp1 = new Razorpay(options);
+      rzp1.open();
+    };
+
+    $(document).ready(function () {
     // Highlight the selected address
     $("input[name='shippingAddressId']").on("change", function () {
         $(".address-card").removeClass("active");
@@ -423,7 +426,6 @@ function updateTotalPrice(discountAmount, discountType, discountValue) {
 
     // Fetch and display coupons on page load
     document.addEventListener('DOMContentLoaded', fetchCoupons);
-</script>
+  </script>
 </body>
-  
 </html>

@@ -3,6 +3,7 @@ const router = express.Router();
 const passport = require('passport');
 const userController = require('../controllers/userController');
 const { isBlockedMiddleware, addNoCacheHeaders, isAuthenticated, isNotAuthenticated } = require('../middlewares/middleware');
+const { createRazorpayOrder } = require('../controllers/userController'); // Adjust the path as necessary
 
 // Google OAuth Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -88,5 +89,8 @@ router.post('/wallet/add-funds', userController.addFunds);
 // Route to deduct funds from the wallet
 router.post('/wallet/deduct-funds', userController.deductFunds);
 
+//razorpay
+router.post('/create-order', isAuthenticated, userController.createOrder);
+router.post('/verify-payment', isAuthenticated, userController.verifyPayment);
 
 module.exports = router;

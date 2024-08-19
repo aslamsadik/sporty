@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Razorpay = require('razorpay');
 const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
@@ -641,23 +642,49 @@ const getCheckoutPage = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!cart || cart.products.length === 0) {
-            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user, coupons: [] });
+            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user, coupons: [], razorpayKeyId: process.env.RAZORPAY_KEY_ID, razorpayOrderId: null });
         }
 
-        // Fetch available coupons that are not expired and within usage limits using aggregation pipeline
+        // Calculate the total amount
+        const totalAmount = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0) * 100; // Amount in paise
+
+        // Initialize Razorpay
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+
+        // Create a Razorpay order
+        const options = {
+            amount: totalAmount, // Amount in paise
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`
+        };
+
+        const order = await razorpay.orders.create(options);
+
+        // Fetch available coupons that are not expired and within usage limits
         const currentDate = new Date();
         const coupons = await Coupon.aggregate([
             { $match: { expirationDate: { $gte: currentDate } } },
             { $match: { $expr: { $lt: ["$usedCount", "$usageLimit"] } } }
         ]);
 
-        res.render('checkout', { message: null, messageType: null, cart, user, coupons });
+        // Render the checkout page with the order ID
+        res.render('checkout', { 
+            message: null, 
+            messageType: null, 
+            cart, 
+            user, 
+            coupons, 
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
+            razorpayOrderId: order.id // Pass the Razorpay order ID to the template
+        });
     } catch (error) {
         console.error('Error fetching checkout page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 const placeOrder = async (req, res) => {
     try {
@@ -803,18 +830,22 @@ const placeOrder = async (req, res) => {
     }
 };
 
-  
+
 const getOrderConfirmpage = async (req, res) => {
     try {
         const orderId = req.params.orderId;
+        console.log('Order ID:', orderId); // Log orderId
 
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            console.log('Invalid order ID');
             return res.status(400).render('orderConfirm', { order: null, message: 'Invalid order ID', messageType: 'error' });
         }
 
         const order = await Order.findById(orderId).populate('products.productId');
+        console.log('Order:', order); // Log the order object
 
         if (!order) {
+            console.log('Order not found');
             return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
         }
 
@@ -824,6 +855,7 @@ const getOrderConfirmpage = async (req, res) => {
         res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
     }
 };
+
 
 const cancelOrder = async (req, res) => {
     try {
@@ -1399,6 +1431,58 @@ const deductFunds = async (req, res) => {
     }
 };
 
+// Initialize Razorpay instance
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID, // Replace with your Razorpay Key ID
+    key_secret: process.env.RAZORPAY_KEY_SECRET, // Replace with your Razorpay Key Secret
+  });
+  
+const createOrder = async (req, res) => {
+    try {
+      const { totalPrice } = req.body;
+  
+      // Create an order in Razorpay
+      const options = {
+        amount: totalPrice * 100, // amount in smallest currency unit
+        currency: "INR",
+        receipt: `receipt_order_${Date.now()}`,
+      };
+  
+      const order = await razorpay.orders.create(options);
+      res.json({
+        success: true,
+        order_id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        key_id: process.env.RAZORPAY_KEY_ID,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Razorpay order creation failed" });
+    }
+  };
+  
+  // Handle payment verification
+  const verifyPayment = async (req, res) => {
+    try {
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+      const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  
+      const hmac = crypto.createHmac('sha256', key_secret);
+      hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+      const generated_signature = hmac.digest('hex');
+  
+      if (generated_signature === razorpay_signature) {
+        // Payment is successful, you can update your database accordingly
+        res.json({ success: true, message: "Payment verified successfully" });
+      } else {
+        res.status(400).json({ success: false, message: "Payment verification failed" });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Payment verification failed" });
+    }
+  };
 
 module.exports = {
     signUpPage,
@@ -1440,5 +1524,7 @@ module.exports = {
     getWishlist,
     getWalletDetails,
     addFunds,
-    deductFunds
+    deductFunds,
+    createOrder,
+    verifyPayment
 };

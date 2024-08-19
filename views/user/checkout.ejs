@@ -287,29 +287,56 @@
       });
 
       // Razorpay payment
-      $('#razorpayButton').click(function (e) {
-        var totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
-        var options = {
-          "key": "YOUR_RAZORPAY_KEY",
-          "amount": totalAmount,
-          "name": "Your Site Name",
-          "description": "Test Transaction",
-          "handler": function (response) {
-            alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
-            // Proceed with order placement
-            $('#placeOrderForm').submit();
-          },
-          "prefill": {
-            "name": "<%= user.firstName %> <%= user.lastName %>",
-            "email": "<%= user.email %>",
-            "contact": "<%= user.phone %>"
-          }
+      $(document).ready(function () {
+    $('#razorpayButton').click(function (e) {
+        e.preventDefault(); // Prevent form from submitting
+
+        const totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
+
+        const options = {
+            "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend
+            "amount": totalAmount,
+            "currency": "INR",
+            "name": "Your Site Name",
+            "description": "Test Transaction",
+            "order_id": "<%= razorpayOrderId %>", // Razorpay Order ID passed from backend
+            "handler": function (response) {
+                // After successful payment
+                alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
+
+                // Send the payment details to backend for verification
+                $.ajax({
+                    url: '/verify-payment',
+                    type: 'POST',
+                    data: {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    },
+                    success: function (result) {
+                        if (result.success) {
+                            $('#placeOrderForm').submit(); // Proceed with order placement
+                        } else {
+                            alert('Payment verification failed. Please try again.');
+                        }
+                    },
+                    error: function () {
+                        alert('Payment verification failed. Please try again.');
+                    }
+                });
+            },
+            "prefill": {
+                "name": "<%= user.firstName %> <%= user.lastName %>",
+                "email": "<%= user.email %>",
+                "contact": "<%= user.phone %>"
+            }
         };
-        var rzp1 = new Razorpay(options);
+
+        const rzp1 = new Razorpay(options);
         rzp1.open();
-        e.preventDefault();
-      });
     });
+});
+});
   </script>
 </body>
 </html>

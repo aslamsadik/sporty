@@ -144,6 +144,8 @@
     <% } %>
   
     <form id="placeOrderForm" action="/place-order" method="POST">
+      <input type="hidden" name="discountAmount" id="discountAmount" value="0">
+      <input type="hidden" name="couponCode" id="couponCodeInput" value="">
       <div class="checkout-row">
         <div class="content-section">
           <h4>Shipping Address</h4>
@@ -211,221 +213,103 @@
               <% }) %>
               <li class="list-group-item d-flex justify-content-between">
                 <span>Total (USD)</span>
-                <strong>₹<%= cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
+                <strong>₹<%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
               </li>
             </ul>
           <% } else { %>
-            <p>Your cart is empty.</p>
+            <p>No products found in cart.</p>
           <% } %>
   
-         <!-- Coupons Section -->
-         <div class="coupons-section mt-4">
-          <h4 class="text-center">Available Coupons</h4>
-          <div id="couponsContainer" class="coupon-container">
+          <div class="coupon-container">
+            <h5>Apply Coupon</h5>
             <% if (coupons && coupons.length > 0) { %>
-              <% coupons.forEach((coupon) => { %>
-                <div class="coupon-item card mb-2">
-                  <div class="card-body d-flex justify-content-between align-items-center">
-                    <div class="coupon-info">
-                      <strong class="coupon-code"><%= coupon.code %></strong><br>
-                      <span class="coupon-discount">
-                        <%= coupon.discountType === 'percentage' ? coupon.discountValue + '% off' : '₹' + coupon.discountValue + ' off' %>
-                      </span><br>
-                      <small class="coupon-expiry">Expires: <%= new Date(coupon.expirationDate).toLocaleDateString() %></small>
+                <% coupons.forEach((coupon) => { %>
+                    <div class="coupon-item">
+                        <div class="coupon-info">
+                            <div class="coupon-code"><%= coupon.code %></div>
+                            <div class="coupon-discount">Discount: <%= coupon.discountPercentage ? coupon.discountPercentage + '%' : coupon.discountAmount ? '₹' + coupon.discountAmount : '' %></div>
+                            <div class="coupon-expiry">
+                                Expires on: <%= coupon.expirationDate ? coupon.expirationDate.toLocaleDateString() : 'No expiration date' %>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary apply-coupon"
+                            data-code="<%= coupon.code %>"
+                            data-discount="<%= coupon.discountPercentage || coupon.discountAmount %>"
+                        >
+                            Apply
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('<%= coupon.code %>')">Copy</button>
-                  </div>
-                </div>
-              <% }) %>
+                <% }) %>
             <% } else { %>
-              <p class="text-center">No available coupons at the moment.</p>
+                <p>No coupons available.</p>
             <% } %>
-          </div>
         </div>
-         <!-- Coupon Section -->
-         <div class="coupon-section mt-4">
-          <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code" />
-          <button type="button" class="btn btn-primary mt-2" onclick="applyCoupon()">Apply Coupon</button>
-          <div id="couponMessage" class="mt-2"></div>
-        </div>
-        <!-- End Coupon Section -->
+        
 
-          <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
+          <!-- Final Price Section -->
+          <div class="final-price">
+            <h5>Final Price</h5>
+            <% if (cart && cart.products) { %>
+                <div class="final-price-value">
+                    ₹<span id="finalPriceValue"><%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></span>
+                </div>
+            <% } else { %>
+                <div class="final-price-value">₹0.00</div>
+            <% } %>
+        </div>
+        
         </div>
       </div>
+  
+      <!-- Add a submit button for order placement -->
+      <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">Place Order</button>
     </form>
   </div>
-
+  
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-    document.getElementById('razorpayButton').onclick = function (e) {
-      e.preventDefault();
-
-      var options = {
-        "key": "<%= razorpayKeyId %>", // Replace with your Razorpay key ID
-        "amount": "<%= cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0).toFixed(2) %>" * 100, // Amount in paise
-        "currency": "INR",
-        "name": "Your Company Name",
-        "description": "Test Transaction",
-        "image": "/your_logo.png", // Replace with your company logo
-        "order_id": "<%= razorpayOrderId %>", // Replace with the order ID generated in the backend
-        "handler": function (response) {
-          // Handle the response from Razorpay
-          alert(response.razorpay_payment_id);
-          alert(response.razorpay_order_id);
-          alert(response.razorpay_signature);
-
-          // After successful payment, submit the form
-          document.getElementById('placeOrderForm').submit();
-        },
-        "prefill": {
-          "name": "<%= user.username %>",
-          "email": "<%= user.email %>",
-          "contact": "<%= user.phone %>"
-        },
-        "theme": {
-          "color": "#3399cc"
-        }
-      };
-
-      var rzp1 = new Razorpay(options);
-      rzp1.open();
-    };
-
     $(document).ready(function () {
-    // Highlight the selected address
-    $("input[name='shippingAddressId']").on("change", function () {
-        $(".address-card").removeClass("active");
-        $(this).closest(".address-card").addClass("active");
-    });
+      // Handle applying a coupon
+      $('.apply-coupon').on('click', function () {
+        var couponCode = $(this).data('code');
+        var discountPercentage = $(this).data('discount');
+        var originalPrice = parseFloat($('#finalPriceValue').text());
+        var discountAmount = (originalPrice * discountPercentage) / 100;
+        var finalPrice = originalPrice - discountAmount;
 
-    // AJAX form submission for placing order
-    $("#placeOrderForm").on("submit", function (e) {
+        $('#discountAmount').val(discountAmount.toFixed(2));
+        $('#finalPriceValue').text(finalPrice.toFixed(2));
+        $('#couponCodeInput').val(couponCode);
+      });
+
+      // Razorpay payment
+      $('#razorpayButton').click(function (e) {
+        var totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
+        var options = {
+          "key": "YOUR_RAZORPAY_KEY",
+          "amount": totalAmount,
+          "name": "Your Site Name",
+          "description": "Test Transaction",
+          "handler": function (response) {
+            alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
+            // Proceed with order placement
+            $('#placeOrderForm').submit();
+          },
+          "prefill": {
+            "name": "<%= user.firstName %> <%= user.lastName %>",
+            "email": "<%= user.email %>",
+            "contact": "<%= user.phone %>"
+          }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
         e.preventDefault();
-        var form = $(this);
-        $.ajax({
-            type: "POST",
-            url: form.attr("action"),
-            data: form.serialize(),
-            success: function (response) {
-                // Handle success response
-                alert("Order placed successfully!");
-                // Redirect to order confirmation page with order ID
-                window.location.href = "/orderConfirm/" + response.orderId;
-            },
-            error: function (xhr) {
-                // Extract error message
-                var errorMessage = "Error placing order. Please try again.";
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-
-                // Show error message in modal
-                $("#modalBody").text(errorMessage);
-                $("#errorModal").modal('show');
-            },
-        });
+      });
     });
-});
-
-// Function to apply coupon
-function applyCoupon() {
-    const couponCode = document.getElementById('couponCode').value.trim();
-    const totalElement = document.querySelector('.order-summary strong');
-    let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
-
-    if (!couponCode) {
-        document.getElementById('couponMessage').textContent = 'Please enter a coupon code.';
-        return;
-    }
-
-    fetch('/checkout/apply-coupon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ couponCode, totalPrice: currentTotal })
-    })
-    .then(response => response.json())
-    .then(data => {
-        const couponMessageElement = document.getElementById('couponMessage');
-        if (data.success) {
-            couponMessageElement.textContent = `Discount Applied: ₹${data.discountAmount}`;
-            updateTotalPrice(data.discountAmount, data.discountType, data.discountValue);
-            document.getElementById('couponCodeInput').value = couponCode; // Store coupon code
-        } else {
-            couponMessageElement.textContent = data.message;
-        }
-    })
-    .catch(error => {
-        console.error('Error applying coupon:', error);
-        document.getElementById('couponMessage').textContent = 'Error applying coupon';
-    });
-}
-
-function updateTotalPrice(discountAmount, discountType, discountValue) {
-        const totalElement = document.querySelector('.order-summary strong');
-        let currentTotal = parseFloat(totalElement.textContent.replace('₹', ''));
-
-        let newTotal;
-        if (discountType === 'percentage') {
-            newTotal = currentTotal - (currentTotal * (discountValue / 100));
-        } else if (discountType === 'fixed') {
-            newTotal = currentTotal - discountValue;
-        }
-
-        newTotal = newTotal < 0 ? 0 : newTotal; // Ensure total is not negative
-        totalElement.textContent = `₹${newTotal.toFixed(2)}`;
-        document.getElementById('discountAmount').value = discountAmount.toFixed(2);
-        document.getElementById('couponCodeInput').value = couponCode;
-    }
-
-    document.getElementById('applyCouponButton').addEventListener('click', function (event) {
-        event.preventDefault(); // Prevent form submission
-        applyCoupon();
-    });
-
-    // coupen
-
-    // Function to fetch and display available coupons
-    function fetchCoupons() {
-        fetch('/coupons')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('couponsContainer');
-                if (data.success && data.coupons.length > 0) {
-                    data.coupons.forEach(coupon => {
-                        const couponElement = document.createElement('div');
-                        couponElement.className = 'coupon-item';
-                        couponElement.innerHTML = `
-                            <div class="coupon-code">Code: <strong>${coupon.code}</strong></div>
-                            <div class="coupon-details">
-                                Type: ${coupon.discountType}, Value: ₹${coupon.discountValue.toFixed(2)}
-                            </div>
-                            <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${coupon.code}')">Copy Code</button>
-                        `;
-                        container.appendChild(couponElement);
-                    });
-                } else {
-                    container.innerHTML = '<p>No available coupons.</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching coupons:', error);
-                document.getElementById('couponsContainer').innerHTML = '<p>Error loading coupons.</p>';
-            });
-    }
-
-    // Function to copy coupon code to clipboard
-    function copyToClipboard(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        alert('Coupon code copied: ' + code);
-    }).catch(err => {
-        console.error('Error copying code: ', err);
-    });
-}
-
-
-    // Fetch and display coupons on page load
-    document.addEventListener('DOMContentLoaded', fetchCoupons);
   </script>
 </body>
 </html>

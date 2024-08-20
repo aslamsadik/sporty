@@ -810,7 +810,7 @@ const placeOrder = async (req, res) => {
             return res.status(401).json({ message: 'User is not authenticated' });
         }
 
-        const { shippingAddressId, orderNotes, paymentMethod, couponCode } = req.body;
+        const { shippingAddressId, orderNotes, paymentMethod, couponCode, razorpayPaymentId } = req.body;
 
         const user = await User.findById(userId);
         if (!user) {
@@ -894,10 +894,7 @@ const placeOrder = async (req, res) => {
             totalPrice = 0;
         }
 
-        console.log('Total Price Before Discount:', totalPriceBeforeDiscount);
-        console.log('Discount Amount:', Math.round(discountAmount));
-        console.log('Total Price After Discount:', totalPrice);
-
+        // Handle payment method
         if (paymentMethod === 'wallet') {
             const wallet = await Wallet.findOne({ user: userId });
 
@@ -913,19 +910,31 @@ const placeOrder = async (req, res) => {
             });
 
             await wallet.save();
+        } else if (paymentMethod === 'razorpay') {
+            // Verify Razorpay payment
+            const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+            const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+            const hmac = crypto.createHmac('sha256', key_secret);
+            hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+            const generated_signature = hmac.digest('hex');
+
+            if (generated_signature !== razorpay_signature) {
+                return res.status(400).json({ message: 'Payment verification failed' });
+            }
         }
 
         const order = new Order({
             userId,
             products: updatedProducts,
             shippingAddress: selectedShippingAddress,
-            shippingAddressId, // Ensure this is included in the order
-            totalPrice, // Ensure this is the discounted total
-            discountAmount, // Save the discount amount
-            couponCode, // Save the coupon code used
+            shippingAddressId,
+            totalPrice,
+            discountAmount,
+            couponCode,
             paymentMethod,
             orderNotes,
-            status: 'Pending',
+            status: paymentMethod === 'razorpay' ? 'Paid' : 'Pending', // Set status based on payment method
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -939,8 +948,6 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ message: `Error placing order: ${error.message}` });
     }
 };
-
-
 
 const getOrderConfirmpage = async (req, res) => {
     try {
@@ -967,43 +974,74 @@ const getOrderConfirmpage = async (req, res) => {
     }
 };
 
-
 const cancelOrder = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const orderId = req.params.orderId;
-        const order = await Order.findById(orderId);
+        console.log(`Attempting to cancel order with ID: ${orderId}`);
 
+        const order = await Order.findById(orderId).session(session);
         if (!order) {
+            console.log('Order not found');
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
         }
 
         if (order.status !== 'Pending') {
+            console.log(`Order status is ${order.status}, cannot cancel`);
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).render('orderConfirm', { order, message: 'Only pending orders can be cancelled', messageType: 'error' });
         }
 
+        // Update order status and timestamp
         order.status = 'Cancelled';
         order.updatedAt = new Date();
-        await order.save();
+        await order.save({ session });
+        console.log('Order status updated to Cancelled');
 
         // Refund to wallet if payment was through wallet
         if (order.paymentMethod === 'wallet') {
-            const wallet = await Wallet.findOne({ user: order.userId });
+            console.log('Processing refund to wallet');
+
+            let wallet = await Wallet.findOne({ user: order.userId }).session(session);
+            if (!wallet) {
+                console.log('Wallet not found, creating a new one');
+                wallet = new Wallet({ user: order.userId, balance: 0, transactions: [] });
+            }
+
+            console.log(`Current Wallet Balance: ₹${wallet.balance}`);
+            console.log(`Refunding ₹${order.totalPrice} to wallet`);
+
+            // Ensure totalPrice is a valid number
+            if (typeof order.totalPrice !== 'number' || isNaN(order.totalPrice) || order.totalPrice < 0) {
+                throw new Error('Invalid totalPrice value');
+            }
+
             wallet.balance += order.totalPrice;
             wallet.transactions.push({
                 amount: order.totalPrice,
                 type: 'credit',
                 description: 'Order cancelled and refunded',
             });
-            await wallet.save();
+
+            await wallet.save({ session });
+            console.log('Wallet updated successfully. New Balance:', wallet.balance);
         }
 
+        await session.commitTransaction();
+        session.endSession();
         res.redirect(`/orderConfirm/${orderId}`);
     } catch (error) {
         console.error('Error cancelling order:', error.message);
+        await session.abortTransaction();
+        session.endSession();
         res.status(500).render('orderConfirm', { order: null, message: 'Error cancelling order. Please try again.', messageType: 'error' });
     }
 };
-
 
 const getProfilePage = async (req, res) => {
     try {
@@ -1403,8 +1441,6 @@ const applyCoupon = async (req, res) => {
     }
 };
 
-
-
 // Add product to wishlist
 const addToWishlist = async (req, res) => {
     try {
@@ -1580,8 +1616,24 @@ const verifyPayment = async (req, res) => {
         const generated_signature = hmac.digest('hex');
 
         if (generated_signature === razorpay_signature) {
-            // Payment is successful, you can update your database accordingly
-            res.json({ success: true, message: "Payment verified successfully" });
+            // Payment is successful, place the order
+            const orderDetails = req.body; // Add necessary order details
+            const order = new Order({
+                userId: req.user._id,
+                products: req.body.products,  // Assuming products come from req.body
+                shippingAddressId: req.body.shippingAddressId,
+                totalPrice: req.body.totalPrice,
+                discountAmount: req.body.discountAmount,
+                paymentMethod: "Razorpay",
+                orderNotes: req.body.orderNotes,
+                status: "Paid",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
+            await order.save();
+
+            res.json({ success: true, message: "Payment verified and order placed successfully" });
         } else {
             res.status(400).json({ success: false, message: "Payment verification failed" });
         }

@@ -186,8 +186,8 @@
             <label class="form-check-label" for="wallet">Wallet</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="PayPal" />
-            <label class="form-check-label" for="paypal">PayPal</label>
+            <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay" />
+            <label class="form-check-label" for="razorpay">Razorpay</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery" />
@@ -286,56 +286,62 @@
         $('#couponCodeInput').val(couponCode);
       });
 
-      // Razorpay payment
-      $(document).ready(function () {
-    $('#razorpayButton').click(function (e) {
-        e.preventDefault(); // Prevent form from submitting
+   // Razorpay payment
+   $('#razorpayButton').click(function (e) {
+            e.preventDefault(); // Prevent form from submitting
 
-        const totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
+            const totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
 
-        const options = {
-            "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend
-            "amount": totalAmount,
-            "currency": "INR",
-            "name": "Your Site Name",
-            "description": "Test Transaction",
-            "order_id": "<%= razorpayOrderId %>", // Razorpay Order ID passed from backend
-            "handler": function (response) {
-                // After successful payment
-                alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
+            const options = {
+                "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend
+                "amount": totalAmount,
+                "currency": "INR",
+                "name": "Your Site Name",
+                "description": "Test Transaction",
+                "order_id": "<%= razorpayOrderId %>", // Razorpay Order ID passed from backend
+                "handler": function (response) {
+                    // After successful payment
+                    alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
 
-                // Send the payment details to backend for verification
-                $.ajax({
-                    url: '/verify-payment',
-                    type: 'POST',
-                    data: {
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature
-                    },
-                    success: function (result) {
-                        if (result.success) {
-                            $('#placeOrderForm').submit(); // Proceed with order placement
-                        } else {
-                            alert('Payment verification failed. Please try again.');
-                        }
-                    },
-                    error: function () {
-                        alert('Payment verification failed. Please try again.');
-                    }
-                });
-            },
-            "prefill": {
-                "name": "<%= user.firstName %> <%= user.lastName %>",
-                "email": "<%= user.email %>",
-                "contact": "<%= user.phone %>"
-            }
-        };
+                    // Append payment details to the form
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'razorpay_order_id',
+                        value: response.razorpay_order_id
+                    }).appendTo('#placeOrderForm');
 
-        const rzp1 = new Razorpay(options);
-        rzp1.open();
-    });
-});
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'razorpay_payment_id',
+                        value: response.razorpay_payment_id
+                    }).appendTo('#placeOrderForm');
+
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'razorpay_signature',
+                        value: response.razorpay_signature
+                    }).appendTo('#placeOrderForm');
+
+                    // Manually set payment method
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'paymentMethod',
+                        value: 'Razorpay'
+                    }).appendTo('#placeOrderForm');
+
+                    // Submit the form to place the order
+                    $('#placeOrderForm').submit(); 
+                },
+                "prefill": {
+                    "name": "<%= user.firstName %> <%= user.lastName %>",
+                    "email": "<%= user.email %>",
+                    "contact": "<%= user.phone %>"
+                }
+            };
+
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+        });
 });
   </script>
 </body>

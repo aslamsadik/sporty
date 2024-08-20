@@ -1,0 +1,64 @@
+<%- include("../layouts/admin_header.ejs") %>
+
+<body>
+    <section class="content-main">
+        <div class="row">
+            <div class="col-6">
+                <div class="content-header">
+                    <h2 class="content-title">Offer Listing</h2>
+                </div>
+            </div>
+            <div class="col-6 text-end">
+                <a href="/admin/offers/new" class="btn btn-primary">Add New Offer</a>
+            </div>
+        </div>
+        
+        <% if (message) { %>
+            <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
+                <%= message %>
+            </div>
+        <% } %>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Offer Code</th>
+                                    <th>Type</th>
+                                    <th>Discount Type</th>
+                                    <th>Discount Value</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Usage Limit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% offers.forEach(offer => { %>
+                                    <tr>
+                                        <td><%= offer.code %></td>
+                                        <td><%= offer.type %></td>
+                                        <td><%= offer.discountType %></td>
+                                        <td><%= offer.discountValue %></td>
+                                        <td><%= new Date(offer.startDate).toLocaleDateString() %></td>
+                                        <td><%= new Date(offer.endDate).toLocaleDateString() %></td>
+                                        <td><%= offer.usageLimit %></td>
+                                        <td>
+                                            <a href="/admin/offers/<%= offer._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                                            <!-- Add delete functionality if needed -->
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include("../layouts/admin_footer.ejs") %>
+</body>

@@ -1,0 +1,79 @@
+<%- include("../layouts/admin_header.ejs") %>
+
+<body>
+    <section class="content-main">
+        <div class="row">
+            <div class="col-6">
+                <div class="content-header">
+                    <h2 class="content-title"><%= offer ? 'Edit Offer' : 'Add Offer' %></h2>
+                </div>
+            </div>
+        </div>
+        
+        <% if (message) { %>
+            <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
+                <%= message %>
+            </div>
+        <% } %>
+        
+        <form action="<%= offer ? '/admin/offers/' + offer._id + '/edit' : '/admin/offers' %>" method="POST">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>Offer Details</h6>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-4">
+                                        <label class="form-label">Offer Code</label>
+                                        <input type="text" placeholder="Enter offer code" class="form-control" name="code" value="<%= offer ? offer.code : '' %>" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Offer Type</label>
+                                        <select class="form-select" name="type" required>
+                                            <option value="" disabled>Select offer type</option>
+                                            <option value="product" <%= offer && offer.type === 'product' ? 'selected' : '' %>>Product</option>
+                                            <option value="category" <%= offer && offer.type === 'category' ? 'selected' : '' %>>Category</option>
+                                            <option value="referral" <%= offer && offer.type === 'referral' ? 'selected' : '' %>>Referral</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Discount Type</label>
+                                        <select class="form-select" name="discountType" required>
+                                            <option value="" disabled>Select discount type</option>
+                                            <option value="percentage" <%= offer && offer.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
+                                            <option value="fixed" <%= offer && offer.discountType === 'fixed' ? 'selected' : '' %>>Fixed</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Discount Value</label>
+                                        <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" value="<%= offer ? offer.discountValue : '' %>" min="0" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" name="startDate" value="<%= offer ? new Date(offer.startDate).toISOString().split('T')[0] : '' %>" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-control" name="endDate" value="<%= offer ? new Date(offer.endDate).toISOString().split('T')[0] : '' %>" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Usage Limit</label>
+                                        <input type="number" placeholder="e.g., 100" class="form-control" name="usageLimit" value="<%= offer ? offer.usageLimit : '' %>" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-md rounded font-sm hover-up" type="submit"><%= offer ? 'Update Offer' : 'Add Offer' %></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>        
+    </section>
+    
+    <%- include("../layouts/admin_footer.ejs") %>
+</body>

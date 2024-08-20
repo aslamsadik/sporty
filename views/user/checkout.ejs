@@ -220,45 +220,32 @@
             <p>No products found in cart.</p>
           <% } %>
   
+          <!-- Coupon Application Section -->
           <div class="coupon-container">
             <h5>Apply Coupon</h5>
             <% if (coupons && coupons.length > 0) { %>
-                <% coupons.forEach((coupon) => { %>
-                    <div class="coupon-item">
-                        <div class="coupon-info">
-                            <div class="coupon-code"><%= coupon.code %></div>
-                            <div class="coupon-discount">Discount: <%= coupon.discountPercentage ? coupon.discountPercentage + '%' : coupon.discountAmount ? '₹' + coupon.discountAmount : '' %></div>
-                            <div class="coupon-expiry">
-                                Expires on: <%= coupon.expirationDate ? coupon.expirationDate.toLocaleDateString() : 'No expiration date' %>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            class="btn btn-outline-primary apply-coupon"
-                            data-code="<%= coupon.code %>"
-                            data-discount="<%= coupon.discountPercentage || coupon.discountAmount %>"
-                        >
-                            Apply
-                        </button>
-                    </div>
-                <% }) %>
+              <% coupons.forEach((coupon) => { %>
+                <div class="coupon-item">
+                  <div class="coupon-info">
+                    <div class="coupon-code"><%= coupon.code %></div>
+                    <div class="coupon-discount">Discount: <%= coupon.discountPercentage ? coupon.discountPercentage + '%' : coupon.discountAmount ? '₹' + coupon.discountAmount : '' %></div>
+                    <div class="coupon-expiry">Expires on: <%= coupon.expirationDate.toLocaleDateString() %></div>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary apply-coupon" data-code="<%= coupon.code %>" data-discount="<%= coupon.discountPercentage || coupon.discountAmount %>" data-type="<%= coupon.discountPercentage ? 'percentage' : 'fixed' %>">Apply</button>
+                </div>
+              <% }) %>
             <% } else { %>
-                <p>No coupons available.</p>
+              <p>No coupons available.</p>
             <% } %>
-        </div>
-        
+          </div>
 
           <!-- Final Price Section -->
           <div class="final-price">
             <h5>Final Price</h5>
-            <% if (cart && cart.products) { %>
-                <div class="final-price-value">
-                    ₹<span id="finalPriceValue"><%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></span>
-                </div>
-            <% } else { %>
-                <div class="final-price-value">₹0.00</div>
-            <% } %>
-        </div>
+            <div class="final-price-value">
+              ₹<span id="finalPriceValue"><%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></span>
+            </div>
+          </div>
         
         </div>
       </div>

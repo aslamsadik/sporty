@@ -5,6 +5,7 @@ const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderShema');
+const Offer = require('../models/offerModel');
 const Coupon = require('../models/coupenModel');
 const Wishlist = require('../models/wishlistModel');
 const Wallet = require('../models/walletModel');
@@ -642,11 +643,55 @@ const getCheckoutPage = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!cart || cart.products.length === 0) {
-            return res.render('checkout', { message: 'Your cart is empty', messageType: 'error', cart: null, user, coupons: [], razorpayKeyId: process.env.RAZORPAY_KEY_ID, razorpayOrderId: null });
+            return res.render('checkout', { 
+                message: 'Your cart is empty', 
+                messageType: 'error', 
+                cart: null, 
+                user, 
+                coupons: [], 
+                razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
+                razorpayOrderId: null 
+            });
         }
 
         // Calculate the total amount
-        const totalAmount = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0) * 100; // Amount in paise
+        let totalAmount = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
+
+        // Fetch available coupons that are not expired and within usage limits
+        const currentDate = new Date();
+        const coupons = await Coupon.aggregate([
+            { $match: { expirationDate: { $gte: currentDate } } },
+            { $match: { $expr: { $lt: ["$usedCount", "$usageLimit"] } } }
+        ]);
+
+        // Map the coupons to ensure the `expiryDate` is valid
+        const couponData = coupons.map(coupon => ({
+            code: coupon.code,
+            discountPercentage: coupon.discountType === 'percentage' ? coupon.discountValue : null,
+            discountAmount: coupon.discountType === 'fixed' ? coupon.discountValue : null,
+            expirationDate: coupon.expirationDate ? new Date(coupon.expirationDate) : null // This line ensures valid expiry date
+        }));
+
+        // Check if a coupon is applied
+        const appliedCouponCode = req.query.couponCode;
+        let discountAmount = 0;
+
+        if (appliedCouponCode) {
+            const appliedCoupon = coupons.find(coupon => coupon.code === appliedCouponCode);
+
+            if (appliedCoupon) {
+                if (appliedCoupon.discountPercentage) {
+                    discountAmount = totalAmount * (appliedCoupon.discountPercentage / 100);
+                } else if (appliedCoupon.discountAmount) {
+                    discountAmount = appliedCoupon.discountAmount;
+                }
+
+                totalAmount -= discountAmount;
+            }
+        }
+
+        // Convert the total amount to paise (required by Razorpay)
+        const totalAmountInPaise = totalAmount * 100;
 
         // Initialize Razorpay
         const razorpay = new Razorpay({
@@ -656,44 +701,31 @@ const getCheckoutPage = async (req, res) => {
 
         // Create a Razorpay order
         const options = {
-            amount: totalAmount, // Amount in paise
+            amount: totalAmountInPaise,
             currency: "INR",
             receipt: `receipt_${Date.now()}`
         };
 
         const order = await razorpay.orders.create(options);
 
-        // Fetch available coupons that are not expired and within usage limits
-const currentDate = new Date();
-const coupons = await Coupon.aggregate([
-    { $match: { expirationDate: { $gte: currentDate } } },
-    { $match: { $expr: { $lt: ["$usedCount", "$usageLimit"] } } }
-]);
-
-// Map the coupons to ensure all required fields are there
-const couponData = coupons.map(coupon => ({
-    code: coupon.code,
-    discountPercentage: coupon.discountType === 'percentage' ? coupon.discountValue : null,
-    discountAmount: coupon.discountType === 'fixed' ? coupon.discountValue : null,
-    expirationDate: coupon.expirationDate
-}));
-
-// Render the checkout page with the order ID
-res.render('checkout', { 
-    message: null, 
-    messageType: null, 
-    cart, 
-    user, 
-    coupons: couponData, 
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
-    razorpayOrderId: order.id
-});
+        // Render the checkout page with the order ID and updated total amount
+        res.render('checkout', { 
+            message: null, 
+            messageType: null, 
+            cart, 
+            user, 
+            coupons: couponData, 
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
+            razorpayOrderId: order.id,
+            totalAmount
+        });
 
     } catch (error) {
-        console.error('Error fetching checkout page:', error.message);
+        console.error('Error fetching checkout page:', error.message, error);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 // const placeOrder = async (req, res) => {
 //     try {
@@ -1425,20 +1457,20 @@ const calculateCouponDiscount = async (couponCode, totalPrice) => {
 
 // Existing applyCoupon route handler
 const applyCoupon = async (req, res) => {
-    try {
-        const { couponCode, totalPrice } = req.body;
+    // try {
+    //     const { couponCode, totalPrice } = req.body;
 
-        const couponResponse = await calculateCouponDiscount(couponCode, totalPrice);
+    //     const couponResponse = await calculateCouponDiscount(couponCode, totalPrice);
 
-        if (!couponResponse.success) {
-            return res.status(400).json({ message: couponResponse.message });
-        }
+    //     if (!couponResponse.success) {
+    //         return res.status(400).json({ message: couponResponse.message });
+    //     }
 
-        res.json(couponResponse);
-    } catch (error) {
-        console.error('Error applying coupon:', error.message);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
+    //     res.json(couponResponse);
+    // } catch (error) {
+    //     console.error('Error applying coupon:', error.message);
+    //     res.status(500).json({ message: 'Internal Server Error' });
+    // }
 };
 
 // Add product to wishlist
@@ -1578,70 +1610,88 @@ const deductFunds = async (req, res) => {
 };
 
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID, // Replace with your Razorpay Key ID
-    key_secret: process.env.RAZORPAY_KEY_SECRET, // Replace with your Razorpay Key Secret
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// Create Razorpay order
 const createOrder = async (req, res) => {
+    const { amount } = req.body; // Get the amount from the frontend
+
+    const options = {
+        amount: amount * 100, // Convert to paise
+        currency: 'INR',
+        receipt: 'order_rcptid_' + new Date().getTime(), // Optional: Add a receipt ID
+    };
+
     try {
-        const { totalPrice } = req.body;
-
-        const options = {
-            amount: totalPrice * 100, // amount in paise (smallest currency unit)
-            currency: "INR",
-            receipt: `receipt_order_${Date.now()}`,
-        };
-
         const order = await razorpay.orders.create(options);
         res.json({
             success: true,
             order_id: order.id,
-            amount: order.amount,
-            currency: order.currency,
             key_id: process.env.RAZORPAY_KEY_ID,
         });
     } catch (error) {
-        console.log('Error creating Razorpay order:', error);
-        res.status(500).json({ success: false, message: "Razorpay order creation failed" });
+        console.error(error);
+        res.status(500).json({ error: 'Unable to create order' });
     }
 };
 
-const verifyPayment = async (req, res) => {
+// Verify Payment
+const verifyPayment = (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    const generatedSignature = hmac.digest('hex');
+
+    if (generatedSignature === razorpay_signature) {
+        // Signature is valid, payment is verified
+        res.json({ success: true });
+        // Here you can update the order status to "Paid" in your database
+    } else {
+        // Signature mismatch
+        res.status(400).json({ success: false, message: 'Payment verification failed' });
+    }
+};
+
+const applyOffer = async (req, res) => {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-        const key_secret = process.env.RAZORPAY_KEY_SECRET;
+        const { offerCode, cart } = req.body; // Cart should contain product details
+        const offer = await Offer.findOne({ offerCode, expirationDate: { $gte: new Date() }, usedCount: { $lt: '$usageLimit' } });
 
-        const hmac = crypto.createHmac('sha256', key_secret);
-        hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
-        const generated_signature = hmac.digest('hex');
-
-        if (generated_signature === razorpay_signature) {
-            // Payment is successful, place the order
-            const orderDetails = req.body; // Add necessary order details
-            const order = new Order({
-                userId: req.user._id,
-                products: req.body.products,  // Assuming products come from req.body
-                shippingAddressId: req.body.shippingAddressId,
-                totalPrice: req.body.totalPrice,
-                discountAmount: req.body.discountAmount,
-                paymentMethod: "Razorpay",
-                orderNotes: req.body.orderNotes,
-                status: "Paid",
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-
-            await order.save();
-
-            res.json({ success: true, message: "Payment verified and order placed successfully" });
-        } else {
-            res.status(400).json({ success: false, message: "Payment verification failed" });
+        if (!offer) {
+            return res.status(400).json({ message: 'Invalid or expired offer' });
         }
+
+        let discountAmount = 0;
+        if (offer.type === 'product') {
+            // Apply product-specific offer
+            cart.products.forEach(product => {
+                if (product.productId === offer.productId.toString()) {
+                    discountAmount += calculateDiscount(product.price, offer.discountValue, offer.discountType);
+                }
+            });
+        } else if (offer.type === 'category') {
+            // Apply category-specific offer
+            cart.products.forEach(async product => {
+                const productData = await Product.findById(product.productId);
+                if (productData.categoryId === offer.categoryId.toString()) {
+                    discountAmount += calculateDiscount(product.price, offer.discountValue, offer.discountType);
+                }
+            });
+        }
+
+        res.json({ message: 'Offer applied successfully', discountAmount });
     } catch (error) {
-        console.log('Error verifying payment:', error);
-        res.status(500).json({ success: false, message: "Payment verification failed" });
+        console.error(error);
+        res.status(500).json({ message: 'Error applying offer' });
     }
 };
+
+function calculateDiscount(price, discountValue, discountType) {
+    return discountType === 'percentage' ? price * (discountValue / 100) : discountValue;
+}
 
 module.exports = {
     signUpPage,
@@ -1685,5 +1735,6 @@ module.exports = {
     addFunds,
     deductFunds,
     createOrder,
-    verifyPayment
+    verifyPayment,
+    applyOffer
 };

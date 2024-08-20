@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel');
+const Offer = require('../models/offerModel');
 const Order = require('../models/orderShema'); // Adjust the path as necessary
 const Coupon = require('../models/coupenModel');
 const nodemailer = require('nodemailer');
@@ -517,6 +518,129 @@ const deleteCoupon = async (req, res) => {
     }
 };
 
+const createOffer = async (req, res) => {
+    try {
+        const { type, productId, categoryId, discountValue, discountType, usageLimit, expirationDate } = req.body;
+        const newOffer = new Offer({
+            type,
+            productId: type === 'product' ? productId : null,
+            categoryId: type === 'category' ? categoryId : null,
+            discountValue,
+            discountType,
+            usageLimit,
+            expirationDate
+        });
+
+        await newOffer.save();
+        res.status(201).json({ message: 'Offer created successfully', offer: newOffer });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error creating offer' });
+    }
+};
+
+const updateOffer = async (req, res) => {
+    try {
+        const { offerId } = req.params;
+        const updateData = req.body;
+
+        const updatedOffer = await Offer.findByIdAndUpdate(offerId, updateData, { new: true });
+        if (!updatedOffer) {
+            return res.status(404).json({ message: 'Offer not found' });
+        }
+
+        res.json({ message: 'Offer updated successfully', offer: updatedOffer });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating offer' });
+    }
+};
+
+const deleteOffer = async (req, res) => {
+    try {
+        const { offerId } = req.params;
+        const deletedOffer = await Offer.findByIdAndDelete(offerId);
+
+        if (!deletedOffer) {
+            return res.status(404).json({ message: 'Offer not found' });
+        }
+
+        res.json({ message: 'Offer deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting offer' });
+    }
+};
+
+const listOffers = async (req, res) => {
+    try {
+        // Fetch all offers
+        const offers = await Offer.find({});
+
+        // Define message and messageType based on any conditions or set them to null
+        const message = req.query.message || null;
+        const messageType = req.query.messageType || null;
+
+        res.render('offerListing', { 
+            offers, 
+            message, 
+            messageType 
+        });
+    } catch (error) {
+        console.error('Error listing offers:', error.message);
+        res.render('admin/offerListing', { 
+            offers: [], 
+            message: 'An error occurred while fetching offers.', 
+            messageType: 'error' 
+        });
+    }
+};
+
+const editOffers = async (req, res) => {
+    try {
+        const offerId = req.params.id;
+
+        if (!offerId) {
+            // Render the page for adding a new offer
+            return res.render('editOffer', { offer: null, message: null });
+        }
+
+        const offer = await Offer.findById(offerId);
+
+        if (!offer) {
+            // Handle the case where the offer does not exist
+            return res.render('editOffer', { offer: null, message: 'Offer not found', messageType: 'error' });
+        }
+
+        res.render('editOffer', { offer, message: null });
+    } catch (error) {
+        console.error('Error fetching offer for edit:', error.message);
+        res.render('editOffer', { offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
+    }
+  };
+
+  const addOffer = async (req, res) => {
+    try {
+        const offerId = req.params.id;
+
+        if (!offerId) {
+            // Render the page for adding a new offer
+            return res.render('addOffer', { offer: null, message: null });
+        }
+
+        const offer = await Offer.findById(offerId);
+
+        if (!offer) {
+            // Handle the case where the offer does not exist
+            return res.render('addOffer', { offer: null, message: 'Offer not found', messageType: 'error' });
+        }
+
+        res.render('addOffer', { offer, message: null });
+    } catch (error) {
+        console.error('Error fetching offer for edit:', error.message);
+        res.render('admin/editOffer', { offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
+    }
+  };
 
 module.exports = {
     Admin_login,
@@ -544,5 +668,11 @@ module.exports = {
     getCouponList,
     getEditCouponPage,
     editCoupon,
-    deleteCoupon
+    deleteCoupon,
+    createOffer,
+    updateOffer,
+    deleteOffer,
+    listOffers,
+    editOffers,
+    addOffer
 };

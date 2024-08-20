@@ -93,4 +93,7 @@ router.post('/wallet/deduct-funds', userController.deductFunds);
 router.post('/create-order', isAuthenticated, userController.createOrder);
 router.post('/verify-payment', isAuthenticated, userController.verifyPayment);
 
+router.post('/apply-offer', userController.applyOffer);
+
+
 module.exports = router;

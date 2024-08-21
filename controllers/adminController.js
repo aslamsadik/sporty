@@ -520,39 +520,31 @@ const deleteCoupon = async (req, res) => {
 
 const createOffer = async (req, res) => {
     try {
-        const { offerName, offerType, discountType, discountValue, targetId, referralCode, usageLimit, startDate, endDate } = req.body;
-
-        // Prepare offer data based on offerType
-        const offerData = {
-            offerName,
-            offerType,
-            discountType,
-            discountValue,
-            usageLimit,
-            startDate,
-            endDate
-        };
-
-        if (offerType !== 'referral') {
-            offerData.targetId = targetId; // Add targetId only if not referral
-        }
-
-        if (offerType === 'referral') {
-            offerData.referralCode = referralCode; // Add referralCode only if referral
-        }
-
-        const newOffer = new Offer(offerData);
-
-        await newOffer.save();
-        res.status(201).json({ message: 'Offer created successfully', offer: newOffer });
+      const { offerName, offerType, discountType, discountValue, startDate, endDate, usageLimit, targetId, referralCode } = req.body;
+  
+      // Create offer object
+      const offer = new Offer({
+        offerName,
+        offerType,
+        discountType,
+        discountValue,
+        startDate,
+        endDate,
+        usageLimit: usageLimit || null,
+        targetId: offerType !== 'referral' ? targetId : undefined, // Only set targetId if offerType is not 'referral'
+        referralCode: offerType === 'referral' ? referralCode : undefined  // Only set referralCode if offerType is 'referral'
+      });
+      
+      await offer.save();
+      res.redirect('/admin/offersList');
     } catch (error) {
-        console.error('Error creating offer:', error);
-        res.status(500).json({ message: 'Error creating offer' });
+      console.warn('Error creating offer:', error);
+      res.status(500).send('Error creating offer');
     }
-};
-
-
-
+  };
+  
+  
+  
 const updateOffer = async (req, res) => {
     try {
         const { offerId } = req.params;
@@ -637,24 +629,27 @@ const editOffers = async (req, res) => {
     try {
         const offerId = req.params.id;
 
+        // Fetch all offers
+        const offers = await Offer.find();
+
         if (!offerId) {
             // Render the page for adding a new offer
-            return res.render('addOffer', { offer: null, message: null });
+            return res.render('addOffer', { offers, offer: null, message: null, messageType: null });
         }
 
         const offer = await Offer.findById(offerId);
 
         if (!offer) {
             // Handle the case where the offer does not exist
-            return res.render('addOffer', { offer: null, message: 'Offer not found', messageType: 'error' });
+            return res.render('addOffer', { offers, offer: null, message: 'Offer not found', messageType: 'error' });
         }
 
-        res.render('addOffer', { offer, message: null });
+        res.render('addOffer', { offers, offer: null, message: null, messageType: null });
     } catch (error) {
         console.error('Error fetching offer for edit:', error.message);
-        res.render('admin/editOffer', { offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
+        res.render('addOffer', { offers: [], offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
     }
-  };
+};
 
 module.exports = {
     Admin_login,

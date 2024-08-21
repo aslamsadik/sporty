@@ -646,7 +646,7 @@
    $('#razorpayButton').click(function (e) {
             e.preventDefault(); // Prevent form from submitting
 
-            const totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
+            const totalAmount = parseFloat($('#discountAmount').text()) * 100; // Convert to paise
 
             const options = {
                 "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend

@@ -27,7 +27,7 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Offer Code</th>
+                                    <th>Offer Name</th> <!-- Changed from Offer Code -->
                                     <th>Type</th>
                                     <th>Discount Type</th>
                                     <th>Discount Value</th>
@@ -41,8 +41,8 @@
                                 <% if (offers.length > 0) { %>
                                     <% offers.forEach(offer => { %>
                                         <tr>
-                                            <td><%= offer.code %></td>
-                                            <td><%= offer.type %></td>
+                                            <td><%= offer.offerName %></td> <!-- Changed from offer.code -->
+                                            <td><%= offer.offerType %></td> <!-- Changed from offer.type -->
                                             <td><%= offer.discountType %></td>
                                             <td><%= offer.discountValue %></td>
                                             <td><%= new Date(offer.startDate).toLocaleDateString() %></td>

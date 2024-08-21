@@ -46,9 +46,9 @@ Admin_router.post('/editCoupon/:id', adminController.editCoupon);
 Admin_router.post('/deleteCoupon/:id', adminController.deleteCoupon);
 
 // Offer management routes
-Admin_router.get('/offers', adminController.listOffers); // Offer listing page
-Admin_router.get('/offers/new', adminController.createOffer); // Form for creating a new offer
-Admin_router.post('/offers', adminController.addOffer); // Submit new offer
+Admin_router.get('/offersList', adminController.listOffers); 
+Admin_router.get('/offers', adminController.addOfferPage); // Submit new offer
+Admin_router.post('/addoffers', adminController.createOffer); // Submit new offer
 Admin_router.get('/offers/:id/edit', adminController.editOffers); // Form for editing an offer
 Admin_router.post('/offers/:id/edit', adminController.updateOffer); // Submit edited offer
 

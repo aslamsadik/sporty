@@ -520,24 +520,38 @@ const deleteCoupon = async (req, res) => {
 
 const createOffer = async (req, res) => {
     try {
-        const { type, productId, categoryId, discountValue, discountType, usageLimit, expirationDate } = req.body;
-        const newOffer = new Offer({
-            type,
-            productId: type === 'product' ? productId : null,
-            categoryId: type === 'category' ? categoryId : null,
-            discountValue,
+        const { offerName, offerType, discountType, discountValue, targetId, referralCode, usageLimit, startDate, endDate } = req.body;
+
+        // Prepare offer data based on offerType
+        const offerData = {
+            offerName,
+            offerType,
             discountType,
+            discountValue,
             usageLimit,
-            expirationDate
-        });
+            startDate,
+            endDate
+        };
+
+        if (offerType !== 'referral') {
+            offerData.targetId = targetId; // Add targetId only if not referral
+        }
+
+        if (offerType === 'referral') {
+            offerData.referralCode = referralCode; // Add referralCode only if referral
+        }
+
+        const newOffer = new Offer(offerData);
 
         await newOffer.save();
         res.status(201).json({ message: 'Offer created successfully', offer: newOffer });
     } catch (error) {
-        console.error(error);
+        console.error('Error creating offer:', error);
         res.status(500).json({ message: 'Error creating offer' });
     }
 };
+
+
 
 const updateOffer = async (req, res) => {
     try {
@@ -619,7 +633,7 @@ const editOffers = async (req, res) => {
     }
   };
 
-  const addOffer = async (req, res) => {
+  const addOfferPage = async (req, res) => {
     try {
         const offerId = req.params.id;
 
@@ -674,5 +688,5 @@ module.exports = {
     deleteOffer,
     listOffers,
     editOffers,
-    addOffer
+    addOfferPage
 };

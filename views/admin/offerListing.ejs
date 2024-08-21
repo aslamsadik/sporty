@@ -13,8 +13,9 @@
             </div>
         </div>
         
+        <!-- Display success or error messages -->
         <% if (message) { %>
-            <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
+            <div class="<%= messageType === 'error' ? 'alert alert-danger' : 'alert alert-success' %>">
                 <%= message %>
             </div>
         <% } %>
@@ -37,21 +38,33 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <% offers.forEach(offer => { %>
+                                <% if (offers.length > 0) { %>
+                                    <% offers.forEach(offer => { %>
+                                        <tr>
+                                            <td><%= offer.code %></td>
+                                            <td><%= offer.type %></td>
+                                            <td><%= offer.discountType %></td>
+                                            <td><%= offer.discountValue %></td>
+                                            <td><%= new Date(offer.startDate).toLocaleDateString() %></td>
+                                            <td><%= new Date(offer.endDate).toLocaleDateString() %></td>
+                                            <td><%= offer.usageLimit %></td>
+                                            <td>
+                                                <!-- Edit button to redirect to the edit form for this offer -->
+                                                <a href="/admin/offers/<%= offer._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                                                
+                                                <!-- Optional: Add delete functionality -->
+                                                <form action="/admin/offers/<%= offer._id %>" method="POST" style="display:inline;">
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
                                     <tr>
-                                        <td><%= offer.code %></td>
-                                        <td><%= offer.type %></td>
-                                        <td><%= offer.discountType %></td>
-                                        <td><%= offer.discountValue %></td>
-                                        <td><%= new Date(offer.startDate).toLocaleDateString() %></td>
-                                        <td><%= new Date(offer.endDate).toLocaleDateString() %></td>
-                                        <td><%= offer.usageLimit %></td>
-                                        <td>
-                                            <a href="/admin/offers/<%= offer._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
-                                            <!-- Add delete functionality if needed -->
-                                        </td>
+                                        <td colspan="8" class="text-center">No offers available.</td>
                                     </tr>
-                                <% }) %>
+                                <% } %>
                             </tbody>
                         </table>
                     </div>

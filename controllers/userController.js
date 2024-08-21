@@ -727,6 +727,7 @@ const getCheckoutPage = async (req, res) => {
 };
 
 
+
 // const placeOrder = async (req, res) => {
 //     try {
 //         const userId = req.session.user?.userId;
@@ -1007,73 +1008,64 @@ const getOrderConfirmpage = async (req, res) => {
 };
 
 const cancelOrder = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const orderId = req.params.orderId;
         console.log(`Attempting to cancel order with ID: ${orderId}`);
 
-        const order = await Order.findById(orderId).session(session);
+        const order = await Order.findById(orderId);
         if (!order) {
             console.log('Order not found');
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         if (order.status !== 'Pending') {
             console.log(`Order status is ${order.status}, cannot cancel`);
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).render('orderConfirm', { order, message: 'Only pending orders can be cancelled', messageType: 'error' });
+            return res.status(400).json({ success: false, message: 'Only pending orders can be cancelled' });
         }
 
         // Update order status and timestamp
         order.status = 'Cancelled';
         order.updatedAt = new Date();
-        await order.save({ session });
+        await order.save();
         console.log('Order status updated to Cancelled');
 
         // Refund to wallet if payment was through wallet
-        if (order.paymentMethod === 'wallet') {
+        if ('wallet'||'cashOnDelivery'|| 'razorpay'.includes(order.paymentMethod)) {
             console.log('Processing refund to wallet');
-
-            let wallet = await Wallet.findOne({ user: order.userId }).session(session);
+        
+            let wallet = await Wallet.findOne({ user: order.userId });
             if (!wallet) {
                 console.log('Wallet not found, creating a new one');
                 wallet = new Wallet({ user: order.userId, balance: 0, transactions: [] });
             }
-
+        
             console.log(`Current Wallet Balance: ₹${wallet.balance}`);
             console.log(`Refunding ₹${order.totalPrice} to wallet`);
-
+        
             // Ensure totalPrice is a valid number
             if (typeof order.totalPrice !== 'number' || isNaN(order.totalPrice) || order.totalPrice < 0) {
                 throw new Error('Invalid totalPrice value');
             }
-
+        
             wallet.balance += order.totalPrice;
             wallet.transactions.push({
                 amount: order.totalPrice,
                 type: 'credit',
                 description: 'Order cancelled and refunded',
             });
-
-            await wallet.save({ session });
+        
+            await wallet.save();
             console.log('Wallet updated successfully. New Balance:', wallet.balance);
         }
 
-        await session.commitTransaction();
-        session.endSession();
-        res.redirect(`/orderConfirm/${orderId}`);
+        res.json({ success: true, message: 'Order cancelled successfully' });
     } catch (error) {
         console.error('Error cancelling order:', error.message);
-        await session.abortTransaction();
-        session.endSession();
-        res.status(500).render('orderConfirm', { order: null, message: 'Error cancelling order. Please try again.', messageType: 'error' });
+        res.status(500).json({ success: false, message: 'Error cancelling order. Please try again.' });
     }
 };
+
+
 
 const getProfilePage = async (req, res) => {
     try {
@@ -1614,26 +1606,30 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Create Razorpay order
 const createOrder = async (req, res) => {
-    const { amount } = req.body; // Get the amount from the frontend
-
-    const options = {
-        amount: amount * 100, // Convert to paise
-        currency: 'INR',
-        receipt: 'order_rcptid_' + new Date().getTime(), // Optional: Add a receipt ID
-    };
-
     try {
+        const { amount } = req.body; // Amount from frontend in INR
+
+        const options = {
+            amount: amount * 100, // Convert to paise
+            currency: 'INR',
+            receipt: 'order_rcptid_' + new Date().getTime(),
+        };
+
         const order = await razorpay.orders.create(options);
+
+        if (!order) {
+            return res.status(500).json({ error: 'Unable to create order' });
+        }
+
         res.json({
             success: true,
             order_id: order.id,
             key_id: process.env.RAZORPAY_KEY_ID,
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Unable to create order' });
+        console.error('Error creating Razorpay order:', error);
+        res.status(500).json({ error: 'Error creating Razorpay order' });
     }
 };
 
@@ -1646,9 +1642,10 @@ const verifyPayment = (req, res) => {
     const generatedSignature = hmac.digest('hex');
 
     if (generatedSignature === razorpay_signature) {
-        // Signature is valid, payment is verified
-        res.json({ success: true });
-        // Here you can update the order status to "Paid" in your database
+        // Signature is valid, update order status to "Paid"
+        // Ideally, update the database here
+
+        res.json({ success: true, message: 'Payment verified successfully' });
     } else {
         // Signature mismatch
         res.status(400).json({ success: false, message: 'Payment verification failed' });

@@ -110,6 +110,11 @@
     .checkout-row {
       display: flex;
     }
+    .final-price-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -156,8 +161,7 @@
                     name="shippingAddressId"
                     id="address<%= index %>"
                     value="<%= address._id %>"
-                    <%= index === 0 ? 'checked' : '' %>
-                  />
+                    <%= index === 0 ? 'checked' : '' %> />
                   <label class="form-check-label" for="address<%= index %>">
                     <%= address.firstName %> <%= address.lastName %><br />
                     <%= address.address1 %> <%= address.address2 %><br />
@@ -192,6 +196,7 @@
           </div>
 
           <button type="button" class="btn btn-primary btn-lg btn-block mt-4" id="razorpayButton">Pay with Razorpay</button>
+          <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">Place Order</button>
         </div>
 
         <div class="summary-section">
@@ -209,128 +214,128 @@
               <% }) %>
               <li class="list-group-item d-flex justify-content-between">
                 <span>Total (INR)</span>
-                <strong>₹<%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
+                <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.productId.price * product.quantity), 0).toFixed(2) %></strong>
               </li>
             </ul>
           <% } else { %>
-            <p>No products found in cart.</p>
+            <p>Your cart is empty.</p>
           <% } %>
 
-          <h4>Apply Coupon</h4>
           <div class="coupon-container">
+            <h5>Apply Coupon</h5>
             <% if (coupons && coupons.length > 0) { %>
-              <% coupons.forEach((coupon) => { %>
+              <% coupons.forEach((coupon) => { 
+                const expiryDate = coupon.endDate ? new Date(coupon.endDate).toLocaleDateString() : 'No Expiry';
+                const discountDisplay = coupon.discountType === 'percentage' 
+                                        ? `${coupon.discountValue}%` 
+                                        : `₹${coupon.discountValue}`;
+                const discountAmount = coupon.discountType === 'percentage'
+                                        ? (cart.totalAmount * coupon.discountValue) / 100
+                                        : coupon.discountValue;
+                const finalPriceAfterDiscount = cart.totalAmount - discountAmount;
+              %>
                 <div class="coupon-item">
                   <div class="coupon-info">
-                    <div class="coupon-code"><%= coupon.code %></div>
-                    <div class="coupon-discount">
-                      <% if (coupon.discountPercentage) { %>
-                        <%= coupon.discountPercentage %>% off
-                      <% } else if (coupon.discountAmount) { %>
-                        ₹<%= coupon.discountAmount %> off
-                      <% } %>
-                    </div>
-                    <div class="coupon-expiry">Expires: <%= coupon.expirationDate.toLocaleDateString() %></div>
+                    <span class="coupon-code"><%= coupon.code %></span>
+                    <p class="coupon-discount">
+                      Discount: <%= discountDisplay %>
+                    </p>
+                    <p class="coupon-expiry">Expiry: <%= expiryDate %></p>
                   </div>
-                  <button
-                    type="button"
-                    class="btn btn-outline-primary"
-                    onclick="applyCoupon('<%= coupon.code %>', <%= coupon.discountPercentage || 0 %>, <%= coupon.discountAmount || 0 %>)"
-                  >
-                    Apply
+                  <button type="button" class="btn btn-outline-primary apply-coupon-btn" 
+                    data-code="<%= coupon.code %>"
+                    data-discount-amount="<%= discountAmount %>"
+                    data-final-price-after-discount="<%= finalPriceAfterDiscount.toFixed(2) %>">
+                    Apply Coupon
                   </button>
                 </div>
               <% }) %>
             <% } else { %>
-              <p>No available coupons.</p>
+              <p>No coupons available at the moment.</p>
             <% } %>
           </div>
-
-          <h4 class="mt-4">Final Price</h4>
-          <div class="final-price-value">
-            ₹<span id="finalPriceValue">
-              <%= (cart && cart.products && cart.products.length > 0) 
-                  ? cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2)
-                  : '0.00' 
-              %>
-            </span>
+          
+          <div class="price-summary">
+            <p class="final-price">Final Price Before Discount: ₹<%= totalAmount.toFixed(2) %></p>
+            <% if (discountAmount > 0) { %>
+              <p class="discount-amount">Discount: ₹<%= discountAmount.toFixed(2) %></p>
+            <% } %>
+            <p class="final-price">Final Price: ₹<%= finalAmount.toFixed(2) %></p>
           </div>
-        </div>
+          
+          
+          
+          
       </div>
-
-      <input type="hidden" name="razorpayOrderId" id="razorpayOrderId" value="<%= razorpayOrderId %>">
-      <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">Place Order</button>
     </form>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-    const razorpayButton = document.getElementById('razorpayButton');
+    $(document).ready(function () {
+  const applyCouponBtns = document.querySelectorAll('.apply-coupon-btn');
+  
+  applyCouponBtns.forEach(button => {
+    button.addEventListener('click', function () {
+      const couponCode = this.getAttribute('data-code');
+      const discountAmount = parseFloat(this.getAttribute('data-discount-amount'));
+      const finalPriceAfterDiscount = parseFloat(this.getAttribute('data-final-price-after-discount'));
 
-    razorpayButton.addEventListener('click', function () {
-      const totalAmount = document.getElementById('finalPriceValue').innerText.replace('₹', '') * 100;
-      const razorpayOrderId = document.getElementById('razorpayOrderId').value;
+      // Update the discount amount and coupon code
+      document.getElementById('discountAmount').textContent = `₹${discountAmount.toFixed(2)}`;
+      document.getElementById('couponCodeInput').value = couponCode;
 
-      const options = {
-        key: '<%= razorpayKeyId %>',
-        amount: totalAmount,
-        currency: 'INR',
-        name: 'Your Company Name',
-        description: 'Test Transaction',
-        image: '/your_logo.png',
-        order_id: razorpayOrderId,
-        handler: function (response) {
-          const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-          const shippingAddressId = document.querySelector('input[name="shippingAddressId"]:checked').value;
-          const form = document.getElementById('placeOrderForm');
-          const paymentIdInput = document.createElement('input');
-
-          paymentIdInput.type = 'hidden';
-          paymentIdInput.name = 'payment_id';
-          paymentIdInput.value = response.razorpay_payment_id;
-
-          form.appendChild(paymentIdInput);
-          form.submit();
-        },
-        prefill: {
-          name: '<%= user.firstName %> <%= user.lastName %>',
-          email: '<%= user.email %>',
-          contact: '<%= user.phone %>',
-        },
-        notes: {
-          address: '<%= user.addresses[0] ? user.addresses[0].address1 : '' %>',
-        },
-        theme: {
-          color: '#3399cc',
-        },
-      };
-
-      const rzp1 = new Razorpay(options);
-      rzp1.open();
+      // Update the final price display
+      $('.final-price-value').text(`₹${finalPriceAfterDiscount.toFixed(2)}`);
     });
+  });
 
-    function applyCoupon(code, discountPercentage, discountAmount) {
-      const totalAmountElement = document.getElementById('finalPriceValue');
-      const discountAmountElement = document.getElementById('discountAmount');
-      const couponCodeInput = document.getElementById('couponCodeInput');
+  $('#razorpayButton').click(function (e) {
+    e.preventDefault();
 
-      let totalAmount = parseFloat(totalAmountElement.innerText.replace('₹', ''));
-      let finalAmount = totalAmount;
-
-      if (discountPercentage) {
-        finalAmount = totalAmount - (totalAmount * (discountPercentage / 100));
-      } else if (discountAmount) {
-        finalAmount = totalAmount - discountAmount;
+    const options = {
+      key: "<%= razorpayKeyId %>",
+      amount: parseFloat($('#finalAmount').val()) * 100, // Razorpay expects amount in paise
+      currency: "INR",
+      name: "Your Store",
+      description: "Test Transaction",
+      handler: function (response) {
+        $.ajax({
+          method: 'POST',
+          url: '/verify-payment',
+          data: {
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature
+          },
+          success: function (data) {
+            alert('Payment Successful');
+            // Optionally, redirect to success page
+          },
+          error: function (error) {
+            alert('Payment Failed');
+          }
+        });
+      },
+      prefill: {
+        name: "<%= user.name %>",
+        email: "<%= user.email %>",
+        contact: "<%= user.phone %>"
+      },
+      theme: {
+        color: "#3399cc"
       }
+    };
 
-      discountAmountElement.value = (totalAmount - finalAmount).toFixed(2);
-      couponCodeInput.value = code;
-      totalAmountElement.innerText = '₹' + finalAmount.toFixed(2);
-    }
+    const rzp = new Razorpay(options);
+    rzp.open();
+  });
+});
+
   </script>
 </body>
-</html> -->
+</html>
 
 
 
@@ -342,28 +347,9 @@
 
 
 
+ -->
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -702,36 +688,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

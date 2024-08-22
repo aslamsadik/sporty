@@ -657,19 +657,18 @@ const getCheckoutPage = async (req, res) => {
         // Calculate the total amount
         let totalAmount = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
 
-        // Fetch available coupons that are not expired and within usage limits
+        // Fetch available coupons
         const currentDate = new Date();
         const coupons = await Coupon.aggregate([
             { $match: { expirationDate: { $gte: currentDate } } },
             { $match: { $expr: { $lt: ["$usedCount", "$usageLimit"] } } }
         ]);
 
-        // Map the coupons to ensure the `expiryDate` is valid
         const couponData = coupons.map(coupon => ({
             code: coupon.code,
             discountPercentage: coupon.discountType === 'percentage' ? coupon.discountValue : null,
             discountAmount: coupon.discountType === 'fixed' ? coupon.discountValue : null,
-            expirationDate: coupon.expirationDate ? new Date(coupon.expirationDate) : null // This line ensures valid expiry date
+            expirationDate: coupon.expirationDate ? new Date(coupon.expirationDate) : null
         }));
 
         // Check if a coupon is applied
@@ -686,6 +685,7 @@ const getCheckoutPage = async (req, res) => {
                     discountAmount = appliedCoupon.discountAmount;
                 }
 
+                // Apply discount
                 totalAmount -= discountAmount;
             }
         }
@@ -708,7 +708,7 @@ const getCheckoutPage = async (req, res) => {
 
         const order = await razorpay.orders.create(options);
 
-        // Render the checkout page with the order ID and updated total amount
+        // Render the checkout page
         res.render('checkout', { 
             message: null, 
             messageType: null, 
@@ -717,7 +717,9 @@ const getCheckoutPage = async (req, res) => {
             coupons: couponData, 
             razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
             razorpayOrderId: order.id,
-            totalAmount
+            totalAmount: totalAmount + discountAmount, // Original total amount before discount
+            discountAmount, // Discount applied
+            finalAmount: totalAmount // Final amount after discount
         });
 
     } catch (error) {
@@ -725,6 +727,8 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
+
 
 
 

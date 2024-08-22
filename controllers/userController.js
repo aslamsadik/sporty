@@ -857,7 +857,7 @@ const placeOrder = async (req, res) => {
         totalPrice = totalPriceBeforeDiscount - discountAmount;
 
         // Handle wallet payment
-        if (paymentMethod === 'wallet') {
+        if (paymentMethod === 'wallet' || 'cashOnDelivery' || 'razorpay') {
             const wallet = await Wallet.findOne({ userId });
             if (!wallet || wallet.balance < totalPrice) {
                 return res.status(400).json({ message: 'Insufficient balance in wallet' });

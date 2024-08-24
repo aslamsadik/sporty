@@ -18,7 +18,8 @@ const productSchema = new mongoose.Schema({
         required: true 
     },
     category: { 
-        type: String, 
+        type: mongoose.Schema.Types.ObjectId,  // Changed to ObjectId
+        ref: 'Category',  // Reference the Category model
         required: true 
     },
     images: {

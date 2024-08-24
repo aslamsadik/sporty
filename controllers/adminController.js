@@ -202,7 +202,40 @@ const Admin_editProductPage = async (req, res) => {
         res.redirect('/admin/productList?message=Internal Server Error&messageType=error');  // Redirect with query params for error
     }
 };
+//real edit product
 
+// const Admin_editProduct = async (req, res) => {
+//     try {
+//         const { name, description, price, brand, category, stock } = req.body;
+//         const productId = req.params.id;
+//         const images = req.files ? req.files.map(file => file.filename) : [];
+
+//         // Find the product to be updated
+//         const product = await Product.findById(productId);
+//         if (!product) {
+//             return res.redirect('/admin/productList?message=Product not found&messageType=error');
+//         }
+
+//         // Update product details
+//         product.name = name;
+//         product.description = description;
+//         product.price = price;
+//         product.brand = brand;
+//         product.category = category;
+//         product.stock = stock; // Update stock
+
+//         if (images.length > 0) {
+//             product.images = images.slice(0, 3); // Only update images if new ones are uploaded
+//         }
+
+//         await product.save();
+
+//         res.redirect('/admin/productList');
+//     } catch (error) {
+//         console.error(error.message);
+//         res.redirect(`/admin/editProduct/${req.params.id}?message=Internal Server Error&messageType=error`);
+//     }
+// };
 
 const Admin_editProduct = async (req, res) => {
     try {
@@ -216,12 +249,23 @@ const Admin_editProduct = async (req, res) => {
             return res.redirect('/admin/productList?message=Product not found&messageType=error');
         }
 
+        // Convert category from string to ObjectId if needed
+        let categoryId = category;
+        if (typeof category === 'string') {
+            const categoryDoc = await Category.findOne({ name: category });
+            if (categoryDoc) {
+                categoryId = categoryDoc._id;
+            } else {
+                return res.redirect(`/admin/editProduct/${productId}?message=Category not found&messageType=error`);
+            }
+        }
+
         // Update product details
         product.name = name;
         product.description = description;
         product.price = price;
         product.brand = brand;
-        product.category = category;
+        product.category = categoryId; // Assign the ObjectId here
         product.stock = stock; // Update stock
 
         if (images.length > 0) {

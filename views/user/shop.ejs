@@ -119,7 +119,7 @@
                                     </div>
                                     <div class="product-content-wrap">
                                         <div class="product-category">
-                                            <a href="/shop-grid-right.html"><%= product.category %></a>
+                                            <a href="/shop-grid-right.html"><%= product.category.name %></a>
                                         </div>
                                         <h2><a href="/product/<%= product._id %>"><%= product.name %></a></h2>
                                         <div class="rating-result" title="90%">
@@ -177,10 +177,11 @@
                             <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
                             <% categories.forEach(category => { %>
                                 <div class="form-check mb-2 me-2">
-                                    <input type="checkbox" class="form-check-input" name="categories" value="<%= category %>" <%= selectedCategories.includes(category) ? 'checked' : '' %> onchange="this.form.submit()" />
-                                    <label class="form-check-label"><%= category %></label>
+                                    <input type="checkbox" class="form-check-input" name="categories" value="<%= category._id %>" <%= selectedCategories.includes(String(category._id)) ? 'checked' : '' %> onchange="this.form.submit()" />
+                                    <label class="form-check-label"><%= category.name %></label>
                                 </div>
                             <% }); %>
+                            
                         </form>
                     </div>
                     <div class="sidebar-widget price_range range mb-30">

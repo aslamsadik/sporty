@@ -127,6 +127,70 @@ const search = async (req, res) => {
     }
 };
 
+// const getShopPage = async (req, res) => {
+//     try {
+//         const { page = 1, sort = 'price', minPrice, maxPrice, categories = [], brands = [] } = req.query;
+//         const ITEMS_PER_PAGE = 9;
+
+//         // Convert categories and brands to arrays if they are not already
+//         const categoryArray = Array.isArray(categories) ? categories : [categories];
+//         const brandArray = Array.isArray(brands) ? brands : [brands];
+
+//         // Create filter object
+//         let filter = {};
+
+//         // Apply price filter only if minPrice and maxPrice are provided
+//         if (minPrice || maxPrice) {
+//             filter.price = {};
+//             if (minPrice) filter.price.$gte = minPrice;
+//             if (maxPrice) filter.price.$lte = maxPrice;
+//         }
+
+//         // Apply category filter only if categories are selected
+//         if (categoryArray.length > 0 && categoryArray[0] !== '') {
+//             filter.category = { $in: categoryArray };
+//         }
+
+//         // Apply brand filter only if brands are selected
+//         if (brandArray.length > 0 && brandArray[0] !== '') {
+//             filter.brand = { $in: brandArray };
+//         }
+
+//         // Count total products
+//         const totalProducts = await Product.countDocuments(filter);
+
+//         // Calculate total pages
+//         const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+
+//         // Fetch products with sorting, filtering, and pagination
+//         const products = await Product.find(filter)
+//             .sort({ price: sort === 'price' ? 1 : -1 })
+//             .skip((page - 1) * ITEMS_PER_PAGE)
+//             .limit(ITEMS_PER_PAGE);
+
+//         // Fetch distinct categories and brands for filters
+//         const categoriesList = await Product.distinct('category');
+//         const brandsList = await Product.distinct('brand');
+
+//         res.render('shop', {
+//             products,
+//             categories: categoriesList,
+//             brands: brandsList,
+//             totalProducts,
+//             totalPages,
+//             currentPage: parseInt(page),
+//             sort,
+//             minPrice: minPrice || 0,
+//             maxPrice: maxPrice || '',
+//             selectedCategories: categoryArray,
+//             selectedBrands: brandArray
+//         });
+//     } catch (error) {
+//         console.error('Error fetching shop page:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
 const getShopPage = async (req, res) => {
     try {
         const { page = 1, sort = 'price', minPrice, maxPrice, categories = [], brands = [] } = req.query;
@@ -162,14 +226,15 @@ const getShopPage = async (req, res) => {
         // Calculate total pages
         const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
-        // Fetch products with sorting, filtering, and pagination
+        // Fetch products with sorting, filtering, and pagination, and populate the category field
         const products = await Product.find(filter)
             .sort({ price: sort === 'price' ? 1 : -1 })
             .skip((page - 1) * ITEMS_PER_PAGE)
-            .limit(ITEMS_PER_PAGE);
+            .limit(ITEMS_PER_PAGE)
+            .populate('category', 'name'); // Populate category field with the name
 
         // Fetch distinct categories and brands for filters
-        const categoriesList = await Product.distinct('category');
+        const categoriesList = await Category.find({}, 'name'); // Fetch all category names
         const brandsList = await Product.distinct('brand');
 
         res.render('shop', {
@@ -734,6 +799,8 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
+
 
 const placeOrder = async (req, res) => {
     try {

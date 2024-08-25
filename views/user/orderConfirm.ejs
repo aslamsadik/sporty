@@ -71,6 +71,7 @@
             </h1>
           </div>
           <div class="card-body">
+            <!-- Display success or error messages -->
             <% if (message && messageType === 'success') { %>
               <div class="alert alert-success">
                 <%= message %>
@@ -81,6 +82,7 @@
               </div>
             <% } %>
 
+            <!-- Order details section -->
             <% if (order && order._id) { %>
               <p class="card-text">Order ID: <span><%= order._id %></span></p>
               <p class="card-text">Status: <span><%= order.status %></span></p>
@@ -89,13 +91,18 @@
                 <% if (order.products && order.products.length > 0) { %>
                   <% order.products.forEach(item => { %>
                     <li class="list-group-item">
-                      <%= item.productId.name %> - Quantity: <span><%= item.quantity %></span> - Price: <span>₹<%= item.productId.price.toFixed(2) %></span>
+                      <% if (item.productId && item.productId.price) { %>
+                        <%= item.productId.name %> - Quantity: <span><%= item.quantity %></span> - Price: <span>₹<%= item.productId.price.toFixed(2) %></span>
+                      <% } else { %>
+                        Product details not available
+                      <% } %>
                     </li>
                   <% }); %>
                 <% } else { %>
                   <li class="list-group-item">No products found.</li>
                 <% } %>
               </ul>
+              
               <p class="card-text mt-3">Subtotal: <span>₹<%= (order.totalPrice + order.discountAmount).toFixed(2) %></span></p>
               <p class="card-text">Discount Applied: <span>₹<%= order.discountAmount.toFixed(2) %></span></p>
               <p class="card-text">Total Amount after Discount: <span>₹<%= order.totalPrice.toFixed(2) %></span></p>
@@ -103,6 +110,7 @@
               <p class="card-text">No order details available.</p>
             <% } %>
 
+            <!-- Cancel order button for pending orders -->
             <% if (order && order.status === 'Pending') { %>
               <form action="/order/cancel/<%= order._id %>" method="POST">
                 <button type="submit" class="btn btn-danger mt-3">Cancel Order</button>

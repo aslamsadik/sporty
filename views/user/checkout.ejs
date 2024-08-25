@@ -239,11 +239,45 @@
             <% } %>
           </div>
 
+          <!-- Referral Code Section -->
+              <div class="form-group mt-4">
+              <label for="referralCode">Referral Code</label>
+              <input type="text" class="form-control" id="referralCode" name="referralCode" placeholder="Enter Referral Code">
+              </div>
+              <!-- <div class="apply-referral-code mt-4">
+                <h4>Apply Referral Code</h4>
+                <form action="/checkout" method="GET">
+                  <div class="input-group">
+                    <input type="text" class="form-control" name="referralCode" placeholder="Enter referral code" />
+                    <button class="btn btn-primary" type="submit">Apply</button>
+                  </div>
+                </form>
+              </div> -->
+              <!-- Referral Code Section -->
+              <% if (referralOffers && referralOffers.length > 0) { %>
+                <div class="referral-section mt-4">
+                  <h4>Referral Offers</h4>
+                  <ul class="list-group">
+                    <% referralOffers.forEach(offer => { %>
+                      <li class="list-group-item d-flex justify-content-between">
+                        <span>Referral Code: <%= offer.code %></span>
+                        <% if (offer.expirationDate && new Date() > offer.expirationDate) { %>
+                          <span class="text-danger">Expired</span>
+                        <% } else { %>
+                          <span class="text-success">Valid</span>
+                        <% } %>
+                      </li>
+                    <% }) %>
+                  </ul>
+                </div>
+              <% } %>
+
+
           <!-- Final Price Section -->
           <div class="final-price-value">
             ₹<span id="finalPriceValue">
               <% if (cart && cart.products && cart.products.length > 0) { %>
-                <%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %>
+               <%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %>
               <% } else { %>
                 0.00
               <% } %>

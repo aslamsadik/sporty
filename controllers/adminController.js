@@ -9,6 +9,9 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+const { Parser } = require('json2csv');
+const pdf = require('html-pdf');
+
 
 const Admin_login = async (req, res) => {
     try {
@@ -694,6 +697,8 @@ const editOffers = async (req, res) => {
         res.render('addOffer', { offers: [], offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
     }
 };
+
+
 
 module.exports = {
     Admin_login,

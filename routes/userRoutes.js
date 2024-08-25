@@ -84,16 +84,13 @@ router.get('/wishlist', isAuthenticated, userController.getWishlist);
 
 // Route to get wallet details
 router.get('/wallet',isAuthenticated, userController.getWalletDetails);
-// Route to add funds to the wallet
 router.post('/wallet/add-funds', userController.addFunds);
-// Route to deduct funds from the wallet
 router.post('/wallet/deduct-funds', userController.deductFunds);
 
 //razorpay
 router.post('/create-order', isAuthenticated, userController.createOrder);
 router.post('/verify-payment', isAuthenticated, userController.verifyPayment);
-
-router.post('/apply-offer', userController.applyOffer);
+router.post('/apply-offer',isAuthenticated, userController.applyOffer);
 
 
 module.exports = router;

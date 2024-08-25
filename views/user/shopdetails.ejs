@@ -27,6 +27,40 @@
 
 <!-- Include Bootstrap JS -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<style>
+    .offers-section {
+    border-top: 1px solid #e6e6e6;
+    padding-top: 20px;
+    margin-top: 30px;
+}
+
+.offers-section .section-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.offers-section .single-offer {
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.offers-section .single-offer h5 {
+    margin-bottom: 5px;
+    font-size: 20px;
+    color: #333;
+}
+
+.offers-section .single-offer p {
+    margin-bottom: 5px;
+    font-size: 16px;
+    color: #555;
+}
+
+</style>
 
 </head>
 
@@ -543,6 +577,30 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- //offer section -->
+                        <div class="offer-section" style="background-color: #f0f8ff; padding: 20px; border-radius: 10px; margin-top: 30px;">
+                            <h3 style="color: #ff4500; font-weight: bold; border-bottom: 2px solid #ff4500; padding-bottom: 10px;">Available Offers</h3>
+                            <% if (offers && offers.length > 0) { %>
+                                <ul class="offer-list" style="list-style: none; padding-left: 0;">
+                                    <% offers.forEach(function(offer) { %>
+                                        <li style="background-color: #e0ffe0; color: #008000; padding: 10px; margin-bottom: 10px; border-left: 5px solid #008000; border-radius: 5px;">
+                                            <strong><%= offer.offerName %></strong>:
+                                            <%= offer.discountType === 'percentage' ? offer.discountValue + '%' : '₹' + offer.discountValue %> off
+                                            <% if (offer.offerType === 'product') { %>
+                                                on this product.
+                                            <% } else if (offer.offerType === 'category') { %>
+                                                on all products in this category.
+                                            <% } %>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                            <% } else { %>
+                                <p style="color: #ff6347; font-weight: bold;">No offers available for this product at the moment.</p>
+                            <% } %>
+                        </div>
+                        
+
                         <div class="tab-pane fade" id="Reviews">
                             <!--Comments-->
                             <div class="comments-area">

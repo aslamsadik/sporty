@@ -260,16 +260,29 @@ const getShopPage = async (req, res) => {
 // Fetch and render product description page
 const getProductDescriptionPage = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findById(req.params.id).populate('category');
         if (!product) {
             return res.status(404).send('Product not found');
         }
-        res.render('shopdetails', { product });
+
+        // Find applicable offers for the product or its category
+        const offers = await Offer.find({
+            $or: [
+                { offerType: 'product', targetId: product._id },
+                { offerType: 'category', targetId: product.category._id }
+            ],
+            isActive: true,
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+        });
+
+        res.render('shopdetails', { product, offers });
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 const signUp = async (req, res) => {

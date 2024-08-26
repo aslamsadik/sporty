@@ -87,9 +87,7 @@ router.get('/wallet',isAuthenticated, userController.getWalletDetails);
 router.post('/wallet/add-funds', userController.addFunds);
 router.post('/wallet/deduct-funds', userController.deductFunds);
 
-//razorpay
-router.post('/create-order', isAuthenticated, userController.createOrder);
-router.post('/verify-payment', isAuthenticated, userController.verifyPayment);
+
 router.post('/apply-offer',isAuthenticated, userController.applyOffer);
 
 

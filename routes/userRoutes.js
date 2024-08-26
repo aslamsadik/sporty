@@ -91,4 +91,5 @@ router.post('/wallet/deduct-funds', userController.deductFunds);
 router.post('/apply-offer',isAuthenticated, userController.applyOffer);
 
 
+
 module.exports = router;

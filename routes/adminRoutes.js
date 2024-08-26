@@ -60,8 +60,15 @@ Admin_router.post('/offers/:id/edit', adminController.updateOffer);
 // Route to list all offers
 Admin_router.get('/offersList', adminController.listOffers);
 
+Admin_router.get('/sales-report', adminController.getSalesReport);
+
+// Export sales report as CSV
+Admin_router.get('/sales-report/export/csv', adminController.exportSalesReportCSV);
+
+// Export sales report as Excel
+Admin_router.get('/sales-report/export/excel', adminController.exportSalesReportExcel);;
+
 
 
 
 module.exports = Admin_router;
-

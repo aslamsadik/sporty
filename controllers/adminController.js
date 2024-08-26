@@ -9,8 +9,9 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
-const { Parser } = require('json2csv');
-const pdf = require('html-pdf');
+const moment = require('moment');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const ExcelJS = require('exceljs');
 
 
 const Admin_login = async (req, res) => {
@@ -81,15 +82,81 @@ const Admin_logout = async (req, res) => {
 
 const Admin_home = async (req, res) => {
     try {
-        return res.render('dashboard');
+        const filters = {
+            startDate: req.query.startDate || '',
+            endDate: req.query.endDate || '',
+            category: req.query.category || '',
+        };
+
+        const categories = await Category.find();
+
+        const totalRevenue = await Order.aggregate([
+            { $match: { status: "Completed" } },
+            { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } }
+        ]);
+
+        const totalOrders = await Order.countDocuments({ status: "Completed" });
+
+        const monthlyEarnings = await Order.aggregate([
+            { 
+                $match: { 
+                    status: "Completed",
+                    createdAt: {
+                        $gte: new Date(new Date().setDate(1)) // Start of the current month
+                    }
+                }
+            },
+            { $group: { _id: null, monthlyEarnings: { $sum: "$totalPrice" } } }
+        ]);
+
+        // Fetch sales data
+        const salesData = await Order.aggregate([
+            { $match: { status: "Completed" } },
+            { $unwind: "$products" }, // Unwind products array
+            { 
+                $lookup: {
+                    from: "products", // Assuming you have a "products" collection
+                    localField: "products.productId",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+            { $unwind: "$productDetails" }, // Unwind productDetails array
+            { 
+                $group: {
+                    _id: "$products.productId",
+                    productName: { $first: "$productDetails.name" },
+                    totalQuantity: { $sum: "$products.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+                }
+            }
+        ]);
+
+        const buildQueryString = (filters) => {
+            const query = [];
+            if (filters.startDate) query.push(`startDate=${encodeURIComponent(filters.startDate)}`);
+            if (filters.endDate) query.push(`endDate=${encodeURIComponent(filters.endDate)}`);
+            if (filters.category) query.push(`category=${encodeURIComponent(filters.category)}`);
+            return query.join('&');
+        };
+
+        res.render('dashboard', {
+            totalRevenue: totalRevenue[0]?.totalRevenue || 0,
+            totalOrders,
+            monthlyEarnings: monthlyEarnings[0]?.monthlyEarnings || 0,
+            categories, 
+            filters, 
+            buildQueryString,
+            salesData // Pass sales data to the template
+        });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Internal Server Error');
     }
 };
 
-// Product Management
 
+// Product Management
 const Admin_productList = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -589,9 +656,7 @@ const createOffer = async (req, res) => {
       res.status(500).send('Error creating offer');
     }
   };
-  
-  
-  
+   
 const updateOffer = async (req, res) => {
     try {
         const { offerId } = req.params;
@@ -698,7 +763,204 @@ const editOffers = async (req, res) => {
     }
 };
 
+// Display Sales Report with Filters
+const getSalesReport = async (req, res) => {
+    try {
+        const { startDate, endDate, category } = req.query;
 
+        // Build match criteria
+        let matchCriteria = { status: "Completed" };
+
+        if (startDate && endDate) {
+            matchCriteria.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        }
+
+        if (category) {
+            matchCriteria['products.category'] = category;
+        }
+
+        // Aggregate sales data
+        const salesData = await Order.aggregate([
+            { $match: matchCriteria },
+            { $unwind: "$products" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "products.productId",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+            { $unwind: "$productDetails" },
+            {
+                $group: {
+                    _id: "$productDetails._id",
+                    productName: { $first: "$productDetails.name" },
+                    category: { $first: "$productDetails.category" },
+                    totalQuantity: { $sum: "$products.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+                }
+            }
+        ]);
+
+        // Fetch all categories for filter dropdown
+        const categories = await Category.find({});
+
+        // Ensure filters are passed to the view
+        res.render('admin/dashboard', {
+            salesData,
+            categories,
+            filters: { startDate, endDate, category }
+        });
+    } catch (error) {
+        console.error('Error fetching sales report:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+// Export Sales Report as CSV
+const exportSalesReportCSV = async (req, res) => {
+    try {
+        const { startDate, endDate, category } = req.query;
+
+        // Fetch sales data using same logic as getSalesReport
+        const salesData = await fetchSalesData({ startDate, endDate, category });
+
+        const csvWriter = createCsvWriter({
+            path: 'sales_report.csv',
+            header: [
+                { id: 'productName', title: 'Product Name' },
+                { id: 'categoryName', title: 'Category' },
+                { id: 'totalQuantity', title: 'Total Quantity Sold' },
+                { id: 'totalRevenue', title: 'Total Revenue' }
+            ]
+        });
+
+        // Prepare data for CSV
+        const records = salesData.map(item => ({
+            productName: item.productName,
+            categoryName: item.categoryName,
+            totalQuantity: item.totalQuantity,
+            totalRevenue: item.totalRevenue.toFixed(2)
+        }));
+
+        await csvWriter.writeRecords(records);
+
+        res.download('sales_report.csv', 'sales_report.csv', (err) => {
+            if (err) {
+                console.error('Error downloading CSV file:', err);
+                res.status(500).send('Error downloading file');
+            }
+        });
+    } catch (error) {
+        console.error('Error exporting sales report as CSV:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+// Export Sales Report as Excel
+const exportSalesReportExcel = async (req, res) => {
+    try {
+        const { startDate, endDate, category } = req.query;
+
+        // Fetch sales data using same logic as getSalesReport
+        const salesData = await fetchSalesData({ startDate, endDate, category });
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Sales Report');
+
+        // Define columns
+        worksheet.columns = [
+            { header: 'Product Name', key: 'productName', width: 30 },
+            { header: 'Category', key: 'categoryName', width: 20 },
+            { header: 'Total Quantity Sold', key: 'totalQuantity', width: 20 },
+            { header: 'Total Revenue', key: 'totalRevenue', width: 20 }
+        ];
+
+        // Add rows
+        salesData.forEach(item => {
+            worksheet.addRow({
+                productName: item.productName,
+                categoryName: item.categoryName,
+                totalQuantity: item.totalQuantity,
+                totalRevenue: item.totalRevenue.toFixed(2)
+            });
+        });
+
+        // Set response headers
+        res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=' + 'sales_report.xlsx'
+        );
+
+        // Write workbook to response
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error('Error exporting sales report as Excel:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+// Helper function to fetch sales data
+const fetchSalesData = async ({ startDate, endDate, category }) => {
+    let matchCriteria = { status: "Completed" };
+
+    if (startDate && endDate) {
+        matchCriteria.createdAt = {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        };
+    }
+
+    if (category) {
+        matchCriteria['products.category'] = category;
+    }
+
+    const salesData = await Order.aggregate([
+        { $match: matchCriteria },
+        { $unwind: "$products" },
+        {
+            $lookup: {
+                from: "products",
+                localField: "products.productId",
+                foreignField: "_id",
+                as: "productDetails"
+            }
+        },
+        { $unwind: "$productDetails" },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "productDetails.category",
+                foreignField: "_id",
+                as: "categoryDetails"
+            }
+        },
+        { $unwind: "$categoryDetails" },
+        {
+            $group: {
+                _id: "$productDetails._id",
+                productName: { $first: "$productDetails.name" },
+                categoryName: { $first: "$categoryDetails.name" },
+                totalQuantity: { $sum: "$products.quantity" },
+                totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+            }
+        }
+    ]);
+
+    return salesData;
+};
 
 module.exports = {
     Admin_login,
@@ -732,5 +994,8 @@ module.exports = {
     deleteOffer,
     listOffers,
     editOffers,
-    addOfferPage
+    addOfferPage,
+    getSalesReport,
+    exportSalesReportCSV,
+    exportSalesReportExcel
 };

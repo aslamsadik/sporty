@@ -9,13 +9,14 @@
                 </div>
             </div>
         </div>
+        
         <% if (message) { %>
             <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
                 <%= message %>
             </div>
         <% } %>
-        
-        <form action='/admin/editCoupon/:id' method="POST" onsubmit="validateCouponForm(event)">
+
+        <form action='/admin/editCoupon/<%= coupon._id %>' method="POST" onsubmit="validateCouponForm(event)">
             <div class="row">
                 <div class="col-lg-6">
                     <div class="card mb-4">
@@ -27,27 +28,27 @@
                                 <div class="col-md-9">
                                     <div class="mb-4">
                                         <label class="form-label">Coupon Code</label>
-                                        <input type="text" placeholder="Enter coupon code" class="form-control" name="code" required>
+                                        <input type="text" placeholder="Enter coupon code" class="form-control" name="code" value="<%= coupon.code %>" required>
                                     </div>
                                     <div class="mb-4">
                                         <label class="form-label">Discount Type</label>
                                         <select class="form-select" name="discountType" required>
-                                            <option value="" disabled selected>Select discount type</option>
-                                            <option value="percentage">Percentage</option>
-                                            <option value="fixed">Fixed</option>
+                                            <option value="" disabled>Select discount type</option>
+                                            <option value="percentage" <%= coupon.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
+                                            <option value="fixed" <%= coupon.discountType === 'fixed' ? 'selected' : '' %>>Fixed</option>
                                         </select>
                                     </div>
                                     <div class="mb-4">
                                         <label class="form-label">Discount Value</label>
-                                        <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" min="0" required>
+                                        <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" min="0" value="<%= coupon.discountValue %>" required>
                                     </div>
                                     <div class="mb-4">
                                         <label class="form-label">Expiration Date</label>
-                                        <input type="date" class="form-control" name="expirationDate" required>
+                                        <input type="date" class="form-control" name="expirationDate" value="<%= coupon.expirationDate.toISOString().split('T')[0] %>" required>
                                     </div>
                                     <div class="mb-4">
                                         <label class="form-label">Usage Limit</label>
-                                        <input type="number" placeholder="e.g., 100" class="form-control" name="usageLimit" min="0">
+                                        <input type="number" placeholder="e.g., 100" class="form-control" name="usageLimit" min="0" value="<%= coupon.usageLimit %>">
                                     </div>
                                 </div>
                             </div>
@@ -58,27 +59,24 @@
                     </div>
                 </div>
             </div>
-        </form>        
+        </form>
     </section>
     
     <script>
         function validateCouponForm(event) {
-            const discountInput = document.querySelector('input[name="discount"]');
+            const discountInput = document.querySelector('input[name="discountValue"]');
             const discount = parseFloat(discountInput.value);
-    
-            // Validate discount
-            if (isNaN(discount) || discount < 0 || discount > 100) {
-                event.preventDefault(); // Prevent form submission if validation fails
-                alert("Discount must be a number between 0 and 100.");
+
+            if (isNaN(discount) || discount < 0 || (discount > 100 && document.querySelector('select[name="discountType"]').value === 'percentage')) {
+                event.preventDefault();
+                alert("Discount must be a valid number between 0 and 100 for percentage-based discounts.");
                 discountInput.focus();
                 return false;
             }
-    
-            // If validation is passed, the form will be submitted
             return true;
         }
     </script>
     
-    </body>
-    
-    <%- include("../layouts/admin_footer.ejs") %>
+</body>
+
+<%- include("../layouts/admin_footer.ejs") %>

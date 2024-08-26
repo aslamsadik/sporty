@@ -185,10 +185,10 @@
             <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet" />
             <label class="form-check-label" for="wallet">Wallet</label>
           </div>
-          <!-- <div class="form-check">
+          <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay" />
             <label class="form-check-label" for="razorpay">Razorpay</label>
-          </div> -->
+          </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery" />
             <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
@@ -240,27 +240,38 @@
           </div>
 
           <!-- Referral Code Section -->
-          <% if (referralOffers && referralOffers.length > 0) { %>
-            <div class="referral-section mt-4">
-              <h4>Referral Offers</h4>
-              <ul class="list-group">
-                <% referralOffers.forEach(offer => { %>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>Referral Code: <%= offer.code %></span>
-                    <% if (offer.expirationDate && new Date() > offer.expirationDate) { %>
-                      <span class="text-danger">Expired</span>
-                    <% } else { %>
-                      <span class="text-success">Valid</span>
-                    <% } %>
-                    <div>
-                      <!-- Apply Button -->
-                      <button type="button" class="btn btn-primary btn-sm apply-referral" data-code="<%= offer.code %>" data-discount="<%= offer.discountAmount %>">Apply</button>
-                    </div>
-                  </li>
-                <% }) %>
-              </ul>
-            </div>
-          <% } %>
+              <div class="form-group mt-4">
+              <label for="referralCode">Referral Code</label>
+              <input type="text" class="form-control" id="referralCode" name="referralCode" placeholder="Enter Referral Code">
+              </div>
+              <!-- <div class="apply-referral-code mt-4">
+                <h4>Apply Referral Code</h4>
+                <form action="/checkout" method="GET">
+                  <div class="input-group">
+                    <input type="text" class="form-control" name="referralCode" placeholder="Enter referral code" />
+                    <button class="btn btn-primary" type="submit">Apply</button>
+                  </div>
+                </form>
+              </div> -->
+              <!-- Referral Code Section -->
+              <% if (referralOffers && referralOffers.length > 0) { %>
+                <div class="referral-section mt-4">
+                  <h4>Referral Offers</h4>
+                  <ul class="list-group">
+                    <% referralOffers.forEach(offer => { %>
+                      <li class="list-group-item d-flex justify-content-between">
+                        <span>Referral Code: <%= offer.code %></span>
+                        <% if (offer.expirationDate && new Date() > offer.expirationDate) { %>
+                          <span class="text-danger">Expired</span>
+                        <% } else { %>
+                          <span class="text-success">Valid</span>
+                        <% } %>
+                      </li>
+                    <% }) %>
+                  </ul>
+                </div>
+              <% } %>
+
 
           <!-- Final Price Section -->
           <div class="final-price-value">
@@ -272,6 +283,7 @@
               <% } %>
             </span>
           </div>
+          
         
         </div>
       </div>
@@ -285,96 +297,77 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-  $('.apply-coupon').on('click', function () {
-  var couponCode = $(this).data('code');
-  var discountPercentage = $(this).data('discount');
-  var originalPrice = parseFloat($('#finalPriceValue').text());
-  var discountAmount = (originalPrice * discountPercentage) / 100;
-  var finalPrice = originalPrice - discountAmount;
+    $(document).ready(function () {
+      // Handle applying a coupon
+      $('.apply-coupon').on('click', function () {
+        var couponCode = $(this).data('code');
+        var discountPercentage = $(this).data('discount');
+        var originalPrice = parseFloat($('#finalPriceValue').text());
+        var discountAmount = (originalPrice * discountPercentage) / 100;
+        var finalPrice = originalPrice - discountAmount;
 
-  $('#discountAmount').val(discountAmount.toFixed(2));
-  $('#finalPriceValue').text(finalPrice.toFixed(2));
-  $('#couponCodeInput').val(couponCode);
-});
-
-$('.apply-referral').on('click', function () {
-  var code = $(this).data('code');
-  var discountAmount = $(this).data('discount');
-  discountAmount = parseFloat(discountAmount);
-  if (isNaN(discountAmount) || discountAmount <= 0) {
-    alert('Invalid discount amount');
-    return;
-  }
-
-  var originalPrice = parseFloat($('#finalPriceValue').text());
-  var finalPrice = originalPrice - discountAmount;
-
-  $('#discountAmount').val(discountAmount.toFixed(2));
-  $('#finalPriceValue').text(finalPrice.toFixed(2));
-  $('#referralCode').val(code);
-
-  alert('Referral code applied! Discount of ₹' + discountAmount.toFixed(2) + ' has been applied.');
-
-
-
-
-      // Razorpay payment
-      $('#razorpayButton').click(function (e) {
-        e.preventDefault(); // Prevent form from submitting
-
-        const totalAmount = parseFloat($('#finalPriceValue').text()) * 100; // Convert to paise
-
-        const options = {
-          "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend
-          "amount": totalAmount,
-          "currency": "INR",
-          "name": "Your Site Name",
-          "description": "Test Transaction",
-          "order_id": "<%= razorpayOrderId %>", // Razorpay Order ID passed from backend
-          "handler": function (response) {
-            // After successful payment
-            alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
-
-            // Append payment details to the form
-            $('<input>').attr({
-              type: 'hidden',
-              name: 'razorpay_order_id',
-              value: response.razorpay_order_id
-            }).appendTo('#placeOrderForm');
-
-            $('<input>').attr({
-              type: 'hidden',
-              name: 'razorpay_payment_id',
-              value: response.razorpay_payment_id
-            }).appendTo('#placeOrderForm');
-
-            $('<input>').attr({
-              type: 'hidden',
-              name: 'razorpay_signature',
-              value: response.razorpay_signature
-            }).appendTo('#placeOrderForm');
-
-            // Manually set payment method
-            $('<input>').attr({
-              type: 'hidden',
-              name: 'paymentMethod',
-              value: 'Razorpay'
-            }).appendTo('#placeOrderForm');
-
-            // Submit the form to place the order
-            $('#placeOrderForm').submit(); 
-          },
-          "prefill": {
-            "name": "<%= user.firstName %> <%= user.lastName %>",
-            "email": "<%= user.email %>",
-            "contact": "<%= user.phone %>"
-          }
-        };
-
-        const rzp1 = new Razorpay(options);
-        rzp1.open();
+        $('#discountAmount').val(discountAmount.toFixed(2));
+        $('#finalPriceValue').text(finalPrice.toFixed(2));
+        $('#couponCodeInput').val(couponCode);
       });
-    });
+
+   // Razorpay payment
+   $('#razorpayButton').click(function (e) {
+            e.preventDefault(); // Prevent form from submitting
+
+            const totalAmount = parseFloat($('#discountAmount').text()) * 100; // Convert to paise
+
+            const options = {
+                "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend
+                "amount": totalAmount,
+                "currency": "INR",
+                "name": "Your Site Name",
+                "description": "Test Transaction",
+                "order_id": "<%= razorpayOrderId %>", // Razorpay Order ID passed from backend
+                "handler": function (response) {
+                    // After successful payment
+                    alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
+
+                    // Append payment details to the form
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'razorpay_order_id',
+                        value: response.razorpay_order_id
+                    }).appendTo('#placeOrderForm');
+
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'razorpay_payment_id',
+                        value: response.razorpay_payment_id
+                    }).appendTo('#placeOrderForm');
+
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'razorpay_signature',
+                        value: response.razorpay_signature
+                    }).appendTo('#placeOrderForm');
+
+                    // Manually set payment method
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'paymentMethod',
+                        value: 'Razorpay'
+                    }).appendTo('#placeOrderForm');
+
+                    // Submit the form to place the order
+                    $('#placeOrderForm').submit(); 
+                },
+                "prefill": {
+                    "name": "<%= user.firstName %> <%= user.lastName %>",
+                    "email": "<%= user.email %>",
+                    "contact": "<%= user.phone %>"
+                }
+            };
+
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+        });
+});
   </script>
 </body>
 </html>

@@ -91,16 +91,16 @@ const Admin_home = async (req, res) => {
         const categories = await Category.find();
 
         const totalRevenue = await Order.aggregate([
-            { $match: { status: "Completed" } },
+            { $match: { status: "Delivered" } },  // Changed to "Delivered"
             { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } }
         ]);
 
-        const totalOrders = await Order.countDocuments({ status: "Completed" });
+        const totalOrders = await Order.countDocuments({ status: "Delivered" });  // Changed to "Delivered"
 
         const monthlyEarnings = await Order.aggregate([
             { 
                 $match: { 
-                    status: "Completed",
+                    status: "Delivered",  // Changed to "Delivered"
                     createdAt: {
                         $gte: new Date(new Date().setDate(1)) // Start of the current month
                     }
@@ -109,19 +109,33 @@ const Admin_home = async (req, res) => {
             { $group: { _id: null, monthlyEarnings: { $sum: "$totalPrice" } } }
         ]);
 
-        // Fetch sales data
+        // Reuse the getSalesReport logic to fetch sales data for the initial load
+        const { startDate, endDate, category } = filters;
+        let matchCriteria = { status: "Delivered" };  // Changed to "Delivered"
+
+        if (startDate && endDate) {
+            matchCriteria.createdAt = {
+                $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),  // Start of the day
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) // End of the day
+            };
+        }
+
+        if (category) {
+            matchCriteria['products.category'] = category;
+        }
+
         const salesData = await Order.aggregate([
-            { $match: { status: "Completed" } },
-            { $unwind: "$products" }, // Unwind products array
+            { $match: matchCriteria },
+            { $unwind: "$products" },
             { 
                 $lookup: {
-                    from: "products", // Assuming you have a "products" collection
+                    from: "products", 
                     localField: "products.productId",
                     foreignField: "_id",
                     as: "productDetails"
                 }
             },
-            { $unwind: "$productDetails" }, // Unwind productDetails array
+            { $unwind: "$productDetails" },
             { 
                 $group: {
                     _id: "$products.productId",
@@ -132,13 +146,8 @@ const Admin_home = async (req, res) => {
             }
         ]);
 
-        const buildQueryString = (filters) => {
-            const query = [];
-            if (filters.startDate) query.push(`startDate=${encodeURIComponent(filters.startDate)}`);
-            if (filters.endDate) query.push(`endDate=${encodeURIComponent(filters.endDate)}`);
-            if (filters.category) query.push(`category=${encodeURIComponent(filters.category)}`);
-            return query.join('&');
-        };
+        // Generate query string
+        const queryString = new URLSearchParams(filters).toString();
 
         res.render('dashboard', {
             totalRevenue: totalRevenue[0]?.totalRevenue || 0,
@@ -146,8 +155,8 @@ const Admin_home = async (req, res) => {
             monthlyEarnings: monthlyEarnings[0]?.monthlyEarnings || 0,
             categories, 
             filters, 
-            buildQueryString,
-            salesData // Pass sales data to the template
+            salesData, 
+            queryString // Pass queryString to the template
         });
     } catch (error) {
         console.log(error.message);
@@ -768,18 +777,20 @@ const getSalesReport = async (req, res) => {
         const { startDate, endDate, category } = req.query;
 
         // Build match criteria
-        let matchCriteria = { status: "Completed" };
+        let matchCriteria = { status: "Delivered" };  // Changed to "Delivered"
 
         if (startDate && endDate) {
             matchCriteria.createdAt = {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
+                $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),  // Start of the day
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) // End of the day
             };
         }
 
         if (category) {
             matchCriteria['products.category'] = category;
         }
+
+        console.log("Match Criteria:", matchCriteria); // Debugging log
 
         // Aggregate sales data
         const salesData = await Order.aggregate([
@@ -805,6 +816,8 @@ const getSalesReport = async (req, res) => {
             }
         ]);
 
+        console.log("Sales Data:", salesData); // Debugging log
+
         // Fetch all categories for filter dropdown
         const categories = await Category.find({});
 
@@ -828,7 +841,7 @@ const getSalesReport = async (req, res) => {
 const exportSalesReportCSV = async (req, res) => {
     try {
         const { startDate, endDate, category } = req.query;
-
+        
         // Fetch sales data using same logic as getSalesReport
         const salesData = await fetchSalesData({ startDate, endDate, category });
 

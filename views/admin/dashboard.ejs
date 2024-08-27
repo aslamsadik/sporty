@@ -48,7 +48,6 @@
         <div class="mb-3">
             <a href="/admin/sales-report/export/csv?<%= queryString %>" class="btn btn-success">Export as CSV</a>
             <a href="/admin/sales-report/export/excel?<%= queryString %>" class="btn btn-info">Export as Excel</a>
-
         </div>
 
         <!-- Sales Report Table -->
@@ -62,17 +61,18 @@
                 </tr>
             </thead>
             <tbody>
-                <% if (salesData.length > 0) { %>
+                <% if (salesData && salesData.length > 0) { %>
                     <% salesData.forEach(function(item) { %>
                         <tr>
                             <td><%= item.productName %></td>
+                            <td><%= item.category %></td>
                             <td><%= item.totalQuantity %></td>
-                            <td><%= item.totalRevenue %></td>
+                            <td><%= item.totalRevenue.toFixed(2) %></td>
                         </tr>
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="3">No sales data available for the selected filters.</td>
+                        <td colspan="4" class="text-center">No sales data available for the selected filters.</td>
                     </tr>
                 <% } %>
             </tbody>            
@@ -92,18 +92,12 @@
         });
 
         // Function to build query string for export links
-        
-    function buildQueryString(filters) {
-        const params = new URLSearchParams(filters);
-        return params.toString();
-    }
-
-
+        function buildQueryString(filters) {
+            const params = new URLSearchParams(filters);
+            return params.toString();
+        }
     </script>
 </body>
 </html>
-
-
-
 
 <%- include("../layouts/admin_footer.ejs") %>

@@ -155,7 +155,6 @@ const Admin_home = async (req, res) => {
     }
 };
 
-
 // Product Management
 const Admin_productList = async (req, res) => {
     try {
@@ -809,18 +808,21 @@ const getSalesReport = async (req, res) => {
         // Fetch all categories for filter dropdown
         const categories = await Category.find({});
 
+        // Generate query strings
+        const queryString = new URLSearchParams({ startDate, endDate, category }).toString();
+
         // Ensure filters are passed to the view
-        res.render('admin/dashboard', {
+        res.render('dashboard', {
             salesData,
             categories,
-            filters: { startDate, endDate, category }
+            filters: { startDate, endDate, category },
+            queryString
         });
     } catch (error) {
         console.error('Error fetching sales report:', error);
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 // Export Sales Report as CSV
 const exportSalesReportCSV = async (req, res) => {

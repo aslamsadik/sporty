@@ -46,8 +46,9 @@
 
         <!-- Export Buttons -->
         <div class="mb-3">
-            <a href="/admin/sales-report/export/csv?<%= buildQueryString(filters) %>" class="btn btn-success">Export as CSV</a>
-            <a href="/admin/sales-report/export/excel?<%= buildQueryString(filters) %>" class="btn btn-info">Export as Excel</a>
+            <a href="/admin/sales-report/export/csv?<%= queryString %>" class="btn btn-success">Export as CSV</a>
+            <a href="/admin/sales-report/export/excel?<%= queryString %>" class="btn btn-info">Export as Excel</a>
+
         </div>
 
         <!-- Sales Report Table -->
@@ -91,10 +92,13 @@
         });
 
         // Function to build query string for export links
-        function buildQueryString(filters) {
-            const params = new URLSearchParams(filters);
-            return params.toString();
-        }
+        
+    function buildQueryString(filters) {
+        const params = new URLSearchParams(filters);
+        return params.toString();
+    }
+
+
     </script>
 </body>
 </html>

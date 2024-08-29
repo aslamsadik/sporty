@@ -51,7 +51,7 @@
     .order-summary .list-group-item {
       border-top: 1px solid #ddd;
       padding: 15px 0;
-      max-width: 400px;
+      max-width: 500px;
     }
     .btn-primary {
       background-color: #007bff;
@@ -186,10 +186,6 @@
             <label class="form-check-label" for="wallet">Wallet</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay" />
-            <label class="form-check-label" for="razorpay">Razorpay</label>
-          </div>
-          <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery" />
             <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
           </div>
@@ -224,20 +220,35 @@
           <div class="coupon-container">
             <h5>Apply Coupon</h5>
             <% if (coupons && coupons.length > 0) { %>
-              <% coupons.forEach((coupon) => { %>
-                <div class="coupon-item">
-                  <div class="coupon-info">
-                    <div class="coupon-code"><%= coupon.code %></div>
-                    <div class="coupon-discount">Discount: <%= coupon.discountPercentage ? coupon.discountPercentage + '%' : coupon.discountAmount ? '₹' + coupon.discountAmount : '' %></div>
-                    <div class="coupon-expiry">Expires on: <%= coupon.expirationDate.toLocaleDateString() %></div>
-                  </div>
-                  <button type="button" class="btn btn-outline-primary apply-coupon" data-code="<%= coupon.code %>" data-discount="<%= coupon.discountPercentage || coupon.discountAmount %>" data-type="<%= coupon.discountPercentage ? 'percentage' : 'fixed' %>">Apply</button>
-                </div>
-              <% }) %>
+                <% coupons.forEach((coupon) => { %>
+                    <div class="coupon-item">
+                        <div class="coupon-info">
+                            <div class="coupon-code">Code: <%= coupon.code %></div>
+                            <div class="coupon-discount">
+                                Discount: 
+                                <% if (coupon.discountType === 'percentage') { %>
+                                    <%= coupon.discountValue %>% Off
+                                <% } else { %>
+                                    ₹<%= coupon.discountValue %> Off
+                                <% } %>
+                            </div>
+                            <div class="coupon-min-amount">
+                                Minimum Purchase: ₹<%= coupon.minPurchaseAmount %>
+                            </div>
+                            <div class="coupon-expiry">Expires on: <%= coupon.expirationDate.toLocaleDateString() %></div>
+                        </div>
+                        <form action="/apply-coupon" method="POST" class="apply-coupon-form">
+                            <input type="hidden" name="couponCode" value="<%= coupon.code %>">
+                            <input type="hidden" name="cartTotal" value="<%= cartTotal %>"> <!-- Hidden input for cart total -->
+                            <button type="submit" class="btn btn-outline-primary">Apply</button>
+                        </form>
+                    </div>
+                <% }) %>
             <% } else { %>
-              <p>No coupons available.</p>
+                <p>No coupons available.</p>
             <% } %>
-          </div>
+        </div>
+        
 
           <!-- Referral Code Section -->
               <div class="form-group mt-4">
@@ -367,6 +378,32 @@
             const rzp1 = new Razorpay(options);
             rzp1.open();
         });
+
+//    function validateCouponForm(event) {
+//     const discountInput = document.querySelector('input[name="discountValue"]');
+//     const discountTypeInput = document.querySelector('select[name="discountType"]');
+//     const minPriceInput = document.querySelector('input[name="minPrice"]');
+
+//     const discountValue = parseFloat(discountInput.value);
+//     const minPrice = parseFloat(minPriceInput.value);
+
+//     if (discountTypeInput.value === 'percentage' && (isNaN(discountValue) || discountValue < 0 || discountValue > 100)) {
+//         event.preventDefault();
+//         alert("Discount must be a number between 0 and 100.");
+//         discountInput.focus();
+//         return false;
+//     }
+
+//     if (isNaN(minPrice) || minPrice < 0) {
+//         event.preventDefault();
+//         alert("Minimum order price must be a positive number.");
+//         minPriceInput.focus();
+//         return false;
+//     }
+
+//     return true;
+// }     
+
 });
   </script>
 </body>

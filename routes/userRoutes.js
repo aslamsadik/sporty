@@ -75,7 +75,7 @@ router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 
 // Apply coupon
-router.post('/checkout/apply-coupon', userController.applyCoupon);
+// router.post('/checkout/apply-coupon', userController.applyCoupon);
 
 // Wishlist routes
 router.post('/wishlist/add', isAuthenticated, userController.addToWishlist);
@@ -85,7 +85,6 @@ router.get('/wishlist', isAuthenticated, userController.getWishlist);
 // Route to get wallet details
 router.get('/wallet',isAuthenticated, userController.getWalletDetails);
 router.post('/wallet/add-funds', userController.addFunds);
-router.post('/wallet/deduct-funds', userController.deductFunds);
 
 
 router.post('/apply-offer',isAuthenticated, userController.applyOffer);

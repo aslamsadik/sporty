@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
   <link rel="stylesheet" href="/user_assets/css/main.css" />
-  <!-- Adjust the path as needed -->
   <style>
     body {
       font-family: "Arial", sans-serif;
@@ -65,7 +64,6 @@
       position: relative;
       margin-left: 250px;
     }
-    /* Styling for coupon section */
     .coupon-container {
       display: flex;
       flex-direction: column;
@@ -217,194 +215,111 @@
           <% } %>
   
           <!-- Coupon Application Section -->
-          <div class="coupon-container">
-            <h5>Apply Coupon</h5>
-            <% if (coupons && coupons.length > 0) { %>
-                <% coupons.forEach((coupon) => { %>
-                    <div class="coupon-item">
-                        <div class="coupon-info">
-                            <div class="coupon-code">Code: <%= coupon.code %></div>
-                            <div class="coupon-discount">
-                                Discount: 
-                                <% if (coupon.discountType === 'percentage') { %>
-                                    <%= coupon.discountValue %>% Off
-                                <% } else { %>
-                                    ₹<%= coupon.discountValue %> Off
-                                <% } %>
-                            </div>
-                            <div class="coupon-min-amount">
-                                Minimum Purchase: ₹<%= coupon.minPurchaseAmount %>
-                            </div>
-                            <div class="coupon-expiry">Expires on: <%= coupon.expirationDate.toLocaleDateString() %></div>
-                        </div>
-                        <form action="/apply-coupon" method="POST" class="apply-coupon-form">
-                            <input type="hidden" name="couponCode" value="<%= coupon.code %>">
-                            <input type="hidden" name="cartTotal" value="<%= cartTotal %>"> <!-- Hidden input for cart total -->
-                            <button type="submit" class="btn btn-outline-primary">Apply</button>
-                        </form>
-                    </div>
-                <% }) %>
+<div class="coupon-container">
+  <h5>Apply Coupon</h5>
+  <% if (coupons && coupons.length > 0) { %>
+    <% coupons.forEach((coupon) => { %>
+      <div class="coupon-item">
+        <div class="coupon-info">
+          <div class="coupon-code">Code: <%= coupon.code %></div>
+          <div class="coupon-discount">Discount: <%= coupon.discountAmount %> INR</div>
+          <div class="coupon-expiry">
+            Expiry:
+            <% 
+              const expirationDate = coupon.expirationDate ? new Date(coupon.expirationDate) : null;
+              if (expirationDate && !isNaN(expirationDate.getTime())) { 
+            %>
+              <%= expirationDate.toLocaleDateString() %>
             <% } else { %>
-                <p>No coupons available.</p>
+              Date not available
             <% } %>
-        </div>
-        
-
-          <!-- Referral Code Section -->
-              <div class="form-group mt-4">
-              <label for="referralCode">Referral Code</label>
-              <input type="text" class="form-control" id="referralCode" name="referralCode" placeholder="Enter Referral Code">
-              </div>
-              <!-- <div class="apply-referral-code mt-4">
-                <h4>Apply Referral Code</h4>
-                <form action="/checkout" method="GET">
-                  <div class="input-group">
-                    <input type="text" class="form-control" name="referralCode" placeholder="Enter referral code" />
-                    <button class="btn btn-primary" type="submit">Apply</button>
-                  </div>
-                </form>
-              </div> -->
-              <!-- Referral Code Section -->
-              <% if (referralOffers && referralOffers.length > 0) { %>
-                <div class="referral-section mt-4">
-                  <h4>Referral Offers</h4>
-                  <ul class="list-group">
-                    <% referralOffers.forEach(offer => { %>
-                      <li class="list-group-item d-flex justify-content-between">
-                        <span>Referral Code: <%= offer.code %></span>
-                        <% if (offer.expirationDate && new Date() > offer.expirationDate) { %>
-                          <span class="text-danger">Expired</span>
-                        <% } else { %>
-                          <span class="text-success">Valid</span>
-                        <% } %>
-                      </li>
-                    <% }) %>
-                  </ul>
-                </div>
-              <% } %>
-
-
-          <!-- Final Price Section -->
-          <div class="final-price-value">
-            ₹<span id="finalPriceValue">
-              <% if (cart && cart.products && cart.products.length > 0) { %>
-               <%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %>
-              <% } else { %>
-                0.00
-              <% } %>
-            </span>
           </div>
-          
-        
+        </div>
+        <button
+          class="btn btn-outline-primary apply-coupon-button"
+          data-coupon-code="<%= coupon.code %>"
+          data-coupon-discount="<%= coupon.discountAmount %>"
+        >
+          Apply
+        </button>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p>No coupons available.</p>
+  <% } %>            
+</div>
+
+  
+          <!-- Place Order Button -->
+          <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
         </div>
       </div>
-  
-      <!-- Add a submit button for order placement -->
-      <button type="submit" class="btn btn-primary btn-lg btn-block mt-4" id="placeOrderButton">Place Order</button>
     </form>
   </div>
   
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-    $(document).ready(function () {
-      // Handle applying a coupon
-      $('.apply-coupon').on('click', function () {
-        var couponCode = $(this).data('code');
-        var discountPercentage = $(this).data('discount');
-        var originalPrice = parseFloat($('#finalPriceValue').text());
-        var discountAmount = (originalPrice * discountPercentage) / 100;
-        var finalPrice = originalPrice - discountAmount;
+    // Apply Coupon
+    document.querySelectorAll('.apply-coupon-button').forEach(button => {
+      button.addEventListener('click', function () {
+        const couponCode = this.getAttribute('data-coupon-code');
+        const discountAmount = parseFloat(this.getAttribute('data-coupon-discount'));
 
-        $('#discountAmount').val(discountAmount.toFixed(2));
-        $('#finalPriceValue').text(finalPrice.toFixed(2));
-        $('#couponCodeInput').val(couponCode);
+        document.getElementById('couponCodeInput').value = couponCode;
+        document.getElementById('discountAmount').value = discountAmount;
+
+        alert('Coupon applied successfully!');
+        window.location.href = '/checkout?appliedCoupon=' + couponCode;
       });
+    });
 
-   // Razorpay payment
-   $('#razorpayButton').click(function (e) {
-            e.preventDefault(); // Prevent form from submitting
+    // Razorpay Integration
+    document.getElementById('razorpayButton').onclick = function (e) {
+      e.preventDefault();
+      
+      // Add coupon code and discount amount to the form data
+      const form = document.getElementById('placeOrderForm');
+      const formData = new FormData(form);
 
-            const totalAmount = parseFloat($('#discountAmount').text()) * 100; // Convert to paise
+      // Create options object for Razorpay
+      const options = {
+        key: '<%= razorpayKeyId %>',
+        amount: '<%= (totalAmount - discountAmount) * 100 %>', // Convert to paise
+        currency: 'INR',
+        name: 'Your Shop Name',
+        description: 'Order Payment',
+        image: '/your_logo.png',
+        handler: function (response) {
+          formData.append('razorpayPaymentId', response.razorpay_payment_id);
+          fetch('/complete-razorpay-payment', {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Payment successful!');
+              window.location.href = '/order-success';
+            } else {
+              alert('Payment failed!');
+            }
+          });
+        },
+        prefill: {
+          name: '<%= user.firstName %> <%= user.lastName %>',
+          email: '<%= user.email %>',
+          contact: '<%= user.phone %>'
+        },
+        theme: {
+          color: '#007bff'
+        }
+      };
 
-            const options = {
-                "key": "<%= razorpayKeyId %>", // Razorpay Key ID passed from backend
-                "amount": totalAmount,
-                "currency": "INR",
-                "name": "Your Site Name",
-                "description": "Test Transaction",
-                "order_id": "<%= razorpayOrderId %>", // Razorpay Order ID passed from backend
-                "handler": function (response) {
-                    // After successful payment
-                    alert('Payment successful with Razorpay ID: ' + response.razorpay_payment_id);
-
-                    // Append payment details to the form
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'razorpay_order_id',
-                        value: response.razorpay_order_id
-                    }).appendTo('#placeOrderForm');
-
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'razorpay_payment_id',
-                        value: response.razorpay_payment_id
-                    }).appendTo('#placeOrderForm');
-
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'razorpay_signature',
-                        value: response.razorpay_signature
-                    }).appendTo('#placeOrderForm');
-
-                    // Manually set payment method
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'paymentMethod',
-                        value: 'Razorpay'
-                    }).appendTo('#placeOrderForm');
-
-                    // Submit the form to place the order
-                    $('#placeOrderForm').submit(); 
-                },
-                "prefill": {
-                    "name": "<%= user.firstName %> <%= user.lastName %>",
-                    "email": "<%= user.email %>",
-                    "contact": "<%= user.phone %>"
-                }
-            };
-
-            const rzp1 = new Razorpay(options);
-            rzp1.open();
-        });
-
-//    function validateCouponForm(event) {
-//     const discountInput = document.querySelector('input[name="discountValue"]');
-//     const discountTypeInput = document.querySelector('select[name="discountType"]');
-//     const minPriceInput = document.querySelector('input[name="minPrice"]');
-
-//     const discountValue = parseFloat(discountInput.value);
-//     const minPrice = parseFloat(minPriceInput.value);
-
-//     if (discountTypeInput.value === 'percentage' && (isNaN(discountValue) || discountValue < 0 || discountValue > 100)) {
-//         event.preventDefault();
-//         alert("Discount must be a number between 0 and 100.");
-//         discountInput.focus();
-//         return false;
-//     }
-
-//     if (isNaN(minPrice) || minPrice < 0) {
-//         event.preventDefault();
-//         alert("Minimum order price must be a positive number.");
-//         minPriceInput.focus();
-//         return false;
-//     }
-
-//     return true;
-// }     
-
-});
+      const rzp = new Razorpay(options);
+      rzp.open();
+    };
   </script>
 </body>
 </html>

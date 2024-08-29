@@ -824,7 +824,6 @@ const getCheckoutPage = async (req, res) => {
         const cart = await Cart.findOne({ userId }).populate('products.productId');
         const user = await User.findById(userId);
 
-        // Handle case where the cart is empty
         if (!cart || cart.products.length === 0) {
             return res.render('checkout', { 
                 message: 'Your cart is empty', 
@@ -835,32 +834,14 @@ const getCheckoutPage = async (req, res) => {
                 addresses: [], 
                 razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
                 razorpayOrderId: null,
-                cartTotal: 0
+                cartTotal: 0,
+                couponCode: '', 
+                discount: 0 
             });
         }
 
-        // Validate product prices
-        for (const item of cart.products) {
-            if (isNaN(item.productId.price)) {
-                console.error(`Invalid price for product: ${item.productId.name}`);
-                return res.render('checkout', { 
-                    message: 'Invalid product price found', 
-                    messageType: 'error', 
-                    cart: null, 
-                    user, 
-                    coupons: [], 
-                    addresses: [], 
-                    razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
-                    razorpayOrderId: null,
-                    cartTotal: 0
-                });
-            }
-        }
-
-        // Calculate total amount (cartTotal)
         let cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
 
-        // Fetch valid coupons
         const currentDate = new Date();
         const coupons = await Coupon.aggregate([
             { $match: { expirationDate: { $gte: currentDate } } },
@@ -871,11 +852,10 @@ const getCheckoutPage = async (req, res) => {
             code: coupon.code,
             discountPercentage: coupon.discountType === 'percentage' ? coupon.discountValue : null,
             discountAmount: coupon.discountType === 'fixed' ? coupon.discountValue : null,
-            expirationDate: coupon.expirationDate ? new Date(coupon.expirationDate) : null
+            expirationDate: coupon.expirationDate ? coupon.expirationDate.toISOString() : null // Ensure proper date formatting
         }));
 
-        // Handle applied coupon code
-        const appliedCouponCode = req.query.couponCode;
+        const appliedCouponCode = req.query.couponCode || '';
         let discountAmount = 0;
 
         if (appliedCouponCode) {
@@ -892,20 +872,6 @@ const getCheckoutPage = async (req, res) => {
             }
         }
 
-        // Fetch referral offers
-        const referralOffers = await Offer.find({
-            offerType: 'referral',
-            startDate: { $lte: currentDate },
-            endDate: { $gte: currentDate },
-            isActive: true
-        });
-
-        const referralData = referralOffers.map(offer => ({
-            code: offer.referralCode,
-            expirationDate: offer.endDate ? new Date(offer.endDate) : null
-        }));
-
-        // Fetch user's addresses for selection
         const addresses = user.addresses || [];
         if (addresses.length === 0) {
             return res.render('checkout', { 
@@ -917,13 +883,13 @@ const getCheckoutPage = async (req, res) => {
                 addresses: [], 
                 razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
                 razorpayOrderId: null,
-                cartTotal
+                cartTotal,
+                couponCode: appliedCouponCode, 
+                discount: discountAmount 
             });
         }
 
-        const totalAmountInPaise = cartTotal * 100;
-
-        // Initialize Razorpay for payment
+        const totalAmountInPaise = (cartTotal + discountAmount) * 100;
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID,
             key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -937,7 +903,6 @@ const getCheckoutPage = async (req, res) => {
 
         const order = await razorpay.orders.create(options);
 
-        // Render checkout page with all necessary data
         res.render('checkout', { 
             message: null, 
             messageType: null, 
@@ -947,11 +912,12 @@ const getCheckoutPage = async (req, res) => {
             addresses, 
             razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
             razorpayOrderId: order.id,
-            totalAmount: cartTotal + discountAmount,
+            totalAmount: totalAmountInPaise / 100,
             discountAmount,
-            finalAmount: cartTotal,
-            referralOffers: referralData,
-            cartTotal // Passing cartTotal to the view
+            finalAmount: cartTotal, 
+            cartTotal,
+            couponCode: appliedCouponCode, 
+            discount: discountAmount 
         });
 
     } catch (error) {
@@ -959,6 +925,8 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
+
 
 
 // const placeOrder = async (req, res) => {

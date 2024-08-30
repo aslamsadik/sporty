@@ -75,7 +75,7 @@ router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 
 // Apply coupon
-// router.post('/checkout/apply-coupon', userController.applyCoupon);
+router.post('/apply-coupon', userController.applyCoupon);
 
 // Wishlist routes
 router.post('/wishlist/add', isAuthenticated, userController.addToWishlist);

@@ -1,13 +1,21 @@
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-  <link rel="stylesheet" href="/user_assets/css/main.css" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="/user_assets/css/main.css">
   <style>
+    /* Add your styles here */
     body {
       font-family: "Arial", sans-serif;
       background-color: #f8f9fa;
@@ -15,54 +23,6 @@
     }
     .container {
       max-width: 1200px;
-    }
-    .error-message {
-      color: red;
-    }
-    .address-card {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 15px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      max-width: 400px;
-    }
-    .address-card:hover {
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .address-card.active {
-      border-color: #007bff;
-      background-color: #f1f9ff;
-    }
-    .address-actions {
-      margin-top: 10px;
-      text-align: right;
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-    .list-group-item {
-      border: none;
-      padding: 10px 0;
-    }
-    .order-summary .list-group-item {
-      border-top: 1px solid #ddd;
-      padding: 15px 0;
-      max-width: 500px;
-    }
-    .btn-primary {
-      background-color: #007bff;
-      border: none;
-      max-width: 300px;
-    }
-    .btn-primary:hover {
-      background-color: #0056b3;
-    }
-    .header-nav {
-      position: relative;
-      margin-left: 250px;
     }
     .coupon-container {
       display: flex;
@@ -99,51 +59,58 @@
       font-size: 0.8rem;
       padding: 5px 10px;
     }
+    .checkout-row {
+      display: flex;
+    }
+    .content-section {
+      flex: 1;
+    }
     .summary-section {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
-    .content-section {
-      flex: 1;
-    }
-    .checkout-row {
-      display: flex;
-    }
   </style>
 </head>
 <body>
-  <!-- navbar -->
-  <div class="header-nav d-none d-lg-flex">
-    <div class="main-menu main-menu-padding-1 main-menu-lh-2 d-none d-lg-block">
-      <nav>
-        <ul>
-          <li>
-            <a class="active" href="/">Home <i class="fi-rs-angle-down"></i></a>
-            <ul class="sub-menu">
-              <li><a href="index.html">Home 1</a></li>
-              <li><a href="index-2.html">Home 2</a></li>
-              <li><a href="index-3.html">Home 3</a></li>
-              <li><a href="index-4.html">Home 4</a></li>
-            </ul>
-          </li>
-          <li><a href="/shop">Shop</a></li>
-          <li><a href="/cart">Cart</a></li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-  <!-- navbar ends -->
   <div class="container">
     <h2 class="mb-4 text-center">Checkout</h2>
-  
+
     <% if (message) { %>
     <div class="alert alert-<%= messageType %>"><%= message %></div>
     <% } %>
-  
+
+    <!-- Separate form for applying coupon -->
+    <form id="applyCouponForm" method="POST" action="/apply-coupon">
+      <div class="coupon-container">
+        <h5>Apply Coupon</h5>
+        <% if (coupons && coupons.length > 0) { %>
+          <% coupons.forEach(coupon => { %>
+          <div class="coupon-item">
+            <div class="coupon-info">
+              <div class="coupon-code">Code: <%= coupon.code %></div>
+              <div class="coupon-discount">Discount: ₹<%= coupon.discountAmount %></div>
+              <div class="coupon-expiry">
+                Expiry: <%= new Date(coupon.expirationDate).toLocaleDateString() %>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary apply-coupon-button" data-coupon-code="<%= coupon.code %>">Apply</button>
+          </div>
+          <% }) %>
+        <% } else { %>
+        <p>No coupons available.</p>
+        <% } %>
+      </div>
+      
+      <input type="hidden" name="couponCode" id="couponCodeInput">
+    </form>
+
+    <!-- Form for placing the order -->
     <form id="placeOrderForm" action="/place-order" method="POST">
-      <input type="hidden" name="discountAmount" id="discountAmount" value="0">
-      <input type="hidden" name="couponCode" id="couponCodeInput" value="">
+      <input type="hidden" name="discountAmount" id="discountAmount" value="<%= discountAmount %>">
+      <input type="hidden" name="couponCode" id="couponCodeInput" value="<%= appliedCouponCode || '' %>"> <!-- Ensure couponCode is set -->
+      <input type="hidden" name="paymentMethod" id="paymentMethod" value="COD"> <!-- Example for COD -->
+      
       <div class="checkout-row">
         <div class="content-section">
           <h4>Shipping Address</h4>
@@ -177,116 +144,70 @@
             <p>No addresses found.</p>
             <a href="/profile/add-addressPage" class="btn btn-primary">Add Address</a>
           <% } %>
-      
+          
           <h4 class="mt-4">Payment Method</h4>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet" />
+            <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet">
             <label class="form-check-label" for="wallet">Wallet</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery" />
+            <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery">
             <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
           </div>
 
-          <!-- Razorpay Button -->
           <button type="button" class="btn btn-primary btn-lg btn-block mt-4" id="razorpayButton">Pay with Razorpay</button>
         </div>
-  
+
         <div class="summary-section">
           <h4>Order Summary</h4>
           <% if (cart && cart.products && cart.products.length > 0) { %>
             <ul class="list-group order-summary mb-3">
-              <% cart.products.forEach((product) => { %>
+                <% cart.products.forEach((product) => { %>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <div>
+                            <h6 class="my-0"><%= product.productId.name %></h6>
+                            <small class="text-muted">Quantity: <%= product.quantity %></small>
+                        </div>
+                        <span class="text-muted">₹<%= (product.productId.price * product.quantity).toFixed(2) %></span>
+                    </li>
+                <% }) %>
                 <li class="list-group-item d-flex justify-content-between">
-                  <div>
-                    <h6 class="my-0"><%= product.productId.name %></h6>
-                    <small class="text-muted">Quantity: <%= product.quantity %></small>
-                  </div>
-                  <span class="text-muted">₹<%= (product.productId.price * product.quantity).toFixed(2) %></span>
+                    <span>Total (INR)</span>
+                    <strong>₹<%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
                 </li>
-              <% }) %>
-              <li class="list-group-item d-flex justify-content-between">
-                <span>Total (INR)</span>
-                <strong>₹<%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
-              </li>
             </ul>
-          <% } else { %>
+        <% } else { %>
             <p>No products found in cart.</p>
-          <% } %>
-  
-          <!-- Coupon Application Section -->
-<div class="coupon-container">
-  <h5>Apply Coupon</h5>
-  <% if (coupons && coupons.length > 0) { %>
-    <% coupons.forEach((coupon) => { %>
-      <div class="coupon-item">
-        <div class="coupon-info">
-          <div class="coupon-code">Code: <%= coupon.code %></div>
-          <div class="coupon-discount">Discount: <%= coupon.discountAmount %> INR</div>
-          <div class="coupon-expiry">
-            Expiry:
-            <% 
-              const expirationDate = coupon.expirationDate ? new Date(coupon.expirationDate) : null;
-              if (expirationDate && !isNaN(expirationDate.getTime())) { 
-            %>
-              <%= expirationDate.toLocaleDateString() %>
-            <% } else { %>
-              Date not available
-            <% } %>
-          </div>
-        </div>
-        <button
-          class="btn btn-outline-primary apply-coupon-button"
-          data-coupon-code="<%= coupon.code %>"
-          data-coupon-discount="<%= coupon.discountAmount %>"
-        >
-          Apply
-        </button>
-      </div>
-    <% }) %>
-  <% } else { %>
-    <p>No coupons available.</p>
-  <% } %>            
-</div>
+        <% } %>
 
-  
-          <!-- Place Order Button -->
           <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
         </div>
       </div>
     </form>
   </div>
-  
+
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-    // Apply Coupon
-    document.querySelectorAll('.apply-coupon-button').forEach(button => {
-      button.addEventListener('click', function () {
-        const couponCode = this.getAttribute('data-coupon-code');
-        const discountAmount = parseFloat(this.getAttribute('data-coupon-discount'));
+    $(document).on('click', '.apply-coupon-button', function() {
+    var couponCode = $(this).data('coupon-code');
+    $('#couponCodeInput').val(couponCode);
+    $('#applyCouponForm').submit();
+});
 
-        document.getElementById('couponCodeInput').value = couponCode;
-        document.getElementById('discountAmount').value = discountAmount;
-
-        alert('Coupon applied successfully!');
-        window.location.href = '/checkout?appliedCoupon=' + couponCode;
-      });
-    });
-
-    // Razorpay Integration
-    document.getElementById('razorpayButton').onclick = function (e) {
+    $('#razorpayButton').click(function(e) {
       e.preventDefault();
       
-      // Add coupon code and discount amount to the form data
       const form = document.getElementById('placeOrderForm');
       const formData = new FormData(form);
-
-      // Create options object for Razorpay
+  
+      const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+      const totalAmount = parseFloat($('.summary-section strong').text().replace('₹', '')) - discountAmount;
+      
       const options = {
         key: '<%= razorpayKeyId %>',
-        amount: '<%= (totalAmount - discountAmount) * 100 %>', // Convert to paise
+        amount: totalAmount * 100, // Convert to paise
         currency: 'INR',
         name: 'Your Shop Name',
         description: 'Order Payment',
@@ -316,10 +237,10 @@
           color: '#007bff'
         }
       };
-
+  
       const rzp = new Razorpay(options);
       rzp.open();
-    };
+    });
   </script>
 </body>
 </html>

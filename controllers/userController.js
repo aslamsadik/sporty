@@ -960,6 +960,8 @@ const getCheckoutPage = async (req, res) => {
                 razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
                 razorpayOrderId: null,
                 cartTotal: 0,
+                discountAmount: 0,
+                finalAmount: 0,
                 appliedCouponCode: null
             });
         }
@@ -1031,7 +1033,6 @@ const getCheckoutPage = async (req, res) => {
 
             const order = await razorpay.orders.create(options);
 
-            // Check if order creation is successful
             if (!order || !order.id) {
                 console.error('Razorpay order creation failed:', order);
                 throw new Error('Razorpay order creation failed.');
@@ -1056,7 +1057,6 @@ const getCheckoutPage = async (req, res) => {
         } catch (error) {
             console.error('Error creating Razorpay order:', error.message, error);
 
-            // Send failure response back to the client with error message
             return res.render('checkout', { 
                 message: 'Failed to initiate payment. Please try again later.', 
                 messageType: 'error', 
@@ -1079,7 +1079,6 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 // const placeOrder = async (req, res) => {
 //     try {
@@ -1275,7 +1274,7 @@ const getCheckoutPage = async (req, res) => {
 
 const placeOrder = async (req, res) => {
     try {
-        const { couponCode, discountAmount = 0, paymentMethod, shippingAddressId } = req.body; // Destructure necessary fields
+        const { couponCode, discountAmount = 0, finalAmount, paymentMethod, shippingAddressId } = req.body;
         const userId = req.session.user?.userId;
 
         if (!userId) {
@@ -1288,60 +1287,54 @@ const placeOrder = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Validate paymentMethod: Ensure it's a string
-        let validPaymentMethod;
-        if (Array.isArray(paymentMethod)) {
-            validPaymentMethod = paymentMethod[0]; // Use the first value if an array is passed
-        } else {
-            validPaymentMethod = paymentMethod;
-        }
-
+        // Validate paymentMethod
+        let validPaymentMethod = Array.isArray(paymentMethod) ? paymentMethod[0] : paymentMethod;
         if (!validPaymentMethod) {
             return res.status(400).json({ message: 'Payment method is required' });
         }
 
+        // Retrieve the user's cart
         const cart = await Cart.findOne({ userId }).populate('products.productId');
         if (!cart || cart.products.length === 0) {
             return res.status(400).json({ message: 'Cart not found or is empty' });
         }
 
-        // Handle coupon application logic if needed
+        // Handle coupon application logic
         let appliedCoupon = null;
         if (couponCode) {
             appliedCoupon = await Coupon.findOne({ code: couponCode });
             if (!appliedCoupon) {
                 return res.status(400).json({ message: 'Invalid coupon' });
             }
+
+            // Update coupon usage count
+            appliedCoupon.usedCount += 1;
+            await appliedCoupon.save();
         }
 
+        // Calculate the cart total
         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
         const finalPrice = cartTotal - discountAmount;
-
-        // Validate and set the shipping address
-        const validShippingAddressId = shippingAddressId || user.defaultShippingAddress;
-        if (!validShippingAddressId) {
-            return res.status(400).json({ message: 'Shipping address is required' });
-        }
 
         // Create the order
         const order = new Order({
             userId,
-            products: cart.products,
-            shippingAddressId: validShippingAddressId,
-            totalPrice: finalPrice,
+            products: cart.products.map(p => ({ productId: p.productId._id, quantity: p.quantity })),
+            shippingAddressId,
+            totalPrice: cartTotal,
             discountAmount,
-            paymentMethod: validPaymentMethod, // Ensure payment method is a string
+            paymentMethod: validPaymentMethod,
+            orderNotes: req.body.orderNotes || '',
+            finalPrice,  // Ensure this value is saved
             status: 'Pending'
         });
 
         await order.save();
 
-        // Empty the cart after placing the order
-        cart.products = [];
-        await cart.save();
+        // Clear the user's cart after placing the order
+        await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
 
-        return res.status(200).json({ message: 'Order placed successfully' });
-
+        return res.status(200).json({ message: 'Order placed successfully', order });
     } catch (error) {
         console.error('Error placing order:', error.message);
         return res.status(500).json({ message: 'Error placing order' });
@@ -1833,7 +1826,7 @@ const applyCoupon = async (req, res) => {
         }
 
         // Retrieve the coupon by code
-        const coupon = await Coupon.findOne({ code: couponCode });
+        const coupon = await Coupon.findOne({ code: couponCode }).exec();
         if (!coupon) {
             console.log('Coupon not found in the database'); // Debugging line
             return res.status(400).json({ message: 'Invalid coupon code' });
@@ -1866,9 +1859,13 @@ const applyCoupon = async (req, res) => {
             discountAmount = coupon.discountValue;
         }
 
-        // Respond with the discount amount and the updated cart total
+        // Ensure discountAmount does not exceed cartTotal
+        discountAmount = Math.min(discountAmount, cartTotal);
+
+        // Calculate the final amount
         const finalAmount = cartTotal - discountAmount;
 
+        // Respond with the discount amount and the updated cart total
         return res.status(200).json({
             message: 'Coupon applied successfully',
             discountAmount,
@@ -1880,9 +1877,6 @@ const applyCoupon = async (req, res) => {
         return res.status(500).json({ message: 'Error applying coupon' });
     }
 };
-
-
-
 
 // Add product to wishlist
 const addToWishlist = async (req, res) => {

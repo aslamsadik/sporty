@@ -1321,11 +1321,10 @@ const placeOrder = async (req, res) => {
             userId,
             products: cart.products.map(p => ({ productId: p.productId._id, quantity: p.quantity })),
             shippingAddressId,
-            totalPrice: cartTotal,
+            totalPrice: finalPrice,  // Store the final price after discount in totalPrice
             discountAmount,
             paymentMethod: validPaymentMethod,
             orderNotes: req.body.orderNotes || '',
-            finalPrice,  // Ensure this value is saved
             status: 'Pending'
         });
 
@@ -1340,7 +1339,6 @@ const placeOrder = async (req, res) => {
         return res.status(500).json({ message: 'Error placing order' });
     }
 };
-
 
 const getOrderConfirmpage = async (req, res) => {
     try {

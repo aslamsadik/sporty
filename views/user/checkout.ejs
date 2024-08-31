@@ -78,25 +78,25 @@
       <div class="coupon-container">
         <h5>Apply Coupon</h5>
         <% if (coupons && coupons.length > 0) { %>
-          <% coupons.forEach(coupon => { %>
-          <div class="coupon-item">
-            <div class="coupon-info">
-              <div class="coupon-code">Code: <%= coupon.code %></div>
-              <div class="coupon-discount">Discount: ₹<%= coupon.discountAmount %></div>
-              <div class="coupon-expiry">
-                Expiry: <%= new Date(coupon.expirationDate).toLocaleDateString() %>
-              </div>
-            </div>
-            <!-- Apply button now submits the form with the selected coupon code -->
-            <button type="button" class="btn btn-outline-primary apply-coupon-button" 
-            data-coupon-code="<%= coupon.code %>">Apply</button>
-    
-          </div>
-          <% }) %>
+            <% coupons.forEach(coupon => { %>
+                <div class="coupon-item">
+                    <div class="coupon-info">
+                        <div class="coupon-code">Code: <%= coupon.code %></div>
+                        <div class="coupon-discount">Discount: ₹<%= coupon.discountValue %></div>
+                        <div class="coupon-expiry">
+                            Expiry: <%= new Date(coupon.expirationDate).toLocaleDateString() %>
+                        </div>
+                    </div>
+                    <!-- Apply button now submits the form with the selected coupon code -->
+                    <button type="button" class="btn btn-outline-primary apply-coupon-button" 
+                    data-coupon-code="<%= coupon.code %>">Apply</button>
+                </div>
+            <% }) %>
         <% } else { %>
-        <p>No coupons available.</p>
+            <p>No coupons available.</p>
         <% } %>
-      </div>
+    </div>
+    
       
       <!-- Hidden input fields to hold the selected coupon code, discount amount, and final amount -->
       <input type="hidden" name="couponCode" id="couponCodeInput">

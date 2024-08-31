@@ -1860,6 +1860,10 @@ const applyCoupon = async (req, res) => {
         // Ensure discountAmount does not exceed cartTotal
         discountAmount = Math.min(discountAmount, cartTotal);
 
+        // Increment the usedCount since the coupon is being applied
+        coupon.usedCount += 1;
+        await coupon.save();
+
         // Calculate the final amount
         const finalAmount = cartTotal - discountAmount;
 

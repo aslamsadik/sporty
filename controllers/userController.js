@@ -950,7 +950,7 @@ const getCheckoutPage = async (req, res) => {
         // Fetch cart, user, and wallet information
         const cart = await Cart.findOne({ userId }).populate('products.productId');
         const user = await User.findById(userId);
-        const wallet = await Wallet.findOne({ userId });
+        const wallet = await Wallet.findOne({ user: userId }); // Make sure the wallet is fetched by `user`, not `userId`
 
         if (!cart || cart.products.length === 0) {
             return res.render('checkout', { 
@@ -965,11 +965,12 @@ const getCheckoutPage = async (req, res) => {
                 discountAmount: 0,
                 finalAmount: 0,
                 appliedCouponCode: null,
-                walletBalance: wallet?.balance || 0
+                walletBalance: wallet?.balance || 0 // Wallet balance defaults to 0 if no wallet is found
             });
         }
 
-        let cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
+        // Calculate cart total
+        let cartTotal = cart.products.reduce((total, item) => total + item.productId.price * item.quantity, 0);
 
         const currentDate = new Date();
         const coupons = await Coupon.find({
@@ -991,38 +992,37 @@ const getCheckoutPage = async (req, res) => {
         if (appliedCouponCode) {
             const appliedCoupon = coupons.find(coupon => coupon.code === appliedCouponCode);
 
-            if (appliedCoupon) {
-                if (cartTotal >= appliedCoupon.minPurchaseAmount) {
-                    if (appliedCoupon.discountType === 'percentage') {
-                        discountAmount = cartTotal * (appliedCoupon.discountValue / 100);
-                    } else if (appliedCoupon.discountType === 'fixed') {
-                        discountAmount = appliedCoupon.discountValue;
-                    }
-                } else {
-                    return res.render('checkout', { 
-                        message: `Minimum purchase of ₹${appliedCoupon.minPurchaseAmount} is required to apply this coupon.`,
-                        messageType: 'error', 
-                        cart, 
-                        user, 
-                        coupons: couponData, 
-                        razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
-                        razorpayOrderId: null,
-                        totalAmount: cartTotal,
-                        discountAmount: 0,
-                        finalAmount: cartTotal,
-                        referralOffers: [], 
-                        cartTotal,
-                        appliedCouponCode,
-                        walletBalance: wallet?.balance || 0
-                    });
+            if (appliedCoupon && cartTotal >= appliedCoupon.minPurchaseAmount) {
+                if (appliedCoupon.discountType === 'percentage') {
+                    discountAmount = cartTotal * (appliedCoupon.discountValue / 100);
+                } else if (appliedCoupon.discountType === 'fixed') {
+                    discountAmount = appliedCoupon.discountValue;
                 }
 
                 cartTotal -= discountAmount;
+            } else {
+                return res.render('checkout', { 
+                    message: `Minimum purchase of ₹${appliedCoupon.minPurchaseAmount} is required to apply this coupon.`,
+                    messageType: 'error', 
+                    cart, 
+                    user, 
+                    coupons: couponData, 
+                    razorpayKeyId: process.env.RAZORPAY_KEY_ID, 
+                    razorpayOrderId: null,
+                    totalAmount: cartTotal,
+                    discountAmount: 0,
+                    finalAmount: cartTotal,
+                    referralOffers: [], 
+                    cartTotal,
+                    appliedCouponCode,
+                    walletBalance: wallet?.balance || 0
+                });
             }
         }
 
         const totalAmountInPaise = cartTotal * 100;
 
+        // Razorpay order creation
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID,
             key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -1038,11 +1038,9 @@ const getCheckoutPage = async (req, res) => {
             const order = await razorpay.orders.create(options);
 
             if (!order || !order.id) {
-                console.error('Razorpay order creation failed:', order);
                 throw new Error('Razorpay order creation failed.');
             }
 
-            // Include wallet balance in the response to the checkout page
             res.render('checkout', { 
                 message: null, 
                 messageType: null, 
@@ -1057,11 +1055,11 @@ const getCheckoutPage = async (req, res) => {
                 referralOffers: [], 
                 cartTotal,
                 appliedCouponCode,
-                walletBalance: wallet?.balance || 0 // Pass wallet balance to the view
+                walletBalance: wallet?.balance || 0 // Ensure the correct wallet balance is passed
             });
 
         } catch (error) {
-            console.error('Error creating Razorpay order:', error.message, error);
+            console.error('Error creating Razorpay order:', error.message);
 
             return res.render('checkout', { 
                 message: 'Failed to initiate payment. Please try again later.', 
@@ -1082,10 +1080,11 @@ const getCheckoutPage = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Error fetching checkout page:', error.message, error);
+        console.error('Error fetching checkout page:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 // const placeOrder = async (req, res) => {

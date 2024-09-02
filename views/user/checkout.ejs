@@ -190,98 +190,108 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
- // JavaScript function to handle coupon application
- function applyCoupon(couponCode) {
-    console.log('Applying coupon:', couponCode); // Debugging line
-
-    $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
-        console.log('Response data:', data); // Debugging line
-        
-        // Update hidden inputs and UI with returned values
-        $('#discountAmountInput').val(data.discountAmount);
-        $('#finalAmountInput').val(data.finalAmount);
-        $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
-        $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
-        $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
-        
-        alert(data.message); // Show the message from the response
-    }).fail(function(response) {
-        console.error('Failed response:', response); // Debugging line
-        console.error('Error response JSON:', response.responseJSON); // Debugging line
-        alert(response.responseJSON.message); // Make sure this path is correct
+    // JavaScript function to handle coupon application
+    function applyCoupon(couponCode) {
+        console.log('Applying coupon:', couponCode); // Debugging line
+    
+        $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
+            console.log('Response data:', data); // Debugging line
+            
+            // Update hidden inputs and UI with returned values
+            $('#discountAmountInput').val(data.discountAmount);
+            $('#finalAmountInput').val(data.finalAmount);
+            $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
+            $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
+            $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
+            
+            alert(data.message); // Show the message from the response
+        }).fail(function(response) {
+            console.error('Failed response:', response); // Debugging line
+            console.error('Error response JSON:', response.responseJSON); // Debugging line
+            alert(response.responseJSON.message); // Make sure this path is correct
+        });
+    }
+    
+    // Attach the click event handler to the apply coupon buttons
+    $(document).on('click', '.apply-coupon-button', function() {
+        var couponCode = $(this).data('coupon-code');
+        console.log('Coupon button clicked with code:', couponCode); // Debugging line
+        applyCoupon(couponCode);
     });
-}
-
-
-// Attach the click event handler to the apply coupon buttons
-$(document).on('click', '.apply-coupon-button', function() {
-    var couponCode = $(this).data('coupon-code');
-    console.log('Coupon button clicked with code:', couponCode); // Debugging line
-    applyCoupon(couponCode);
-});
-
-// Function to place the order
-function placeOrder() {
-    const couponCode = $('#couponCodeInput').val(); // Ensure coupon code is available
+    
+    // Function to place the order
+    function placeOrder() {
+    const couponCode = $('#couponCodeInput').val();
     const discountAmount = parseFloat($('#discountAmountInput').val()) || 0;
     const finalAmount = parseFloat($('#finalAmountInput').val()) || 0;
     const paymentMethod = $('input[name="paymentMethod"]:checked').val();
-    const shippingAddressId = $('input[name="shippingAddressId"]:checked').val(); // Ensure shipping address ID is available
+    const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
 
-    $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
-        console.log('Order response:', data); // Debugging line
-        alert(data.message); // Show the message from the response
-    }).fail(function(response) {
-        console.error('Failed response:', response); // Debugging line
-        alert(response.responseJSON.message); // Make sure this path is correct
-    });
+    if (paymentMethod === 'wallet') {
+        $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
+            if (data.success) {
+                alert(data.message);
+                window.location.href = '/order-success';
+            } else {
+                alert(data.message);
+            }
+        }).fail(function(response) {
+            alert(response.responseJSON.message);
+        });
+    } else {
+        // Handle Razorpay or COD payments
+        $('#razorpayButton').trigger('click');
+    }
 }
 
-$('#razorpayButton').click(function(e) {
-      e.preventDefault();
-      
-      const form = document.getElementById('placeOrderForm');
-      const formData = new FormData(form);
-  
-      const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
-      const totalAmount = parseFloat($('#totalPrice').text().replace('₹', '')) - discountAmount;
-      
-      const options = {
+      // Razorpay payment integration
+    $('#razorpayButton').click(function(e) {
+    e.preventDefault();
+
+    const form = document.getElementById('placeOrderForm');
+    const formData = new FormData(form);
+
+    const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+    const totalAmount = parseFloat($('#totalPrice').text().replace('₹', '')) || 0;
+    const finalAmount = totalAmount - discountAmount;
+
+    const options = {
         key: '<%= razorpayKeyId %>',
-        amount: totalAmount * 100, // Convert to paise
+        amount: finalAmount * 100, // Convert to paise
         currency: 'INR',
         name: 'Your Shop Name',
         description: 'Order Payment',
         image: '/your_logo.png',
         handler: function (response) {
-          formData.append('razorpayPaymentId', response.razorpay_payment_id);
-          fetch('/complete-razorpay-payment', {
-            method: 'POST',
-            body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              alert('Payment successful!');
-              window.location.href = '/order-success';
-            } else {
-              alert('Payment failed!');
-            }
-          });
+            formData.append('razorpayPaymentId', response.razorpay_payment_id);
+            fetch('/complete-razorpay-payment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Payment successful!');
+                    window.location.href = '/order-success';
+                } else {
+                    alert('Payment failed!');
+                }
+            });
         },
         prefill: {
-          name: '<%= user.firstName %> <%= user.lastName %>',
-          email: '<%= user.email %>',
-          contact: '<%= user.phone %>'
+            name: '<%= user.firstName %> <%= user.lastName %>',
+            email: '<%= user.email %>',
+            contact: '<%= user.phone %>'
         },
         theme: {
-          color: '#007bff'
+            color: '#007bff'
         }
-      };
-  
-      const rzp = new Razorpay(options);
-      rzp.open();
-    });
-  </script>
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+});
+
+    </script>    
 </body>
 </html>

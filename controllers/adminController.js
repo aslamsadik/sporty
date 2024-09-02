@@ -910,32 +910,25 @@ const editOffers = async (req, res) => {
 
 const getSalesReport = async (req, res) => {
     try {
-        const { startDate, endDate, category } = req.query;
-        const categories = await Category.find({});
+        const { startDate, endDate } = req.query;
 
-        console.log('Start Date:', startDate);
-        console.log('End Date:', endDate);
-        console.log('Category:', category);
+        // Adjust startDate to beginning of the day and endDate to the end of the day
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0); // Set to start of the day
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // Set to end of the day
 
         const matchCriteria = {
             status: 'Delivered',
             createdAt: {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
+                $gte: start,
+                $lte: end
             }
         };
 
-        // Check and log the category
-        if (category) {
-            try {
-                // Ensure category is valid
-                console.log('Converting category:', category);
-                matchCriteria['products.category'] = mongoose.Types.ObjectId(category);
-            } catch (err) {
-                console.error('Error converting category:', err);
-            }
-        }
-
+        console.log('Start Date:', start);
+        console.log('End Date:', end);
         console.log('Match Criteria:', matchCriteria);
 
         const salesData = await Order.aggregate([
@@ -949,21 +942,11 @@ const getSalesReport = async (req, res) => {
                 }
             },
             { $unwind: '$productDetails' },
-            {
-                $lookup: {
-                    from: 'categories',
-                    localField: 'productDetails.category',
-                    foreignField: '_id',
-                    as: 'categoryDetails'
-                }
-            },
-            { $unwind: '$categoryDetails' },
             { $match: matchCriteria },
             {
                 $group: {
                     _id: '$productDetails._id',
                     productName: { $first: '$productDetails.name' },
-                    category: { $first: '$categoryDetails.name' },
                     totalQuantity: { $sum: '$products.quantity' },
                     totalRevenue: { $sum: { $multiply: ['$products.quantity', '$productDetails.price'] } }
                 }
@@ -975,7 +958,6 @@ const getSalesReport = async (req, res) => {
         res.render('dashboard', { 
             salesData, 
             filters: req.query, 
-            categories: categories,
             queryString: new URLSearchParams(req.query).toString() // Pass the query string for export links
         });
     } catch (err) {
@@ -983,7 +965,6 @@ const getSalesReport = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
 
 // Export Sales Report as CSV
 const exportSalesReportCSV = async (req, res) => {

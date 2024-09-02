@@ -28,15 +28,6 @@
                     <input type="text" class="form-control datepicker" id="endDate" name="endDate" placeholder="YYYY-MM-DD" value="<%= filters.endDate || '' %>">
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="category">Category</label>
-                    <select class="form-control" id="category" name="category">
-                        <option value="">All Categories</option>
-                        <% categories.forEach(function(cat) { %>
-                            <option value="<%= cat._id %>" <%= filters.category == cat._id ? 'selected' : '' %>><%= cat.name %></option>
-                        <% }); %>
-                    </select>
-                </div>
-                <div class="form-group col-md-3">
                     <button type="submit" class="btn btn-primary">Filter</button>
                     <a href="/admin/sales-report" class="btn btn-secondary">Reset</a>
                 </div>
@@ -55,9 +46,8 @@
             <thead>
                 <tr>
                     <th>Product Name</th>
-                    <th>Category</th>
                     <th>Total Quantity Sold</th>
-                    <th>Total Revenue ($)</th>
+                    <th>Total Revenue (INR)</th>
                 </tr>
             </thead>
             <tbody>
@@ -65,14 +55,13 @@
                     <% salesData.forEach(function(item) { %>
                         <tr>
                             <td><%= item.productName %></td>
-                            <td><%= item.category %></td> <!-- This now displays the category name -->
                             <td><%= item.totalQuantity %></td>
                             <td><%= item.totalRevenue.toFixed(2) %></td>
                         </tr>
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="4" class="text-center">No sales data available for the selected filters.</td>
+                        <td colspan="3" class="text-center">No sales data available for the selected filters.</td>
                     </tr>
                 <% } %>
             </tbody>                    
@@ -90,12 +79,6 @@
             format: 'yyyy-mm-dd',
             autoclose: true
         });
-
-        // Function to build query string for export links
-        function buildQueryString(filters) {
-            const params = new URLSearchParams(filters);
-            return params.toString();
-        }
     </script>
 </body>
 </html>

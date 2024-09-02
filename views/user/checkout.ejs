@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <link rel="stylesheet" href="/user_assets/css/main.css">
   <style>
-    /* Add your styles here */
     body {
       font-family: "Arial", sans-serif;
       background-color: #f8f9fa;
@@ -87,7 +86,6 @@
                             Expiry: <%= new Date(coupon.expirationDate).toLocaleDateString() %>
                         </div>
                     </div>
-                    <!-- Apply button now submits the form with the selected coupon code -->
                     <button type="button" class="btn btn-outline-primary apply-coupon-button" 
                     data-coupon-code="<%= coupon.code %>">Apply</button>
                 </div>
@@ -95,22 +93,16 @@
         <% } else { %>
             <p>No coupons available.</p>
         <% } %>
-    </div>
-    
-      
-      <!-- Hidden input fields to hold the selected coupon code, discount amount, and final amount -->
-      <input type="hidden" name="couponCode" id="couponCodeInput">
-      <input type="hidden" name="discountAmount" id="discountAmountInput">
-      <input type="hidden" name="finalAmount" id="finalAmountInput">
+      </div>
     </form>
 
     <!-- Form for placing the order -->
     <form id="placeOrderForm" action="/place-order" method="POST">
       <input type="hidden" name="discountAmount" id="discountAmount" value="<%= discountAmount %>">
       <input type="hidden" name="couponCode" id="couponCode" value="<%= appliedCouponCode || '' %>">
-      <input type="hidden" name="paymentMethod" id="paymentMethod" value="COD"> <!-- Example for COD -->
-      <input type="hidden" name="finalAmount" id="finalAmount" value="<%= finalAmount %>"> <!-- Hidden field for final amount -->
-      
+      <input type="hidden" name="paymentMethod" id="paymentMethod" value="COD">
+      <input type="hidden" name="finalAmount" id="finalAmount" value="<%= finalAmount %>">
+
       <div class="checkout-row">
         <div class="content-section">
           <h4>Shipping Address</h4>
@@ -145,32 +137,17 @@
             <a href="/profile/add-addressPage" class="btn btn-primary">Add Address</a>
           <% } %>
           
-          <!-- <h4 class="mt-4">Payment Method</h4>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet">
-            <label class="form-check-label" for="wallet">Wallet</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery">
-            <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
-          </div> -->
-
           <div class="payment-method">
             <h3>Select Payment Method</h3>
             <label>
-                <input type="radio" name="paymentMethod" value="COD" checked>
-                Cash on Delivery (COD)
+                <input type="radio" name="paymentMethod" value="COD" checked> Cash on Delivery (COD)
             </label>
             <label>
-                <input type="radio" name="paymentMethod" value="wallet" <%= walletBalance >= finalAmount ? '' : 'disabled' %>>
+                <input type="radio" name="paymentMethod" value="wallet" <%= walletBalance >= finalAmount ? '' : 'disabled' %>> 
                 Pay with Wallet (Balance: ₹<%= walletBalance %>)
             </label>
-            <% if (walletBalance < finalAmount) { %>
-                <p>Your wallet balance is insufficient for this purchase.</p>
-            <% } %>
-        </div>
-        
-
+          </div>
+          
           <button type="button" class="btn btn-primary btn-lg btn-block mt-4" id="razorpayButton">Pay with Razorpay</button>
         </div>
 
@@ -192,9 +169,9 @@
                     <strong id="totalPrice">₹<%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
                 </li>
             </ul>
-        <% } else { %>
+          <% } else { %>
             <p>No products found in cart.</p>
-        <% } %>
+          <% } %>
 
           <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
         </div>
@@ -206,108 +183,78 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-    // JavaScript function to handle coupon application
-    function applyCoupon(couponCode) {
-        console.log('Applying coupon:', couponCode); // Debugging line
-    
-        $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
-            console.log('Response data:', data); // Debugging line
-            
-            // Update hidden inputs and UI with returned values
-            $('#discountAmountInput').val(data.discountAmount);
-            $('#finalAmountInput').val(data.finalAmount);
-            $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
-            $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
-            $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
-            
-            alert(data.message); // Show the message from the response
-        }).fail(function(response) {
-            console.error('Failed response:', response); // Debugging line
-            console.error('Error response JSON:', response.responseJSON); // Debugging line
-            alert(response.responseJSON.message); // Make sure this path is correct
-        });
-    }
-    
-    // Attach the click event handler to the apply coupon buttons
-    $(document).on('click', '.apply-coupon-button', function() {
-        var couponCode = $(this).data('coupon-code');
-        console.log('Coupon button clicked with code:', couponCode); // Debugging line
-        applyCoupon(couponCode);
-    });
-    
-    // Function to place the order
-    function placeOrder() {
-    const couponCode = $('#couponCodeInput').val();
-    const discountAmount = parseFloat($('#discountAmountInput').val()) || 0;
-    const finalAmount = parseFloat($('#finalAmountInput').val()) || 0;
-    const paymentMethod = $('input[name="paymentMethod"]:checked').val();
-    const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
+   // Handle coupon application
+  $(document).on('click', '.apply-coupon-button', function(e) {
+      e.preventDefault(); // Prevent default button action
+      var couponCode = $(this).data('coupon-code');
+      applyCoupon(couponCode); // Call the function to apply the coupon
+  });
 
-    if (paymentMethod === 'wallet') {
-        $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
-            if (data.success) {
-                alert(data.message);
-                window.location.href = '/order-success';
-            } else {
-                alert(data.message);
-            }
-        }).fail(function(response) {
-            alert(response.responseJSON.message);
-        });
-    } else {
-        // Handle Razorpay or COD payments
-        $('#razorpayButton').trigger('click');
-    }
-}
+  function applyCoupon(couponCode) {
+      console.log('Applying coupon:', couponCode); // Debugging line
+      $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
+          console.log('Response data:', data); // Debugging line
+          // Update hidden inputs and UI with returned values
+          $('#discountAmountInput').val(data.discountAmount);
+          $('#finalAmountInput').val(data.finalAmount);
+          $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
+          $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
+          $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
+          alert(data.message); // Show the message from the response
+      }).fail(function(response) {
+          console.error('Failed response:', response); // Debugging line
+          console.error('Error response JSON:', response.responseJSON); // Debugging line
+          alert(response.responseJSON.message);
+      });
+  }
 
-      // Razorpay payment integration
+  // Handle place order
+  $('#placeOrderForm').submit(function(e) {
+      e.preventDefault(); // Prevent default form submission
+
+      // Ensure the payment method is set before submitting the form
+      const paymentMethod = $('input[name="paymentMethod"]:checked').val();
+
+      if (!paymentMethod || typeof paymentMethod !== 'string') {
+          alert('Please select a valid payment method.');
+          return;
+      }
+
+      $('#paymentMethod').val(paymentMethod); // Ensure the hidden input is updated
+
+      const couponCode = $('#couponCode').val();
+      const discountAmount = parseFloat($('#discountAmount').val()) || 0;
+      const finalAmount = parseFloat($('#finalAmount').val()) || 0;
+      const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
+
+      if (!shippingAddressId) {
+          alert('Please select a shipping address.');
+          return;
+      }
+
+      $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
+          if (data.success) {
+              alert(data.message);
+              window.location.href = '/order-success';
+          } else {
+              alert(data.message);
+          }
+      }).fail(function(response) {
+          console.error('Failed response:', response); // Debugging line
+          console.error('Error response JSON:', response.responseJSON); // Debugging line
+          alert(response.responseJSON.message);
+      });
+  });
+
+    // Razorpay button handler
     $('#razorpayButton').click(function(e) {
-    e.preventDefault();
+        e.preventDefault();
 
-    const form = document.getElementById('placeOrderForm');
-    const formData = new FormData(form);
+        // Ensure the payment method is set to Razorpay
+        $('#paymentMethod').val('Razorpay');
 
-    const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
-    const totalAmount = parseFloat($('#totalPrice').text().replace('₹', '')) || 0;
-    const finalAmount = totalAmount - discountAmount;
-
-    const options = {
-        key: '<%= razorpayKeyId %>',
-        amount: finalAmount * 100, // Convert to paise
-        currency: 'INR',
-        name: 'Your Shop Name',
-        description: 'Order Payment',
-        image: '/your_logo.png',
-        handler: function (response) {
-            formData.append('razorpayPaymentId', response.razorpay_payment_id);
-            fetch('/complete-razorpay-payment', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Payment successful!');
-                    window.location.href = '/order-success';
-                } else {
-                    alert('Payment failed!');
-                }
-            });
-        },
-        prefill: {
-            name: '<%= user.firstName %> <%= user.lastName %>',
-            email: '<%= user.email %>',
-            contact: '<%= user.phone %>'
-        },
-        theme: {
-            color: '#007bff'
-        }
-    };
-
-    const rzp = new Razorpay(options);
-    rzp.open();
-});
-
-    </script>    
+        // Your Razorpay integration code here
+    });
+  </script>
 </body>
 </html>

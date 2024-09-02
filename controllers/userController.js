@@ -1086,7 +1086,6 @@ const getCheckoutPage = async (req, res) => {
 };
 
 
-
 // const placeOrder = async (req, res) => {
 //     try {
 //         // Check if user is authenticated
@@ -1372,6 +1371,98 @@ const getCheckoutPage = async (req, res) => {
 //     }
 // };
 
+// const placeOrder = async (req, res) => {
+//     try {
+//         const { couponCode, discountAmount = 0, finalAmount, paymentMethod, shippingAddressId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+//         const userId = req.session.user?.userId;
+
+//         if (!userId) {
+//             return res.status(400).json({ message: 'User not logged in' });
+//         }
+
+//         // Retrieve the user and cart from the database
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+//         if (!cart || cart.products.length === 0) {
+//             return res.status(400).json({ message: 'Cart is empty' });
+//         }
+
+//         // Handle coupon application logic
+//         let appliedCoupon = null;
+//         if (couponCode) {
+//             appliedCoupon = await Coupon.findOne({ code: couponCode });
+//             if (!appliedCoupon) {
+//                 return res.status(400).json({ message: 'Invalid coupon' });
+//             }
+
+//             // Update coupon usage count
+//             appliedCoupon.usedCount += 1;
+//             await appliedCoupon.save();
+//         }
+
+//         // Calculate the cart total
+//         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
+//         const finalPrice = Math.max(cartTotal - discountAmount, 0);
+
+//         // Handle wallet payment
+//         if (paymentMethod === 'wallet') {
+//             let wallet = await Wallet.findOne({ userId });
+
+//             // Check for sufficient wallet balance
+//             if (!wallet || wallet.balance < finalPrice) {
+//                 return res.status(400).json({ message: 'Insufficient wallet balance' });
+//             }
+
+//             // Deduct from wallet and add transaction history
+//             wallet.balance -= finalPrice;
+//             wallet.transactions.push({ type: 'Debit', amount: finalPrice, description: 'Order payment' });
+//             await wallet.save();
+//         } else if (paymentMethod === 'Razorpay') {
+//             // Verify Razorpay payment
+//             const razorpay = new Razorpay({
+//                 key_id: process.env.RAZORPAY_KEY_ID,
+//                 key_secret: process.env.RAZORPAY_KEY_SECRET
+//             });
+
+//             const isValidSignature = razorpay.utils.verifyPaymentSignature({
+//                 order_id: razorpay_order_id,
+//                 payment_id: razorpay_payment_id,
+//                 signature: razorpay_signature
+//             });
+
+//             if (!isValidSignature) {
+//                 return res.status(400).json({ message: 'Invalid Razorpay payment signature' });
+//             }
+//         }
+
+//         // Create the order
+//         const order = new Order({
+//             userId,
+//             products: cart.products.map(p => ({ productId: p.productId._id, quantity: p.quantity })),
+//             shippingAddressId,
+//             totalPrice: finalPrice,  // Final price after discount
+//             discountAmount,
+//             paymentMethod,  // Ensure it's the correct single string value
+//             orderNotes: req.body.orderNotes || '',
+//             status: 'Pending'
+//         });
+
+//         await order.save();
+
+//         // Clear the user's cart after placing the order
+//         await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
+
+//         res.status(200).json({ message: 'Order placed successfully', order });
+//     } catch (error) {
+//         console.error('Error placing order:', error.message);
+//         res.status(500).json({ message: 'Error placing order' });
+//     }
+// };
+
 const placeOrder = async (req, res) => {
     try {
         const { couponCode, discountAmount = 0, finalAmount, paymentMethod, shippingAddressId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
@@ -1379,6 +1470,10 @@ const placeOrder = async (req, res) => {
 
         if (!userId) {
             return res.status(400).json({ message: 'User not logged in' });
+        }
+
+        if (!paymentMethod || typeof paymentMethod !== 'string' || !paymentMethod.trim()) {
+            return res.status(400).json({ message: 'Payment method is required and must be a valid string' });
         }
 
         // Retrieve the user and cart from the database
@@ -1400,7 +1495,6 @@ const placeOrder = async (req, res) => {
                 return res.status(400).json({ message: 'Invalid coupon' });
             }
 
-            // Update coupon usage count
             appliedCoupon.usedCount += 1;
             await appliedCoupon.save();
         }
@@ -1409,22 +1503,19 @@ const placeOrder = async (req, res) => {
         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
         const finalPrice = Math.max(cartTotal - discountAmount, 0);
 
-        // Ensure final amount is valid
-        const totalPrice = finalPrice;
-
         // Handle wallet payment
-        if (paymentMethod === 'Wallet') {
-            let wallet = await Wallet.findOne({ user: userId });
+        let wallet;
+        if (paymentMethod === 'wallet') {
+            wallet = await Wallet.findOne({ user: userId });
 
             // Check for sufficient wallet balance
-            if (!wallet || wallet.balance < totalPrice) {
+            if (!wallet || wallet.balance < finalPrice) {
                 return res.status(400).json({ message: 'Insufficient wallet balance' });
             }
 
             // Deduct from wallet and add transaction history
-            wallet.balance -= totalPrice;
-            wallet.transactions.push({ type: 'Debit', amount: totalPrice, description: 'Order payment' });
-
+            wallet.balance -= finalPrice;
+            wallet.transactions.push({ type: 'debit', amount: finalPrice, description: 'Order payment' });
             await wallet.save();
         } else if (paymentMethod === 'Razorpay') {
             // Verify Razorpay payment
@@ -1449,9 +1540,9 @@ const placeOrder = async (req, res) => {
             userId,
             products: cart.products.map(p => ({ productId: p.productId._id, quantity: p.quantity })),
             shippingAddressId,
-            totalPrice,  // Final price after discount
+            totalPrice: finalPrice,  // Final price after discount
             discountAmount,
-            paymentMethod,
+            paymentMethod: paymentMethod.trim(),  // Ensure it's the correct single string value
             orderNotes: req.body.orderNotes || '',
             status: 'Pending'
         });

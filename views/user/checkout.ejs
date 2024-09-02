@@ -145,7 +145,7 @@
             <a href="/profile/add-addressPage" class="btn btn-primary">Add Address</a>
           <% } %>
           
-          <h4 class="mt-4">Payment Method</h4>
+          <!-- <h4 class="mt-4">Payment Method</h4>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet">
             <label class="form-check-label" for="wallet">Wallet</label>
@@ -153,7 +153,23 @@
           <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="Cash on Delivery">
             <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
-          </div>
+          </div> -->
+
+          <div class="payment-method">
+            <h3>Select Payment Method</h3>
+            <label>
+                <input type="radio" name="paymentMethod" value="COD" checked>
+                Cash on Delivery (COD)
+            </label>
+            <label>
+                <input type="radio" name="paymentMethod" value="wallet" <%= walletBalance >= finalAmount ? '' : 'disabled' %>>
+                Pay with Wallet (Balance: ₹<%= walletBalance %>)
+            </label>
+            <% if (walletBalance < finalAmount) { %>
+                <p>Your wallet balance is insufficient for this purchase.</p>
+            <% } %>
+        </div>
+        
 
           <button type="button" class="btn btn-primary btn-lg btn-block mt-4" id="razorpayButton">Pay with Razorpay</button>
         </div>

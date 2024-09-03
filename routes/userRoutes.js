@@ -25,6 +25,41 @@ router.get('/facebook/callback',
   }
 );
 
+
+// Define the test route
+router.get('/test-order-confirm', (req, res) => {
+  const dummyOrder = {
+      _id: 'order123',
+      status: 'Pending',
+      products: [
+          {
+              productId: { name: 'Product 1', price: 100 },
+              quantity: 2
+          },
+          {
+              productId: { name: 'Product 2', price: 200 },
+              quantity: 1
+          }
+      ],
+      totalPrice: 400,
+      discountAmount: 50,
+      shippingAddressId: {
+          addressLine1: '123 Test Street',
+          city: 'Test City',
+          postalCode: '123456'
+      }
+  };
+
+  res.render('orderConfirm', { 
+      message: 'Test Order', 
+      messageType: 'success', 
+      orderDetails: dummyOrder 
+  });
+});
+
+
+
+
 // Apply isBlockedMiddleware to all routes that require the user to be logged in
 router.use(isBlockedMiddleware);
 

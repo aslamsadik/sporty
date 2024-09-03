@@ -1463,62 +1463,163 @@ const getCheckoutPage = async (req, res) => {
 //     }
 // };
 
+// const placeOrder = async (req, res) => {
+//     try {
+//         const {
+//             couponCode,
+//             discountAmount = 0,
+//             paymentMethod,  // Make sure this is coming from the request body
+//             shippingAddressId,
+//             razorpay_payment_id,
+//             razorpay_order_id,
+//             razorpay_signature
+//         } = req.body;
+
+//         const userId = req.session.user?.userId;
+
+//         if (!userId) {
+//             return res.status(400).json({ message: 'User not logged in' });
+//         }
+
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+//         if (!cart || cart.products.length === 0) {
+//             return res.status(400).json({ message: 'Cart is empty' });
+//         }
+
+//         let appliedCoupon = null;
+//         let appliedDiscount = discountAmount;
+//         if (couponCode) {
+//             appliedCoupon = await Coupon.findOne({ code: couponCode });
+//             if (!appliedCoupon) {
+//                 return res.status(400).json({ message: 'Invalid coupon' });
+//             }
+//             appliedCoupon.usedCount += 1;
+//             await appliedCoupon.save();
+//         }
+
+//         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
+//         const finalPrice = Math.max(cartTotal - appliedDiscount, 0);
+
+//         if (paymentMethod === 'wallet') {
+//             const wallet = await Wallet.findOne({ user: userId });
+//             if (!wallet || wallet.balance < finalPrice) {
+//                 return res.status(400).json({ message: 'Insufficient wallet balance' });
+//             }
+
+//             wallet.balance -= finalPrice;
+//             wallet.transactions.push({ type: 'debit', amount: finalPrice, description: 'Order payment' });
+//             await wallet.save();
+//         } else if (paymentMethod === 'Razorpay') {
+//             const razorpay = new Razorpay({
+//                 key_id: process.env.RAZORPAY_KEY_ID,
+//                 key_secret: process.env.RAZORPAY_KEY_SECRET
+//             });
+
+//             const isValidSignature = razorpay.utils.verifyPaymentSignature({
+//                 order_id: razorpay_order_id,
+//                 payment_id: razorpay_payment_id,
+//                 signature: razorpay_signature
+//             });
+
+//             if (!isValidSignature) {
+//                 return res.status(400).json({ message: 'Invalid Razorpay payment signature' });
+//             }
+//         }
+
+//         const newOrder = new Order({
+//             userId,
+//             products: cart.products.map(p => ({
+//                 productId: p.productId._id,
+//                 quantity: p.quantity
+//             })),
+//             totalPrice: finalPrice,
+//             discountAmount: appliedDiscount,
+//             shippingAddressId,
+//             paymentMethod,  // Include paymentMethod in the order creation
+//             status: 'Pending'
+//         });
+
+//         await newOrder.save();
+
+//         // Log the order ID
+//         console.log('New Order ID:', newOrder._id);
+
+//         // Clear the cart after the order is placed
+//         await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
+
+//         // Redirect to the order confirmation page with the orderId
+//         res.render('orderConfirm', { 
+//             message: 'Your order has been placed successfully!', 
+//             messageType: 'success', 
+//             orderDetails: newOrder 
+//         });
+
+        
+        
+
+//     } catch (error) {
+//         console.error('Error placing order:', error.message);
+//         res.status(500).json({ message: 'Error placing order' });
+//     }
+// };
+
 const placeOrder = async (req, res) => {
     try {
-        const { couponCode, discountAmount = 0, finalAmount, paymentMethod, shippingAddressId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+        const {
+            couponCode,
+            discountAmount = 0,
+            paymentMethod, 
+            shippingAddressId,
+            razorpay_payment_id,
+            razorpay_order_id,
+            razorpay_signature
+        } = req.body;
+
         const userId = req.session.user?.userId;
 
         if (!userId) {
-            return res.status(400).json({ message: 'User not logged in' });
+            return res.status(400).json({ success: false, message: 'User not logged in' });
         }
 
-        if (!paymentMethod || typeof paymentMethod !== 'string' || !paymentMethod.trim()) {
-            return res.status(400).json({ message: 'Payment method is required and must be a valid string' });
-        }
-
-        // Retrieve the user and cart from the database
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         const cart = await Cart.findOne({ userId }).populate('products.productId');
         if (!cart || cart.products.length === 0) {
-            return res.status(400).json({ message: 'Cart is empty' });
+            return res.status(400).json({ success: false, message: 'Cart is empty' });
         }
 
-        // Handle coupon application logic
         let appliedCoupon = null;
+        let appliedDiscount = discountAmount;
         if (couponCode) {
             appliedCoupon = await Coupon.findOne({ code: couponCode });
             if (!appliedCoupon) {
-                return res.status(400).json({ message: 'Invalid coupon' });
+                return res.status(400).json({ success: false, message: 'Invalid coupon' });
             }
-
             appliedCoupon.usedCount += 1;
             await appliedCoupon.save();
         }
 
-        // Calculate the cart total
         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
-        const finalPrice = Math.max(cartTotal - discountAmount, 0);
+        const finalPrice = Math.max(cartTotal - appliedDiscount, 0);
 
-        // Handle wallet payment
-        let wallet;
         if (paymentMethod === 'wallet') {
-            wallet = await Wallet.findOne({ user: userId });
-
-            // Check for sufficient wallet balance
+            const wallet = await Wallet.findOne({ user: userId });
             if (!wallet || wallet.balance < finalPrice) {
-                return res.status(400).json({ message: 'Insufficient wallet balance' });
+                return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
             }
 
-            // Deduct from wallet and add transaction history
             wallet.balance -= finalPrice;
             wallet.transactions.push({ type: 'debit', amount: finalPrice, description: 'Order payment' });
             await wallet.save();
         } else if (paymentMethod === 'Razorpay') {
-            // Verify Razorpay payment
             const razorpay = new Razorpay({
                 key_id: process.env.RAZORPAY_KEY_ID,
                 key_secret: process.env.RAZORPAY_KEY_SECRET
@@ -1531,58 +1632,119 @@ const placeOrder = async (req, res) => {
             });
 
             if (!isValidSignature) {
-                return res.status(400).json({ message: 'Invalid Razorpay payment signature' });
+                return res.status(400).json({ success: false, message: 'Invalid Razorpay payment signature' });
             }
         }
 
-        // Create the order
-        const order = new Order({
+        const newOrder = new Order({
             userId,
-            products: cart.products.map(p => ({ productId: p.productId._id, quantity: p.quantity })),
+            products: cart.products.map(p => ({
+                productId: p.productId._id,
+                quantity: p.quantity
+            })),
+            totalPrice: finalPrice,
+            discountAmount: appliedDiscount,
             shippingAddressId,
-            totalPrice: finalPrice,  // Final price after discount
-            discountAmount,
-            paymentMethod: paymentMethod.trim(),  // Ensure it's the correct single string value
-            orderNotes: req.body.orderNotes || '',
+            paymentMethod,  
             status: 'Pending'
         });
 
-        await order.save();
+        await newOrder.save();
 
-        // Clear the user's cart after placing the order
+        // Log the order ID
+        console.log('New Order ID:', newOrder._id);
+
+        // Clear the cart after the order is placed
         await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
 
-        res.status(200).json({ message: 'Order placed successfully', order });
+        // Return success response with orderId and message
+        return res.json({
+            success: true,
+            message: 'Order placed successfully',
+            orderId: newOrder._id
+        });
+
     } catch (error) {
         console.error('Error placing order:', error.message);
-        res.status(500).json({ message: 'Error placing order' });
+        res.status(500).json({ success: false, message: 'Error placing order' });
     }
 };
+
+
+// const getOrderConfirmpage = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         console.log('Order ID:', orderId); // Log orderId
+
+//         if (!mongoose.Types.ObjectId.isValid(orderId)) {
+//             console.log('Invalid order ID');
+//             return res.status(400).render('orderConfirm', { order: null, message: 'Invalid order ID', messageType: 'error' });
+//         }
+
+//         const order = await Order.findById(orderId).populate('products.productId');
+//         console.log('Order:', order); // Log the order object
+
+//         if (!order) {
+//             console.log('Order not found');
+//             return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
+//         }
+
+//         res.render('orderConfirm', { order, message: null, messageType: null });
+//     } catch (error) {
+//         console.error('Error retrieving order details:', error.message);
+//         res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
+//     }
+// };
+
+// const getOrderConfirmpage = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         const userId = req.session.user?.userId;
+
+//         if (!orderId) {
+//             console.log('Order ID not provided');
+//             return res.status(400).json({ message: 'Order ID is required' });
+//         }
+
+//         const order = await Order.findOne({ _id: orderId, userId }).populate('products.productId shippingAddressId');
+        
+//         if (!order) {
+//             console.log('Order not found');
+//             return res.status(404).json({ message: 'Order not found' });
+//         }
+
+//         console.log('Order found:', order);
+
+//         return res.render('orderConfirm.ejs', {
+//             order,  // Pass the order details to the template
+//             user: req.session.user,  // Pass the user details if needed
+//         });
+//     } catch (error) {
+//         console.error('Error retrieving order confirmation page:', error.message);
+//         return res.status(500).json({ message: 'Error retrieving order confirmation page' });
+//     }
+// };
 
 const getOrderConfirmpage = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        console.log('Order ID:', orderId); // Log orderId
+        const orderDetails = await Order.findById(orderId).populate('products.productId');
 
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            console.log('Invalid order ID');
-            return res.status(400).render('orderConfirm', { order: null, message: 'Invalid order ID', messageType: 'error' });
+        if (!orderDetails) {
+            return res.status(404).send('Order not found');
         }
 
-        const order = await Order.findById(orderId).populate('products.productId');
-        console.log('Order:', order); // Log the order object
+        const user = req.session.user;
+        const message = req.query.message || null;
+        const messageType = req.query.messageType || null;
 
-        if (!order) {
-            console.log('Order not found');
-            return res.status(404).render('orderConfirm', { order: null, message: 'Order not found', messageType: 'error' });
-        }
-
-        res.render('orderConfirm', { order, message: null, messageType: null });
+        return res.render('orderConfirm', { orderDetails, user, message, messageType });
     } catch (error) {
-        console.error('Error retrieving order details:', error.message);
-        res.status(500).render('orderConfirm', { order: null, message: 'Error retrieving order details. Please try again.', messageType: 'error' });
+        console.error('Error rendering order confirmation page:', error.message);
+        return res.status(500).send('Internal Server Error');
     }
 };
+
 
 const cancelOrder = async (req, res) => {
     try {

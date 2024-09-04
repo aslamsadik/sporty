@@ -322,61 +322,61 @@
 
     // Razorpay button handler
         // Razorpay button handler
-        $('#razorpayButton').click(function(e) {
-        e.preventDefault(); // Prevent the form from submitting
+  $('#razorpayButton').click(function(e) {
+    e.preventDefault(); // Prevent the form from submitting
 
-        const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
-        const finalAmount = parseFloat($('#finalAmount').val()) || 0;
-        const couponCode = $('#couponCode').val() || null;
+    const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
+    const finalAmount = parseFloat($('#finalAmount').val()) || 0;
+    const couponCode = $('#couponCode').val() || null;
 
-        if (!shippingAddressId) {
-            alert('Please select a shipping address.');
-            return;
+    if (!shippingAddressId) {
+      alert('Please select a shipping address.');
+      return;
+    }
+
+    // Fetch the Razorpay order details
+    $.post('/create-razorpay-order', { finalAmount, shippingAddressId, couponCode }, function(orderData) {
+      const options = {
+        key: orderData.key, // Your Razorpay Key ID
+        amount: orderData.amount, // Amount in paise (multiply by 100 for rupees)
+        currency: 'INR',
+        name: 'Your Website Name',
+        description: 'Order Payment',
+        order_id: orderData.id, // Order ID returned from Razorpay
+        handler: function(response) {
+          // After payment completion, post payment details to your server
+          $.post('/verify-razorpay-payment', {
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature,
+            shippingAddressId: shippingAddressId,
+            finalAmount: finalAmount,
+            couponCode: couponCode
+          }, function(paymentResult) {
+            if (paymentResult.success) {
+              alert('Payment successful!');
+              window.location.href = '/order-success'; // Redirect to order success page
+            } else {
+              alert(paymentResult.message);
+            }
+          });
+        },
+        prefill: {
+          name: '<%= user.firstName %> <%= user.lastName %>',
+          email: '<%= user.email %>',
+          contact: '<%= user.phone %>',
+        },
+        theme: {
+          color: '#3399cc'
         }
+      };
 
-        // Fetch the Razorpay order details
-        $.post('/create-razorpay-order', { finalAmount, shippingAddressId, couponCode }, function(orderData) {
-            const options = {
-                key: orderData.key, // Your Razorpay Key ID
-                amount: orderData.amount, // Amount in paise (multiply by 100 for rupees)
-                currency: 'INR',
-                name: 'Your Website Name',
-                description: 'Order Payment',
-                order_id: orderData.id, // Order ID returned from Razorpay
-                handler: function(response) {
-                    // After payment completion, post payment details to your server
-                    $.post('/verify-razorpay-payment', {
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        razorpayOrderId: response.razorpay_order_id,
-                        razorpaySignature: response.razorpay_signature,
-                        shippingAddressId: shippingAddressId,
-                        finalAmount: finalAmount,
-                        couponCode: couponCode
-                    }, function(paymentResult) {
-                        if (paymentResult.success) {
-                            alert('Payment successful!');
-                            window.location.href = '/order-success';
-                        } else {
-                            alert(paymentResult.message);
-                        }
-                    });
-                },
-                prefill: {
-                    name: '<%= user.firstName %> <%= user.lastName %>',
-                    email: '<%= user.email %>',
-                    contact: '<%= user.phone %>',
-                },
-                theme: {
-                    color: '#3399cc'
-                }
-            };
-
-            const razorpay = new Razorpay(options);
-            razorpay.open();
-        }).fail(function(response) {
-            console.error('Failed response:', response);
-            alert('Unable to initiate payment. Please try again.');
-        });
+      const razorpay = new Razorpay(options);
+      razorpay.open();
+    }).fail(function(response) {
+      console.error('Failed response:', response);
+      alert('Unable to initiate payment. Please try again.');
+    });
     });
 
   </script>

@@ -13,6 +13,8 @@ const Wallet = require('../models/walletModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const { ObjectId } = require('mongodb'); // Import ObjectId
+
 
 // Helper function to generate a numeric OTP
 const generateNumericOtp = (length) => {
@@ -1429,10 +1431,33 @@ const applyCoupon = async (req, res) => {
 };
 
 // Add product to wishlist
+// const addToWishlist = async (req, res) => {
+//     try {
+//         const productId = req.body.productId;
+//         const userId =await User.findById(req.session.user?.userId);
+
+//         let wishlist = await Wishlist.findOne({ user: userId });
+//         if (!wishlist) {
+//             wishlist = new Wishlist({ user: userId, products: [] });
+//         }
+
+//         if (!wishlist.products.includes(productId)) {
+//             wishlist.products.push(productId);
+//             await wishlist.save();
+//             return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+//         } else {
+//             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
+//         }
+//     } catch (err) {
+//         console.error('Error adding product to wishlist:', err);
+//         return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+//     }
+// };
+
 const addToWishlist = async (req, res) => {
     try {
         const productId = req.body.productId;
-        const userId =await User.findById(req.session.user?.userId);
+        const userId = await User.findById(req.session.user?.userId);
 
         let wishlist = await Wishlist.findOne({ user: userId });
         if (!wishlist) {
@@ -1442,7 +1467,7 @@ const addToWishlist = async (req, res) => {
         if (!wishlist.products.includes(productId)) {
             wishlist.products.push(productId);
             await wishlist.save();
-            return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+            // return res.status(200).json({ success: true, message: 'Product added to wishlist' });
         } else {
             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
         }
@@ -1452,14 +1477,15 @@ const addToWishlist = async (req, res) => {
     }
 };
 
+
   // Remove product from wishlist
-  const removeFromWishlist = async (req, res) => {
+const removeFromWishlist = async (req, res) => {
     try {
       const wishlist = await Wishlist.findOne({ user: req.session.user?.userId });
       if (wishlist) {
         wishlist.products = wishlist.products.filter(productId => productId.toString() !== req.body.productId);
         await wishlist.save();
-        res.status(200).json({ success: true, message: 'Product removed from wishlist' });
+        // res.status(200).json({ success: true, message: 'Product removed from wishlist' });
       } else {
         res.status(404).json({ success: false, message: 'Wishlist not found' });
       }
@@ -1467,16 +1493,35 @@ const addToWishlist = async (req, res) => {
       res.status(500).json({ success: false, message: 'Failed to remove product from wishlist' });
     }
   };
+
   
-  const getWishlist = async (req, res) => {
+//   const getWishlist = async (req, res) => {
+//     try {
+//         const wishlist = await Wishlist.findOne({ user: req.session.user?.userId }).populate('products');
+//         res.render('wishList', { wishlist });
+//     } catch (err) {
+//         console.log(err.message);
+//         res.status(500).json({ success: false, message: 'Failed to retrieve wishlist' });
+//     }
+// };
+
+const getWishlist = async (req, res) => {
     try {
-        const wishlist = await Wishlist.findOne({ user: req.session.user?.userId }).populate('products');
+        console.log('User ID from session:', req.session.user?.userId);
+
+        const wishlist = await Wishlist.findOne({ user: req.session.user?.userId })
+            .populate('products');
+
+        console.log('Fetched wishlist:', wishlist);
+
         res.render('wishList', { wishlist });
     } catch (err) {
-        console.log(err.message);
+        console.error('Error retrieving wishlist:', err);
         res.status(500).json({ success: false, message: 'Failed to retrieve wishlist' });
     }
 };
+
+
 
 const getWalletDetails = async (req, res) => {
     try {
@@ -1501,6 +1546,8 @@ const getWalletDetails = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+
 
 const addFunds = async (req, res) => {
     try {
@@ -1538,53 +1585,115 @@ const addFunds = async (req, res) => {
     }
 };
 
-const razorpay = new Razorpay({
+// const razorpay = new Razorpay({
+//     key_id: process.env.RAZORPAY_KEY_ID,
+//     key_secret: process.env.RAZORPAY_KEY_SECRET,
+// });
+
+// const createOrder = async (req, res) => {
+//     try {
+//         const { amount } = req.body; // Amount from frontend in INR
+
+//         const options = {
+//             amount: amount * 100, // Convert to paise
+//             currency: 'INR',
+//             receipt: 'order_rcptid_' + new Date().getTime(),
+//         };
+
+//         const order = await razorpay.orders.create(options);
+
+//         if (!order) {
+//             return res.status(500).json({ error: 'Unable to create order' });
+//         }
+
+//         res.json({
+//             success: true,
+//             order_id: order.id,
+//             key_id: process.env.RAZORPAY_KEY_ID,
+//         });
+//     } catch (error) {
+//         console.error('Error creating Razorpay order:', error);
+//         res.status(500).json({ error: 'Error creating Razorpay order' });
+//     }
+// };
+
+// // Verify Payment
+// const verifyPayment = (req, res) => {
+//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+//     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+//     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+//     const generatedSignature = hmac.digest('hex');
+
+//     if (generatedSignature === razorpay_signature) {
+//         // Signature is valid, update order status to "Paid"
+//         // Ideally, update the database here
+
+//         res.json({ success: true, message: 'Payment verified successfully' });
+//     } else {
+//         // Signature mismatch
+//         res.status(400).json({ success: false, message: 'Payment verification failed' });
+//     }
+// };
+
+const instance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
-const createOrder = async (req, res) => {
+  });
+  
+  const createRazorpayOrder = async (req, res) => {
+    const { finalAmount } = req.body;
+  
+    const options = {
+      amount: finalAmount * 100, // Amount in paise
+      currency: 'INR',
+      receipt: crypto.randomBytes(10).toString('hex'),
+    };
+  
     try {
-        const { amount } = req.body; // Amount from frontend in INR
-
-        const options = {
-            amount: amount * 100, // Convert to paise
-            currency: 'INR',
-            receipt: 'order_rcptid_' + new Date().getTime(),
-        };
-
-        const order = await razorpay.orders.create(options);
-
-        if (!order) {
-            return res.status(500).json({ error: 'Unable to create order' });
-        }
-
-        res.json({
-            success: true,
-            order_id: order.id,
-            key_id: process.env.RAZORPAY_KEY_ID,
-        });
+      const order = await instance.orders.create(options);
+      res.json({
+        id: order.id,
+        amount: order.amount,
+        key: process.env.RAZORPAY_KEY_ID
+      });
     } catch (error) {
-        console.error('Error creating Razorpay order:', error);
-        res.status(500).json({ error: 'Error creating Razorpay order' });
+      console.error('Error creating Razorpay order:', error);
+      res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
     }
-};
+  };
 
-// Verify Payment
-const verifyPayment = (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const verifyPayment = async (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
 
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
     const generatedSignature = hmac.digest('hex');
 
     if (generatedSignature === razorpay_signature) {
-        // Signature is valid, update order status to "Paid"
-        // Ideally, update the database here
+        try {
+            // Create and save the order
+            const order = new Order({
+                userId: req.user._id, // Assuming you're using req.user to get the logged-in user
+                products: req.session.cart.products, // Assuming cart is saved in session
+                shippingAddressId: shippingAddressId,
+                totalPrice: finalAmount,
+                paymentMethod: 'Razorpay',
+                status: 'Paid',
+                createdAt: new Date()
+            });
 
-        res.json({ success: true, message: 'Payment verified successfully' });
+            await order.save();
+
+            // Clear cart after order placement
+            req.session.cart = null;
+
+            res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
+        } catch (error) {
+            console.error('Error placing order:', error);
+            res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
+        }
     } else {
-        // Signature mismatch
         res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 };
@@ -1667,7 +1776,7 @@ module.exports = {
     getWishlist,
     getWalletDetails,
     addFunds,
-    createOrder,
+    createRazorpayOrder,
     verifyPayment,
     applyOffer
 };

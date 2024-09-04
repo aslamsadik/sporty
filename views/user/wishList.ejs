@@ -40,7 +40,7 @@
                 </thead>
                 <tbody>
                   <% wishlist.products.forEach(product => { %>
-                    <tr>
+                    <tr data-product-id="<%= product._id %>">
                       <td class="image product-thumbnail">
                         <img src="<%= product.images.length > 0 ? `/user_assets/imgs/shop/${product.images[0]}` : '/user_assets/imgs/shop/default-image.jpg' %>" alt="#">
                       </td>
@@ -71,7 +71,9 @@
                         <form class="remove-from-wishlist-form" data-product-id="<%= product._id %>" action="/wishlist/remove" method="POST">
                           <input type="hidden" name="productId" value="<%= product._id %>">
                           <button type="submit" class="button button-remove-from-wishlist">Remove</button>
-                      </form>
+                        </form>
+                        
+                        
                       
                       </td>
                     </tr>
@@ -89,6 +91,7 @@
 </main>
 
 <!-- Ensure jQuery and Bootstrap JS are included -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
@@ -124,6 +127,57 @@
     });
   });
 </script>
+
+<!-- <script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const showMessageAlert = (type, title, message) => {
+          Swal.fire({
+              icon: type,
+              title: title,
+              text: message,
+              confirmButtonText: 'OK'
+          });
+      };
+
+      document.querySelectorAll(".remove-from-wishlist-form").forEach(form => {
+        form.addEventListener("submit", function (e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const productId = formData.get('productId'); // Ensure productId is captured correctly
+  
+  if (!productId) {
+    showMessageAlert('error', 'Error', 'Product ID is missing');
+    return; // Prevent submission if productId is missing
+  }
+  
+  fetch(this.action, {
+    method: "POST",
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showMessageAlert('success', 'Success', data.message);
+      const productRow = document.querySelector(`[data-product-id="${productId}"]`);
+      if (productRow) {
+        productRow.remove();
+      }
+    } else {
+      showMessageAlert('error', 'Error', data.message);
+    }
+  })
+  .catch(error => {
+    showMessageAlert('error', 'Error', "An error occurred. Please try again.");
+  });
+
+          });
+      });
+  });
+</script> -->
+
+
+
 
 
 

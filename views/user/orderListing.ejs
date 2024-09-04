@@ -132,42 +132,91 @@
         <% } %>
         
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
         function cancelOrder(orderId) {
-            if (confirm("Are you sure you want to cancel this order?")) {
-                fetch(`/order/cancel/${orderId}`, { method: 'POST' })
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you really want to cancel this order?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, cancel it!',
+                cancelButtonText: 'No, keep it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/order/cancel/${orderId}`, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Order cancelled successfully!',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Failed',
+                                    text: 'Failed to cancel the order',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        });
+                }
+            });
+        }
+    
+        function returnProduct(orderId) {
+            Swal.fire({
+                title: 'Return Product',
+                text: "Please enter a reason for returning the product:",
+                input: 'text',
+                inputPlaceholder: 'Enter your reason here...',
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: (reason) => {
+                    if (!reason) {
+                        Swal.showValidationMessage('Reason is required');
+                        return false;
+                    }
+                    return fetch(`/order/return/${orderId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reason })
+                    })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Order cancelled successfully');
-                            window.location.reload();
+                            return true;
                         } else {
-                            alert('Failed to cancel the order');
+                            throw new Error('Failed to submit return request');
                         }
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                        return false;
                     });
-            }
-        }
-
-        function returnProduct(orderId) {
-            const reason = prompt('Please enter a reason for returning the product:');
-            if (reason) {
-                fetch(`/order/return/${orderId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Return request submitted successfully');
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Return request submitted successfully!',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
                         window.location.reload();
-                    } else {
-                        alert('Failed to submit return request');
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
     </script>
 </body>

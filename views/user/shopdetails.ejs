@@ -579,12 +579,12 @@
                         </div>
                         
                         <!-- //offer section -->
-                        <div class="offer-section" style="background-color: #f0f8ff; padding: 20px; border-radius: 10px; margin-top: 30px;">
-                            <h3 style="color: #ff4500; font-weight: bold; border-bottom: 2px solid #ff4500; padding-bottom: 10px;">Available Offers</h3>
+                        <!-- <div class="offer-section" style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin-top: 30px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                            <h3 style="color: #ff4500; font-weight: bold; border-bottom: 2px solid #ff4500; padding-bottom: 10px; margin-bottom: 20px;">Available Offers</h3>
                             <% if (offers && offers.length > 0) { %>
                                 <ul class="offer-list" style="list-style: none; padding-left: 0;">
                                     <% offers.forEach(function(offer) { %>
-                                        <li style="background-color: #e0ffe0; color: #008000; padding: 10px; margin-bottom: 10px; border-left: 5px solid #008000; border-radius: 5px;">
+                                        <li style="background-color: #e0ffe0; color: #008000; padding: 15px; margin-bottom: 15px; border-left: 5px solid #008000; border-radius: 5px; font-size: 16px;">
                                             <strong><%= offer.offerName %></strong>:
                                             <%= offer.discountType === 'percentage' ? offer.discountValue + '%' : '₹' + offer.discountValue %> off
                                             <% if (offer.offerType === 'product') { %>
@@ -596,11 +596,28 @@
                                     <% }); %>
                                 </ul>
                             <% } else { %>
-                                <p style="color: #ff6347; font-weight: bold;">No offers available for this product at the moment.</p>
+                                <p style="color: #ff6347; font-weight: bold; font-size: 16px;">No offers available for this product at the moment.</p>
                             <% } %>
-                        </div>
-                        
+                        </div>                         -->
 
+                        <% if (offers.length > 0) { %>
+                            <div class="offer-section">
+                              <h3>Available Offers</h3>
+                              <ul>
+                                <% offers.forEach(offer => { %>
+                                  <li>
+                                    <strong><%= offer.offerName %></strong>: 
+                                    <%= offer.discountValue %> <%= offer.discountType === 'percentage' ? '%' : 'currency' %> discount
+                                  </li>
+                                <% }) %>
+                              </ul>
+                            </div>
+                          <% } else { %>
+                            <p>No offers available for this product.</p>
+                          <% } %>
+                          
+                        
+                        
                         <div class="tab-pane fade" id="Reviews">
                             <!--Comments-->
                             <div class="comments-area">

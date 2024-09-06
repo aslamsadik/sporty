@@ -1,119 +1,124 @@
 <%- include("../layouts/admin_header.ejs") %>
-        
-<section class="content-main">
-    <div class="content-header">
-        <div>
-            <h2 class="content-title card-title">Products List</h2>
-            <p>Lorem ipsum dolor sit amet.</p>
-        </div>
-        <div>
-            <a href="#" class="btn btn-light rounded font-md">Export</a>
-            <a href="#" class="btn btn-light rounded font-md">Import</a>
-            <a href="/admin/productManagement" class="btn btn-primary btn-sm rounded">Create new</a>
-        </div>
-    </div>
-    <div class="card mb-4">
-        <header class="card-header">
-            <div class="row align-items-center">
-                <div class="col col-check flex-grow-0">
-                    <div class="form-check ms-2">
-                        <input class="form-check-input" type="checkbox" value="">
-                    </div>
-                </div>
-                <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
-                    <select class="form-select">
-                        <option selected>All category</option>
-                        <option>Football</option>
-                        <option>Cricket</option>
-                        <option>Combat sports items</option>
-                    </select>
-                </div>
-                <div class="col-md-2 col-6">
-                    <input type="date" value="02.05.2022" class="form-control">
-                </div>
-                <div class="col-md-2 col-6">
-                    <select class="form-select">
-                        <option selected>Status</option>
-                        <option>Active</option>
-                        <option>Disabled</option>
-                        <option>Show all</option>
-                    </select>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <link href="/admin_assets/css/main.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <section class="content-main">
+        <div class="content-header">
+            <div>
+                <h2 class="content-title card-title">Products</h2>
+                <p>Manage your products</p>
             </div>
-        </header>
-        <!-- card-header end// -->
-        <div class="card-body">
-            <% products.forEach(product => { %>
-            <article class="itemlist">
-                <div class="row align-items-center">
-                    <div class="col col-check flex-grow-0">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox">
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-4 col-8 flex-grow-1 col-name">
-                        <a class="itemside" href="#">
-                            <div class="left">
-                                <img src="/user_assets/imgs/shop/<%= product.images[0] %>" class="img-sm img-thumbnail" alt="Item">
-                            </div>
-                            <div class="info">
-                                <h6 class="mb-0"><%= product.name %></h6>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-lg-2 col-sm-2 col-4 col-price"> <span>$<%= product.price %></span> </div>
-                    <div class="col-lg-2 col-sm-2 col-4 col-status">
-                        <span class="badge rounded-pill alert-success">Active</span>
-                    </div>
-                    <div class="col-lg-1 col-sm-2 col-4 col-stock">
-                        <% if (product.stock < 1) { %>
-                        <span class="text-danger">Out of Stock</span>
-                        <% } else { %>
-                        <span><%= product.stock %> in Stock</span>
-                        <% } %>
-                    </div>
-                    <div class="col-lg-2 col-sm-2 col-4 col-action text-end">
-                        <a href="/admin/editProduct/<%= product._id %>" class="btn btn-sm font-sm rounded btn-brand">
-                            <i class="material-icons md-edit"></i> Edit
-                        </a>
-                        <form action="/admin/deleteProduct/<%= product._id %>" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-sm font-sm btn-light rounded">
-                                <i class="material-icons md-delete_forever"></i> Delete
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                <!-- row .// -->
-            </article>
-            <% }); %>
         </div>
-        <!-- card-body end// -->
-    </div>
-    <!-- card end// -->
-    <div class="pagination-area mt-30 mb-50">
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-start">
-                <% if (currentPage > 1) { %>
-                <li class="page-item">
-                    <a class="page-link" href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
-                </li>
-                <% } %>
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                </li>
-                <% } %>
-                <% if (currentPage < totalPages) { %>
-                <li class="page-item">
-                    <a class="page-link" href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
-                </li>
-                <% } %>
-            </ul>
-        </nav>
-    </div>
-</section>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Category</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (products.length === 0) { %>
+                                <tr>
+                                    <td colspan="5" class="text-center">No Products Available</td>
+                                </tr>
+                            <% } else { %>
+                                <% products.forEach(product => { %>
+                                    <tr>
+                                        <td>
+                                            <img src="<%= product.images.length > 0 ? '/user_assets/imgs/shop/' + product.images[0] : '/admin_assets/images/no_image.png' %>" alt="Product Image" style="width: 60px; height: 60px; object-fit: cover;">
+                                        </td>
+                                        <td><%= product.name %></td>
+                                        <td><%= product.price %></td>
+                                        <td><%= product.category ? product.category.name : 'No Category' %></td>
+                                        <td class="text-end">
+                                            <button class="btn btn-primary btn-sm" onclick="openOfferModal('<%= product._id %>')">Add Offer</button>
+                                            <a href="/admin/products/edit/<%= product._id %>" class="btn btn-light btn-sm">Edit</a>
+                                            <form action="/admin/products/delete/<%= product._id %>" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
 
+                <!-- Pagination controls -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <% if (currentPage > 1) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        <% } %>
 
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                            </li>
+                        <% } %>
 
-       
+                        <% if (currentPage < totalPages) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function openOfferModal(productId) {
+            Swal.fire({
+                title: 'Add Offer',
+                html: `
+                    <form id="offerForm" action="/admin/offers/add" method="POST">
+                        <input type="hidden" name="offerType" value="product" />
+                        <input type="hidden" name="applicableProducts" value="${productId}" />
+                        <label for="offerName">Offer Name</label>
+                        <input type="text" id="offerName" name="offerName" class="swal2-input" required>
+                        <label for="discountType">Discount Type</label>
+                        <select id="discountType" name="discountType" class="swal2-input" required>
+                            <option value="percentage">Percentage</option>
+                            <option value="fixed">Fixed</option>
+                        </select>
+                        <label for="discountValue">Discount Value</label>
+                        <input type="number" id="discountValue" name="discountValue" class="swal2-input" required>
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" name="startDate" class="swal2-input" required>
+                        <label for="endDate">End Date</label>
+                        <input type="date" id="endDate" name="endDate" class="swal2-input" required>
+                    </form>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                preConfirm: () => {
+                    document.getElementById("offerForm").submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
 <%- include("../layouts/admin_footer.ejs") %>

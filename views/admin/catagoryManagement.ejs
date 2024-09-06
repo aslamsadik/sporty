@@ -7,13 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Management</title>
     <link href="/admin_assets/css/main.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- SweetAlert script -->
 </head>
 <body>
     <section class="content-main">
         <div class="content-header">
             <div>
                 <h2 class="content-title card-title">Categories</h2>
-                <p>Add, edit or delete a category</p>
+                <p>Add, edit, delete a category, or create an offer</p>
             </div>
             <div>
                 <input type="text" placeholder="Search Categories" class="form-control bg-white">
@@ -89,6 +90,10 @@
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td>
+                                                <!-- Add Offer Button -->
+                                                <button class="btn btn-success btn-sm" onclick="addOfferModal('<%= category._id %>', '<%= category.name %>', 'category')">Add Offer</button>
+                                            </td>
                                         </tr>
                                     <% }) %>
                                 </tbody>
@@ -99,12 +104,50 @@
             </div>
         </div>
     </section>
+
+    <script>
+        function addOfferModal(id, name, type) {
+            Swal.fire({
+                title: `Add Offer for ${name}`,
+                html: `
+                    <form id="offerForm" action="/admin/offers/create" method="POST">
+                        <input type="hidden" name="offerType" value="${type}" />
+                        <input type="hidden" name="applicableId" value="${id}" />
+                        <div class="mb-3">
+                            <label for="offerName" class="form-label">Offer Name</label>
+                            <input type="text" id="offerName" name="offerName" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="discountType" class="form-label">Discount Type</label>
+                            <select id="discountType" name="discountType" class="form-control" required>
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Fixed</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="discountValue" class="form-label">Discount Value</label>
+                            <input type="number" id="discountValue" name="discountValue" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" id="startDate" name="startDate" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" id="endDate" name="endDate" class="form-control" required />
+                        </div>
+                    </form>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+                preConfirm: () => {
+                    document.getElementById('offerForm').submit();
+                }
+            });
+        }
+    </script>
+
 </body>
 </html>
 
-
-
 <%- include("../layouts/admin_footer.ejs") %>
-
-      
-       

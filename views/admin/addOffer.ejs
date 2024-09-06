@@ -1,141 +1,109 @@
 <%- include("../layouts/admin_header.ejs") %>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Offer</title>
+    <link href="/admin_assets/css/main.css" rel="stylesheet" type="text/css" />
+</head>
 <body>
     <section class="content-main">
-        <div class="row">
-            <div class="col-6">
-                <div class="content-header">
-                    <h2 class="content-title"><%= offer ? 'Edit Offer' : 'Add Offer' %></h2>
-                </div>
+        <div class="content-header">
+            <div>
+                <h2 class="content-title card-title">Create Offer</h2>
             </div>
         </div>
-        
-        <% if (message) { %>
-            <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
-                <%= message %>
-            </div>
-        <% } %>
-        
-        <form action="/admin/offers" method="POST"> 
-            <div class="col-lg-6">
-              <div class="card mb-4">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-3">
-                      <h6>Offer Details</h6>
+        <div class="card">
+            <div class="card-body">
+              <form action="/admin/offers/add" method="POST">
+                    <div class="mb-4">
+                        <label for="offerName" class="form-label">Offer Name</label>
+                        <input type="text" class="form-control" id="offerName" name="offerName" placeholder="Enter offer name" required />
                     </div>
-                    <div class="col-md-9">
-                      <!-- Offer Name -->
-                      <div class="mb-4">
-                        <label class="form-label">Offer Name</label>
-                        <input type="text" placeholder="Enter offer name" class="form-control" name="offerName" value="<%= offer ? offer.offerName : '' %>" required>
-                      </div>
-          
-                      <!-- Offer Type -->
-                      <div class="mb-4">
+
+                    <div class="mb-4">
                         <label for="offerType" class="form-label">Offer Type</label>
-                        <select class="form-select" name="offerType" id="offerType" required>
-                          <option value="" disabled selected>Select Offer Type</option>
-                          <option value="product" <%= offer && offer.offerType === 'product' ? 'selected' : '' %>>Product Offer</option>
-                          <option value="category" <%= offer && offer.offerType === 'category' ? 'selected' : '' %>>Category Offer</option>
-                          <option value="referral" <%= offer && offer.offerType === 'referral' ? 'selected' : '' %>>Referral Offer</option>
+                        <select class="form-control" id="offerType" name="offerType" required>
+                            <option value="product">Product</option>
+                            <option value="category">Category</option>
                         </select>
-                      </div>
-          
-                      <!-- Target ID Field (hidden initially) -->
-                      <div class="mb-4" id="targetIdField" style="display: none;">
-                        <label class="form-label">Target ID</label>
-                        <input type="text" placeholder="Enter target ID" class="form-control" name="targetId" value="<%= offer ? offer.targetId : '' %>">
-                      </div>
-          
-                      <!-- Referral Code Field (hidden initially) -->
-                      <div class="mb-4" id="referralCodeField" style="display: none;">
-                        <label class="form-label">Referral Code</label>
-                        <input type="text" placeholder="Enter referral code" class="form-control" name="referralCode" value="<%= offer ? offer.referralCode : '' %>">
-                      </div>
-          
-                      <!-- Discount Type -->
-                      <div class="mb-4">
-                        <label class="form-label">Discount Type</label>
-                        <select class="form-select" name="discountType" required>
-                          <option value="" disabled>Select discount type</option>
-                          <option value="percentage" <%= offer && offer.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
-                          <option value="fixed" <%= offer && offer.discountType === 'fixed' ? 'selected' : '' %>>Fixed</option>
-                        </select>
-                      </div>
-          
-                      <!-- Discount Value -->
-                      <div class="mb-4">
-                        <label class="form-label">Discount Value</label>
-                        <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" value="<%= offer ? offer.discountValue : '' %>" min="0" required>
-                      </div>
-          
-                      <!-- Start Date -->
-                      <div class="mb-4">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" class="form-control" name="startDate" value="<%= offer ? new Date(offer.startDate).toISOString().split('T')[0] : '' %>" required>
-                      </div>
-          
-                      <!-- End Date -->
-                      <div class="mb-4">
-                        <label class="form-label">End Date</label>
-                        <input type="date" class="form-control" name="endDate" value="<%= offer ? new Date(offer.endDate).toISOString().split('T')[0] : '' %>" required>
-                      </div>
-          
-                      <!-- Usage Limit -->
-                      <div class="mb-4">
-                        <label class="form-label">Usage Limit</label>
-                        <input type="number" placeholder="e.g., 100" class="form-control" name="usageLimit" value="<%= offer ? offer.usageLimit : '' %>" min="0">
-                      </div>
-          
-                      <!-- Submit Button -->
-                      <div>
-                        <button class="btn btn-md rounded font-sm hover-up" type="submit">
-                          <%= offer ? 'Update Offer' : 'Add Offer' %>
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+
+                    <!-- Products and Categories -->
+                    <div class="mb-4" id="applicableProductsContainer">
+                        <label for="applicableProducts" class="form-label">Applicable Products</label>
+                        <select class="form-control" id="applicableProducts" name="applicableIds" multiple>
+                            <% products.forEach(product => { %>
+                                <option value="<%= product._id %>"><%= product.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-4" id="applicableCategoriesContainer" style="display: none;">
+                        <label for="applicableCategories" class="form-label">Applicable Categories</label>
+                        <select class="form-control" id="applicableCategories" name="applicableIds" multiple>
+                            <% categories.forEach(category => { %>
+                                <option value="<%= category._id %>"><%= category.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="discountType" class="form-label">Discount Type</label>
+                        <select class="form-control" id="discountType" name="discountType" required>
+                            <option value="percentage">Percentage</option>
+                            <option value="fixed">Fixed</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="discountValue" class="form-label">Discount Value</label>
+                        <input type="number" class="form-control" id="discountValue" name="discountValue" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="usageLimit" class="form-label">Usage Limit (optional)</label>
+                        <input type="number" class="form-control" id="usageLimit" name="usageLimit" />
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Create Offer</button>
+                    </div>
+                </form>
             </div>
-          </form>
-                       
+        </div>
     </section>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const offerTypeSelect = document.getElementById('offerType');
-          const targetIdField = document.getElementById('targetIdField');
-          const referralCodeField = document.getElementById('referralCodeField');
-          const referralCodeInput = referralCodeField.querySelector('input');
-      
-          // Function to update field visibility based on selected offer type
-          const updateFields = () => {
-            const offerType = offerTypeSelect.value;
-      
-            if (offerType === 'product' || offerType === 'category') {
-              targetIdField.style.display = 'block';
-              referralCodeField.style.display = 'none';
-              referralCodeInput.value = ''; // Clear referral code
-            } else if (offerType === 'referral') {
-              targetIdField.style.display = 'none';
-              referralCodeField.style.display = 'block';
+        // Toggle between Product and Category options
+        document.getElementById('offerType').addEventListener('change', function () {
+            const selectedType = this.value;
+            const productContainer = document.getElementById('applicableProductsContainer');
+            const categoryContainer = document.getElementById('applicableCategoriesContainer');
+            
+            if (selectedType === 'product') {
+                productContainer.style.display = 'block';
+                categoryContainer.style.display = 'none';
             } else {
-              targetIdField.style.display = 'none';
-              referralCodeField.style.display = 'none';
-              referralCodeInput.value = ''; // Clear referral code
+                productContainer.style.display = 'none';
+                categoryContainer.style.display = 'block';
             }
-          };
-      
-          // Set initial visibility on page load
-          updateFields();
-      
-          // Update visibility when offer type changes
-          offerTypeSelect.addEventListener('change', updateFields);
         });
-      </script>
-      
-      
+    </script>
+</body>
+</html>
       
     <%- include("../layouts/admin_footer.ejs") %>
 </body>

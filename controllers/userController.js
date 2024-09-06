@@ -196,32 +196,64 @@ const getShopPage = async (req, res) => {
 
 
 // Fetch and render product description page
+// const getProductDescriptionPage = async (req, res) => {
+//     try {
+//         const product = await Product.findById(req.params.id).populate('category');
+//         if (!product) {
+//             return res.status(404).send('Product not found');
+//         }
+
+//         // Find applicable offers for the product or its category
+//         const offers = await Offer.find({
+//             $or: [
+//                 { offerType: 'product', targetId: product._id },
+//                 { offerType: 'category', targetId: product.category._id }
+//             ],
+//             isActive: true,
+//             startDate: { $lte: new Date() },
+//             endDate: { $gte: new Date() }
+//         });
+
+//         res.render('shopdetails', { product, offers });
+//     } catch (error) {
+//         console.error(error.message);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
+
 const getProductDescriptionPage = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id).populate('category');
+        const productId = mongoose.Types.ObjectId(req.params.id);
+
+        // Fetch the product along with its category
+        const product = await Product.findById(productId).populate('category').exec();
+
         if (!product) {
             return res.status(404).send('Product not found');
         }
 
-        // Find applicable offers for the product or its category
+        // Fetch offers related to the product or category
         const offers = await Offer.find({
             $or: [
-                { offerType: 'product', targetId: product._id },
-                { offerType: 'category', targetId: product.category._id }
-            ],
-            isActive: true,
-            startDate: { $lte: new Date() },
-            endDate: { $gte: new Date() }
+                { applicableProducts: product._id },  // Directly compare ObjectId
+                { applicableCategories: product.category._id }  // Directly compare ObjectId
+            ]
         });
 
-        res.render('shopdetails', { product, offers });
+        console.log('Product ID:', product._id);
+        console.log('Category ID:', product.category._id);
+        console.log('Offers found:', offers);
+
+        res.render('shopdetails', {
+            product,
+            offers // Pass offers to the view
+        });
     } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Internal Server Error');
+        console.error('Error fetching product details:', error);
+        res.status(500).send('Server Error');
     }
 };
-
-
 
 const signUp = async (req, res) => {
     try {
@@ -829,10 +861,42 @@ const placeOrder = async (req, res) => {
             }
             appliedCoupon.usedCount += 1;
             await appliedCoupon.save();
+
+            // Apply coupon discount if available
+            appliedDiscount += appliedCoupon.discountValue;  // You can modify the logic based on coupon type
         }
 
+        // Offer discount logic
+        let offerDiscount = 0;
+
+        // Fetch all active offers
+        const activeOffers = await Offer.find({ 
+            isActive: true, 
+            startDate: { $lte: new Date() }, 
+            endDate: { $gte: new Date() }
+        });
+
+        // Iterate over cart products and apply applicable offers
+        cart.products.forEach(cartItem => {
+            activeOffers.forEach(offer => {
+                if (offer.offerType === 'product' && offer.applicableProducts.includes(cartItem.productId._id)) {
+                    if (offer.discountType === 'percentage') {
+                        offerDiscount += (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
+                    } else {
+                        offerDiscount += offer.discountValue * cartItem.quantity;
+                    }
+                } else if (offer.offerType === 'category' && offer.applicableCategories.includes(cartItem.productId.category)) {
+                    if (offer.discountType === 'percentage') {
+                        offerDiscount += (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
+                    } else {
+                        offerDiscount += offer.discountValue * cartItem.quantity;
+                    }
+                }
+            });
+        });
+
         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
-        const finalPrice = Math.max(cartTotal - appliedDiscount, 0);
+        const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
 
         if (paymentMethod === 'wallet') {
             const wallet = await Wallet.findOne({ user: userId });
@@ -867,7 +931,7 @@ const placeOrder = async (req, res) => {
                 quantity: p.quantity
             })),
             totalPrice: finalPrice,
-            discountAmount: appliedDiscount,
+            discountAmount: appliedDiscount + offerDiscount,
             shippingAddressId,
             paymentMethod,  
             status: 'Pending'
@@ -893,6 +957,7 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error placing order' });
     }
 };
+
 
 const getOrderConfirmpage = async (req, res) => {
     try {

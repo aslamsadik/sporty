@@ -239,6 +239,28 @@ const Admin_home = async (req, res) => {
 };
 
 // Product Management
+// const Admin_productList = async (req, res) => {
+//     try {
+//         const page = parseInt(req.query.page) || 1;
+//         const limit = 10; // Number of products per page
+//         const totalProducts = await Product.countDocuments();
+//         const totalPages = Math.ceil(totalProducts / limit);
+
+//         const products = await Product.find()
+//             .skip((page - 1) * limit)
+//             .limit(limit);
+
+//         return res.render('productList', {
+//             products,
+//             currentPage: page,
+//             totalPages,
+//         });
+//     } catch (error) {
+//         console.log(error.message);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
 const Admin_productList = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -247,6 +269,7 @@ const Admin_productList = async (req, res) => {
         const totalPages = Math.ceil(totalProducts / limit);
 
         const products = await Product.find()
+            .populate('category')  // Populating category to show category name
             .skip((page - 1) * limit)
             .limit(limit);
 
@@ -260,6 +283,7 @@ const Admin_productList = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 const Admin_addProductPage = async (req, res) => {
@@ -278,6 +302,7 @@ const Admin_addProductPage = async (req, res) => {
     }
 };
 
+// 
 const Admin_addProduct = async (req, res) => {
     try {
         const { name, description, price, brand, category, stock } = req.body;
@@ -294,7 +319,7 @@ const Admin_addProduct = async (req, res) => {
             });
         }
 
-        // Check if the category exists
+        // Check if the category exists by name and get its ID
         const validCategory = await Category.findOne({ name: category });
         if (!validCategory) {
             return res.render('productManagement', { 
@@ -305,16 +330,17 @@ const Admin_addProduct = async (req, res) => {
             });
         }
 
-        if (images.length > 3) {
-            return res.render('productManagement', { 
-                message: 'You can upload a maximum of 3 images per product.', 
-                messageType: 'error', 
-                product: req.body,
-                categories: await Category.find()
-            });
-        }
+        // Now, use validCategory._id as the category for the new product
+        const newProduct = new Product({ 
+            name, 
+            description, 
+            price, 
+            brand, 
+            category: validCategory._id,  // Assign the ObjectId here
+            stock, 
+            images 
+        });
 
-        const newProduct = new Product({ name, description, price, brand, category, stock, images });
         await newProduct.save();
 
         res.redirect('/admin/productList');
@@ -712,136 +738,90 @@ const deleteCoupon = async (req, res) => {
     }
 };
 
-const createOffer = async (req, res) => {
+// Add Offer to a Product or Category
+const addOffer = async (req, res) => {
     try {
-      const { offerName, offerType, discountType, discountValue, startDate, endDate, usageLimit, targetId, referralCode } = req.body;
+      const { offerName, offerType, discountType, discountValue, applicableIds, usageLimit, startDate, endDate } = req.body;
   
-      // Create offer object
-      const offer = new Offer({
+      console.log('Offer Data:', { offerName, offerType, discountType, discountValue, applicableIds, usageLimit, startDate, endDate });
+  
+      // Convert applicableIds to an array if it's not already
+      let applicableIdsArray = Array.isArray(applicableIds) ? applicableIds : [applicableIds];
+  
+      // Check if applicableIdsArray is valid
+      if (!applicableIdsArray || applicableIdsArray.length === 0) {
+        return res.status(400).send('You must apply the offer to at least one product or category.');
+      }
+  
+      const newOffer = new Offer({
         offerName,
         offerType,
         discountType,
         discountValue,
+        usageLimit,
         startDate,
         endDate,
-        usageLimit: usageLimit || null,
-        targetId: offerType !== 'referral' ? targetId : undefined, // Only set targetId if offerType is not 'referral'
-        referralCode: offerType === 'referral' ? referralCode : undefined  // Only set referralCode if offerType is 'referral'
+        isActive: true
       });
-      
-      await offer.save();
-      res.redirect('/admin/offersList');
+  
+      // Assign applicable products or categories based on offerType
+      if (offerType === 'product') {
+        newOffer.applicableProducts = applicableIdsArray;
+      } else if (offerType === 'category') {
+        newOffer.applicableCategories = applicableIdsArray;
+      }
+  
+      // Save the new offer
+      await newOffer.save();
+  
+      res.redirect('/offerListing');
     } catch (error) {
-      console.warn('Error creating offer:', error);
+      console.error('Error creating offer:', error);
       res.status(500).send('Error creating offer');
     }
   };
-   
-const updateOffer = async (req, res) => {
+  
+
+
+  // Get Offers for Products and Categories
+const getOffers = async (req, res) => {
     try {
-        const { offerId } = req.params;
-        const updateData = req.body;
-
-        const updatedOffer = await Offer.findByIdAndUpdate(offerId, updateData, { new: true });
-        if (!updatedOffer) {
-            return res.status(404).json({ message: 'Offer not found' });
-        }
-
-        res.json({ message: 'Offer updated successfully', offer: updatedOffer });
+      const offers = await Offer.find().populate('applicableProducts').populate('applicableCategories');
+  
+      // Pass a message and messageType if they are present in the query parameters
+      const { message, messageType } = req.query;
+  
+      res.render('offerListing', { offers, message, messageType });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error updating offer' });
+      console.error(error);
+      res.status(500).send('Error fetching offers');
     }
-};
-
-const deleteOffer = async (req, res) => {
+  };
+  
+  
+  // Delete Offer
+  const deleteOffer = async (req, res) => {
     try {
-        const { offerId } = req.params;
-        const deletedOffer = await Offer.findByIdAndDelete(offerId);
-
-        if (!deletedOffer) {
-            return res.status(404).json({ message: 'Offer not found' });
-        }
-
-        res.json({ message: 'Offer deleted successfully' });
+      await Offer.findByIdAndDelete(req.params.offerId);
+      res.redirect('/admin/offers');
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error deleting offer' });
-    }
-};
-
-const listOffers = async (req, res) => {
-    try {
-        // Fetch all offers
-        const offers = await Offer.find({});
-
-        // Define message and messageType based on any conditions or set them to null
-        const message = req.query.message || null;
-        const messageType = req.query.messageType || null;
-
-        res.render('offerListing', { 
-            offers, 
-            message, 
-            messageType 
-        });
-    } catch (error) {
-        console.error('Error listing offers:', error.message);
-        res.render('admin/offerListing', { 
-            offers: [], 
-            message: 'An error occurred while fetching offers.', 
-            messageType: 'error' 
-        });
-    }
-};
-
-const editOffers = async (req, res) => {
-    try {
-        const offerId = req.params.id;
-
-        if (!offerId) {
-            // Render the page for adding a new offer
-            return res.render('editOffer', { offer: null, message: null });
-        }
-
-        const offer = await Offer.findById(offerId);
-
-        if (!offer) {
-            // Handle the case where the offer does not exist
-            return res.render('editOffer', { offer: null, message: 'Offer not found', messageType: 'error' });
-        }
-
-        res.render('editOffer', { offer, message: null });
-    } catch (error) {
-        console.error('Error fetching offer for edit:', error.message);
-        res.render('editOffer', { offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
+      console.error(error);
+      res.status(500).send('Error deleting offer');
     }
   };
 
   const addOfferPage = async (req, res) => {
     try {
-        const offerId = req.params.id;
+        const products = await Product.find(); // Fetch products for selection
+        const categories = await Category.find(); // Fetch categories for selection
 
-        // Fetch all offers
-        const offers = await Offer.find();
-
-        if (!offerId) {
-            // Render the page for adding a new offer
-            return res.render('addOffer', { offers, offer: null, message: null, messageType: null });
-        }
-
-        const offer = await Offer.findById(offerId);
-
-        if (!offer) {
-            // Handle the case where the offer does not exist
-            return res.render('addOffer', { offers, offer: null, message: 'Offer not found', messageType: 'error' });
-        }
-
-        res.render('addOffer', { offers, offer: null, message: null, messageType: null });
+        res.render('addOffer', { products, categories, offer: null, message: null, messageType: null });
     } catch (error) {
-        console.error('Error fetching offer for edit:', error.message);
-        res.render('addOffer', { offers: [], offer: null, message: 'An error occurred while fetching the offer.', messageType: 'error' });
+        console.error('Error fetching products and categories:', error.message);
+        res.render('admin/addOffer', { products: [], categories: [], offer: null, message: 'An error occurred.', messageType: 'error' });
     }
 };
+
 
 // Display Sales Report with Filters
 // const getSalesReport = async (req, res) => {
@@ -1133,11 +1113,9 @@ module.exports = {
     getEditCouponPage,
     editCoupon,
     deleteCoupon,
-    createOffer,
-    updateOffer,
+    addOffer,
+    getOffers,
     deleteOffer,
-    listOffers,
-    editOffers,
     addOfferPage,
     getSalesReport,
     exportSalesReportCSV,

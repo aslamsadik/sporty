@@ -7,7 +7,7 @@ const offerSchema = new mongoose.Schema({
   },
   offerType: { 
     type: String, 
-    enum: ['product', 'category', 'referral'], 
+    enum: ['product', 'category'], 
     required: true 
   },
   discountType: { 
@@ -19,21 +19,16 @@ const offerSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
-  targetId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: function() { 
-      return this.offerType !== 'referral'; 
-    },
-    refPath: 'offerType'
-  },
-  referralCode: {
-    type: String,
-    unique: true,  // Ensures that referralCode is unique if provided
-    sparse: true,  // Only applies uniqueness when referralCode is not null
-    required: function() { 
-      return this.offerType === 'referral'; 
-    } // Only required for referral offers
-  },
+  applicableProducts: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Product',
+    default: []  // Ensure it defaults to an empty array
+  }], 
+  applicableCategories: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Category',
+    default: []  // Ensure it defaults to an empty array
+  }], 
   usageLimit: { 
     type: Number, 
     default: null 
@@ -56,13 +51,17 @@ const offerSchema = new mongoose.Schema({
   }
 });
 
-// Validate targetId is provided for product or category offers
-offerSchema.path('targetId').validate(function(value) {
-  if (this.offerType !== 'referral' && !value) {
-    return false;
+// Automatically validate that at least one of applicableProducts or applicableCategories is populated
+offerSchema.pre('validate', function(next) {
+  if (!this.applicableProducts || !this.applicableCategories || 
+      (!this.applicableProducts.length && !this.applicableCategories.length)) {
+    return next(new Error('Offer must be applied to at least one product or category.'));
   }
-  return true;
-}, 'Target ID is required for product or category offers.');
+  next();
+});
+
+
+
 
 const Offer = mongoose.model('Offer', offerSchema);
 

@@ -164,6 +164,80 @@ const Admin_logout = async (req, res) => {
 //     }
 // };
 
+// const Admin_home = async (req, res) => {
+//     try {
+//         const filters = {
+//             startDate: req.query.startDate || '',
+//             endDate: req.query.endDate || '',
+//             category: req.query.category || '',
+//         };
+
+//         const categories = await Category.find(); // Fetch categories for the dropdown
+
+//         const { startDate, endDate, category } = filters;
+//         let matchCriteria = { status: "Delivered" }; // Adjust to match your order statuses
+
+//         if (startDate && endDate) {
+//             matchCriteria.createdAt = {
+//                 $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+//                 $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+//             };
+//         }
+
+//         let salesDataPipeline = [
+//             { $match: matchCriteria },
+//             { $unwind: "$products" },
+//             {
+//                 $lookup: {
+//                     from: "products",
+//                     localField: "products.productId",
+//                     foreignField: "_id",
+//                     as: "productDetails"
+//                 }
+//             },
+//             { $unwind: "$productDetails" },
+//             {
+//                 $lookup: {
+//                     from: "categories",
+//                     localField: "productDetails.category",
+//                     foreignField: "_id",
+//                     as: "categoryDetails"
+//                 }
+//             },
+//             { $unwind: "$categoryDetails" },
+//         ];
+
+//         if (category) {
+//             salesDataPipeline.push({
+//                 $match: { "categoryDetails._id": mongoose.Types.ObjectId(category) }
+//             });
+//         }
+
+//         salesDataPipeline.push({
+//             $group: {
+//                 _id: "$products.productId",
+//                 productName: { $first: "$productDetails.name" },
+//                 category: { $first: "$categoryDetails.name" }, // Get the category name
+//                 totalQuantity: { $sum: "$products.quantity" },
+//                 totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+//             }
+//         });
+
+//         const salesData = await Order.aggregate(salesDataPipeline);
+//         const queryString = new URLSearchParams(filters).toString();
+
+//         res.render('dashboard', {
+//             categories,
+//             filters,
+//             salesData,
+//             queryString
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
 const Admin_home = async (req, res) => {
     try {
         const filters = {
@@ -219,17 +293,48 @@ const Admin_home = async (req, res) => {
                 productName: { $first: "$productDetails.name" },
                 category: { $first: "$categoryDetails.name" }, // Get the category name
                 totalQuantity: { $sum: "$products.quantity" },
-                totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+                totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } },
+                totalDiscount: { $sum: "$products.discount" }, // Assuming you have discount data
+                couponsDeduction: { $sum: "$products.couponsDeduction" } // Assuming you have coupons deduction data
             }
         });
 
+        // Fetching sales data per product
         const salesData = await Order.aggregate(salesDataPipeline);
+
+        // Fetching overall sales data
+        const overallSales = await Order.aggregate([
+            { $match: matchCriteria },
+            {
+                $group: {
+                    _id: null,
+                    overallSalesCount: { $sum: 1 }, // Each order counts as one
+                    overallOrderAmount: { $sum: '$totalPrice' },
+                    overallDiscount: { $sum: '$discountAmount' }, // Assuming you have this field
+                    overallCouponsDeduction: { $sum: { $ifNull: ['$coupon.discountValue', 0] } } // Assuming coupon deduction
+                }
+            }
+        ]);
+
+        // Default to zero if no data exists
+        const overallSalesData = overallSales[0] || { 
+            overallSalesCount: 0, 
+            overallOrderAmount: 0, 
+            overallDiscount: 0, 
+            overallCouponsDeduction: 0 
+        };
+
         const queryString = new URLSearchParams(filters).toString();
 
+        // Render the dashboard with sales data and overall stats
         res.render('dashboard', {
             categories,
             filters,
             salesData,
+            overallSalesCount: overallSalesData.overallSalesCount,
+            overallOrderAmount: overallSalesData.overallOrderAmount,
+            overallDiscount: overallSalesData.overallDiscount,
+            overallCouponsDeduction: overallSalesData.overallCouponsDeduction,
             queryString
         });
     } catch (error) {
@@ -892,24 +997,16 @@ const getSalesReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
 
-        // Adjust startDate to beginning of the day and endDate to the end of the day
         const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0); // Set to start of the day
+        start.setHours(0, 0, 0, 0);
 
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // Set to end of the day
+        end.setHours(23, 59, 59, 999);
 
         const matchCriteria = {
             status: 'Delivered',
-            createdAt: {
-                $gte: start,
-                $lte: end
-            }
+            createdAt: { $gte: start, $lte: end }
         };
-
-        console.log('Start Date:', start);
-        console.log('End Date:', end);
-        console.log('Match Criteria:', matchCriteria);
 
         const salesData = await Order.aggregate([
             { $unwind: '$products' },
@@ -924,27 +1021,120 @@ const getSalesReport = async (req, res) => {
             { $unwind: '$productDetails' },
             { $match: matchCriteria },
             {
+                // $group: {
+                //     _id: '$productDetails._id',
+                //     productName: { $first: '$productDetails.name' },
+                //     totalQuantity: { $sum: '$products.quantity' },
+                //     totalRevenue: { $sum: { $multiply: ['$products.quantity', '$productDetails.price'] } },
+                //     totalDiscount: { $sum: '$discountAmount' },
+                //     couponsDeduction: { $sum: { $ifNull: ['$coupon.discountValue', 0] } }
+                // }
                 $group: {
-                    _id: '$productDetails._id',
-                    productName: { $first: '$productDetails.name' },
-                    totalQuantity: { $sum: '$products.quantity' },
-                    totalRevenue: { $sum: { $multiply: ['$products.quantity', '$productDetails.price'] } }
+                    _id: "$products.productId",
+                    productName: { $first: "$productDetails.name" },
+                    category: { $first: "$categoryDetails.name" }, 
+                    totalQuantity: { $sum: "$products.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } },
+                    totalDiscount: { $sum: "$products.discount" }, // Assuming you have discount data
+                    couponsDeduction: { $sum: "$products.couponsDeduction" } // Assuming you have coupons deduction data
                 }
             }
         ]);
 
-        console.log('Sales Data:', salesData);
+        // Calculating overall sales data
+        const overallSales = await Order.aggregate([
+            { $match: matchCriteria },
+            {
+                $group: {
+                    _id: null,
+                    overallSalesCount: { $sum: 1 },
+                    overallOrderAmount: { $sum: '$totalPrice' },
+                    overallDiscount: { $sum: '$discountAmount' },
+                    overallCouponsDeduction: { $sum: { $ifNull: ['$coupon.discountValue', 0] } }
+                }
+            }
+        ]);
+
+        const overallSalesData = overallSales[0] || { 
+            overallSalesCount: 0, 
+            overallOrderAmount: 0, 
+            overallDiscount: 0, 
+            overallCouponsDeduction: 0 
+        };
 
         res.render('dashboard', { 
             salesData, 
-            filters: req.query, 
-            queryString: new URLSearchParams(req.query).toString() // Pass the query string for export links
+            overallSalesCount: overallSalesData.overallSalesCount,
+            overallOrderAmount: overallSalesData.overallOrderAmount,
+            overallDiscount: overallSalesData.overallDiscount,
+            overallCouponsDeduction: overallSalesData.overallCouponsDeduction,
+            filters: req.query,
+            queryString: new URLSearchParams(req.query).toString()
         });
     } catch (err) {
         console.error('Error in getSalesReport:', err);
         res.status(500).send('Server Error');
     }
 };
+
+
+// const getSalesReport = async (req, res) => {
+//     try {
+//         const { startDate, endDate } = req.query;
+
+//         // Adjust startDate to beginning of the day and endDate to the end of the day
+//         const start = new Date(startDate);
+//         start.setHours(0, 0, 0, 0); // Set to start of the day
+
+//         const end = new Date(endDate);
+//         end.setHours(23, 59, 59, 999); // Set to end of the day
+
+//         const matchCriteria = {
+//             status: 'Delivered',
+//             createdAt: {
+//                 $gte: start,
+//                 $lte: end
+//             }
+//         };
+
+//         console.log('Start Date:', start);
+//         console.log('End Date:', end);
+//         console.log('Match Criteria:', matchCriteria);
+
+//         const salesData = await Order.aggregate([
+//             { $unwind: '$products' },
+//             {
+//                 $lookup: {
+//                     from: 'products',
+//                     localField: 'products.productId',
+//                     foreignField: '_id',
+//                     as: 'productDetails'
+//                 }
+//             },
+//             { $unwind: '$productDetails' },
+//             { $match: matchCriteria },
+//             {
+//                 $group: {
+//                     _id: '$productDetails._id',
+//                     productName: { $first: '$productDetails.name' },
+//                     totalQuantity: { $sum: '$products.quantity' },
+//                     totalRevenue: { $sum: { $multiply: ['$products.quantity', '$productDetails.price'] } }
+//                 }
+//             }
+//         ]);
+
+//         console.log('Sales Data:', salesData);
+
+//         res.render('dashboard', { 
+//             salesData, 
+//             filters: req.query, 
+//             queryString: new URLSearchParams(req.query).toString() // Pass the query string for export links
+//         });
+//     } catch (err) {
+//         console.error('Error in getSalesReport:', err);
+//         res.status(500).send('Server Error');
+//     }
+// };
 
 // Export Sales Report as CSV
 const exportSalesReportCSV = async (req, res) => {

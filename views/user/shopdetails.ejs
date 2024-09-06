@@ -598,26 +598,60 @@
                             <% } else { %>
                                 <p style="color: #ff6347; font-weight: bold; font-size: 16px;">No offers available for this product at the moment.</p>
                             <% } %>
-                        </div>                         -->
+                        </div>  -->
 
-                        <% if (offers.length > 0) { %>
-                            <div class="offer-section">
-                              <h3>Available Offers</h3>
-                              <ul>
-                                <% offers.forEach(offer => { %>
-                                  <li>
-                                    <strong><%= offer.offerName %></strong>: 
-                                    <%= offer.discountValue %> <%= offer.discountType === 'percentage' ? '%' : 'currency' %> discount
-                                  </li>
-                                <% }) %>
-                              </ul>
+                        
+
+                        <section class="pt-25 pb-20">
+                            <div class="container wow fadeIn animated">
+                                <h3 class="section-title mb-20"><span>Top</span> Offers</h3>
+                                <div class="carausel-6-columns-cover position-relative">
+                                    <div class="slider-arrow slider-arrow-2 carausel-6-columns-arrow" id="carausel-6-columns-2-arrows"></div>
+                                    <div class="row carausel-6-columns carausel-arrow-center" id="carausel-6-columns-2" style="display: flex; flex-wrap: wrap; justify-content: space-evenly; gap: 20px;">
+                                        <% offers.forEach(function(offer) { %>
+                                        <div class="col-lg-4 col-md-6 col-sm-12" style="max-width: 30%;">
+                                            <div class="product-cart-wrap large hover-up" style="border: 1px solid #e1e1e1; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                                                <div class="product-img-action-wrap">
+                                                    <div class="product-img product-img-zoom">
+                                                        <a href="/product/<%= offer.targetId %>">
+                                                            <img class="default-img" src="user_assets/imgs/shop/default-offer-img.jpg" alt="" style="width: 100%; height: auto;">
+                                                            <img class="hover-img" src="user_assets/imgs/shop/default-offer-img.jpg" alt="" style="width: 100%; height: auto;">
+                                                        </a>
+                                                    </div>
+                                                    <div class="product-action-1" style="display: flex; justify-content: space-between;">
+                                                        <a aria-label="Quick view" class="action-btn small hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal">
+                                                            <i class="fi-rs-eye"></i></a>
+                                                        <a aria-label="Add To Wishlist" class="action-btn small hover-up" href="/wishlist" tabindex="0">
+                                                            <i class="fi-rs-heart"></i></a>
+                                                        <a aria-label="Compare" class="action-btn small hover-up" href="/compare" tabindex="0">
+                                                            <i class="fi-rs-shuffle"></i></a>
+                                                    </div>
+                                                    <div class="product-badges product-badges-position product-badges-mrg">
+                                                        <span class="<%= offer.offerType === 'product' ? 'hot' : 'sale' %>">
+                                                            <%= offer.discountValue %>%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="product-content-wrap text-center" style="margin-top: 15px;">
+                                                    <h2><a href="/product/<%= offer.targetId %>" style="font-size: 18px;"><%= offer.offerName %></a></h2>
+                                                    <div class="rating-result" title="90%">
+                                                        <span></span>
+                                                    </div>
+                                                    <div class="product-price" style="margin-top: 10px;">
+                                                        <span class="text-success" style="font-weight: bold;">Discount: <%= offer.discountValue %>%</span>
+                                                        <% if (offer.originalPrice) { %>
+                                                            <span class="old-price" style="text-decoration: line-through; margin-left: 10px;">$<%= offer.originalPrice %></span>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% }) %>
+                                    </div>
+                                </div>
                             </div>
-                          <% } else { %>
-                            <p>No offers available for this product.</p>
-                          <% } %>
+                        </section>
                           
-                        
-                        
                         <div class="tab-pane fade" id="Reviews">
                             <!--Comments-->
                             <div class="comments-area">

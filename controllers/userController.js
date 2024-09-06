@@ -196,64 +196,64 @@ const getShopPage = async (req, res) => {
 
 
 // Fetch and render product description page
-// const getProductDescriptionPage = async (req, res) => {
-//     try {
-//         const product = await Product.findById(req.params.id).populate('category');
-//         if (!product) {
-//             return res.status(404).send('Product not found');
-//         }
-
-//         // Find applicable offers for the product or its category
-//         const offers = await Offer.find({
-//             $or: [
-//                 { offerType: 'product', targetId: product._id },
-//                 { offerType: 'category', targetId: product.category._id }
-//             ],
-//             isActive: true,
-//             startDate: { $lte: new Date() },
-//             endDate: { $gte: new Date() }
-//         });
-
-//         res.render('shopdetails', { product, offers });
-//     } catch (error) {
-//         console.error(error.message);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
-
-
 const getProductDescriptionPage = async (req, res) => {
     try {
-        const productId = mongoose.Types.ObjectId(req.params.id);
-
-        // Fetch the product along with its category
-        const product = await Product.findById(productId).populate('category').exec();
-
+        const product = await Product.findById(req.params.id).populate('category');
         if (!product) {
             return res.status(404).send('Product not found');
         }
 
-        // Fetch offers related to the product or category
+        // Find applicable offers for the product or its category
         const offers = await Offer.find({
             $or: [
-                { applicableProducts: product._id },  // Directly compare ObjectId
-                { applicableCategories: product.category._id }  // Directly compare ObjectId
-            ]
+                { offerType: 'product', targetId: product._id },
+                { offerType: 'category', targetId: product.category._id }
+            ],
+            isActive: true,
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
         });
 
-        console.log('Product ID:', product._id);
-        console.log('Category ID:', product.category._id);
-        console.log('Offers found:', offers);
-
-        res.render('shopdetails', {
-            product,
-            offers // Pass offers to the view
-        });
+        res.render('shopdetails', { product, offers });
     } catch (error) {
-        console.error('Error fetching product details:', error);
-        res.status(500).send('Server Error');
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
     }
 };
+
+
+// const getProductDescriptionPage = async (req, res) => {
+//     try {
+//         const productId = mongoose.Types.ObjectId(req.params.id);
+
+//         // Fetch the product along with its category
+//         const product = await Product.findById(productId).populate('category').exec();
+
+//         if (!product) {
+//             return res.status(404).send('Product not found');
+//         }
+
+//         // Fetch offers related to the product or category
+//         const offers = await Offer.find({
+//             $or: [
+//                 { applicableProducts: product._id },  // Directly compare ObjectId
+//                 { applicableCategories: product.category._id }  // Directly compare ObjectId
+//             ]
+//         });
+
+//         console.log('Product ID:', product._id);
+//         console.log('Category ID:', product.category._id);
+//         console.log('Offers found:', offers);
+
+//         res.render('shopdetails', {
+//             product,
+//             offers // Pass offers to the view
+//         });
+//     } catch (error) {
+//         console.error('Error fetching product details:', error);
+//         res.status(500).send('Server Error');
+//     }
+// };
 
 const signUp = async (req, res) => {
     try {
@@ -863,7 +863,23 @@ const placeOrder = async (req, res) => {
             await appliedCoupon.save();
 
             // Apply coupon discount if available
-            appliedDiscount += appliedCoupon.discountValue;  // You can modify the logic based on coupon type
+            if (appliedCoupon.discountType === 'percentage') {
+                // Calculate percentage discount
+                appliedDiscount = (appliedCoupon.discountValue / 100) * cartTotal;
+
+                // Ensure discount does not exceed the cart total
+                if (appliedDiscount > cartTotal) {
+                    appliedDiscount = cartTotal; // Cap discount to cart total
+                }
+            } else if (appliedCoupon.discountType === 'fixed') {
+                // Apply fixed discount
+                appliedDiscount = appliedCoupon.discountValue;
+
+                // Ensure fixed discount does not exceed the cart total
+                if (appliedDiscount > cartTotal) {
+                    appliedDiscount = cartTotal; // Cap discount to cart total
+                }
+            }
         }
 
         // Offer discount logic
@@ -931,7 +947,7 @@ const placeOrder = async (req, res) => {
                 quantity: p.quantity
             })),
             totalPrice: finalPrice,
-            discountAmount: appliedDiscount + offerDiscount,
+            discountAmount: appliedDiscount,
             shippingAddressId,
             paymentMethod,  
             status: 'Pending'

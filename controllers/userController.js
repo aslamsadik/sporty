@@ -1499,20 +1499,99 @@ const updateProfile = async (req, res) => {
     }
 };
 
+// const getOrderDetails = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+        
+//         // Fetch order details, including product and shipping address information
+//         const order = await Order.findById(orderId)
+//             .populate('products.productId')
+//             .populate('shippingAddressId');
+
+//         if (!order) {
+//             return res.status(404).send('Order not found');
+//         }
+
+//         res.render('orderDetailspage', { order });
+//     } catch (error) {
+//         console.error('Error fetching order details:', error);
+//         res.status(500).send('Server Error');
+//     }
+// };
+
+
+// const getOrderDetails = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+
+//         // Fetch order details
+//         const order = await Order.findById(orderId)
+//             .populate('products.productId') // Populate product details
+//             .populate('couponId'); // Populate coupon details
+
+//         if (!order) {
+//             return res.status(404).send('Order not found');
+//         }
+
+//         // Fetch user details to get the shipping address
+//         const user = await User.findById(order.userId);
+
+//         if (!user) {
+//             return res.status(404).send('User not found');
+//         }
+
+//         // Find the shipping address from user's addresses
+//         const shippingAddress = user.addresses.id(order.shippingAddressId);
+
+//         // Ensure the shipping address exists
+//         if (!shippingAddress) {
+//             return res.status(404).send('Shipping address not found');
+//         }
+
+//         // Render the order details page with the fetched data
+//         res.render('orderDetailspage', {
+//             order,
+//             shippingAddress
+//         });
+//     } catch (error) {
+//         console.error('Error fetching order details:', error);
+//         res.status(500).send('Server Error');
+//     }
+// };
+
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        
-        // Fetch order details, including product and shipping address information
+
+        // Fetch order details
         const order = await Order.findById(orderId)
-            .populate('products.productId')
-            .populate('shippingAddressId');
+            .populate('products.productId') // Populate product details
+            .populate('couponId'); // Populate coupon details
 
         if (!order) {
             return res.status(404).send('Order not found');
         }
 
-        res.render('orderDetailspage', { order });
+        // Fetch user details to get the shipping address
+        const user = await User.findById(order.userId);
+
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        // Find the shipping address from user's addresses
+        const shippingAddress = user.addresses.id(order.shippingAddressId);
+
+        // Ensure the shipping address exists
+        if (!shippingAddress) {
+            return res.status(404).send('Shipping address not found');
+        }
+
+        // Render the order details page with the fetched data
+        res.render('orderDetailspage', {
+            order,
+            shippingAddress
+        });
     } catch (error) {
         console.error('Error fetching order details:', error);
         res.status(500).send('Server Error');

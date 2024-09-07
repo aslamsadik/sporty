@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details</title>
-     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/styles/evara.css">
 </head>
 <body>
@@ -14,18 +14,28 @@
                 <h1 class="h3 mb-3 font-weight-normal">Order Details</h1>
             </div>
             <div class="card-body">
+                <!-- Order Summary -->
                 <div class="order-summary mb-4">
                     <h2 class="h5">Order ID: <%= order._id %></h2>
                     <p><strong>Status:</strong> <%= order.status %></p>
-                    <p><strong>Total Price:</strong> $<%= order.totalPrice.toFixed(2) %></p>
+                    <p><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p> <!-- Order Date -->
+                    <p><strong>Original Amount:</strong> $<%= (order.totalPrice + order.discountAmount).toFixed(2) %></p> <!-- Original Amount -->
+                    <p><strong>Discount:</strong> -$<%= order.discountAmount.toFixed(2) %></p> <!-- Discount Amount -->
+                    <p><strong>Total Price After Discount:</strong> $<%= order.totalPrice.toFixed(2) %></p> <!-- Final Price After Discount -->
                     <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
-                    <p><strong>Order Notes:</strong> <%= order.orderNotes %></p>
+                    <p><strong>Order Notes:</strong> <%= order.orderNotes || 'N/A' %></p>
                 </div>
+
+                <!-- Shipping Address -->
                 <div class="shipping-address mb-4">
                     <h2 class="h5">Shipping Address</h2>
-                    <p><%= order.shippingAddressId.street %></p>
-                    <p><%= order.shippingAddressId.city %>, <%= order.shippingAddressId.state %> <%= order.shippingAddressId.zipCode %></p>
+                    <p><%= shippingAddress.address1 %> <%= shippingAddress.address2 ? shippingAddress.address2 : '' %></p>
+                    <p><%= shippingAddress.city %>, <%= shippingAddress.state %> <%= shippingAddress.zip %></p>
+                    <p><%= shippingAddress.phone %></p>
+                    <p><%= shippingAddress.email %></p>
                 </div>
+
+                <!-- Products -->
                 <div class="products mb-4">
                     <h2 class="h5">Products</h2>
                     <ul class="list-group">
@@ -47,5 +57,4 @@
         </div>
     </div>
 </body>
-
 </html>

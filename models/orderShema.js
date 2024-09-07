@@ -26,15 +26,15 @@ const orderSchema = new mongoose.Schema({
             quantity: { type: Number, required: true }
         }
     ],
-    shippingAddressId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
     totalPrice: { type: Number, required: true },
     discountAmount: { type: Number, default: 0 },
-    couponDeduction: { type: Number, default: 0 },  // New field for coupon deduction
     paymentMethod: { type: String, required: true },
     orderNotes: { type: String },
     status: { type: String, default: 'Pending' },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' } // Optional
 });
 
 const Order = mongoose.model('Order', orderSchema);

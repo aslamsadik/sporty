@@ -92,6 +92,37 @@
         .order-summary p {
             margin: 5px 0;
         }
+
+        .pagination {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pagination a {
+            color: #007bff;
+            margin: 0 5px;
+            padding: 8px 16px;
+            text-decoration: none;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+        }
+
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination a:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        .pagination a.disabled {
+            pointer-events: none;
+            color: grey;
+            border-color: grey;
+        }
     </style>
 </head>
 <body>
@@ -131,7 +162,26 @@
             <% }) %>
         <% } %>
         
+        <!-- Pagination Section -->
+        <div class="pagination">
+            <% if (currentPage > 1) { %>
+                <a href="?page=<%= currentPage - 1 %>">Previous</a>
+            <% } else { %>
+                <a href="#" class="disabled">Previous</a>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>">Next</a>
+            <% } else { %>
+                <a href="#" class="disabled">Next</a>
+            <% } %>
+        </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
@@ -162,65 +212,50 @@
                             } else {
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Failed',
-                                    text: 'Failed to cancel the order',
-                                    confirmButtonText: 'OK'
+                                    title: 'Error',
+                                    text: 'Failed to cancel the order. Please try again.',
                                 });
                             }
                         });
                 }
             });
         }
-    
+
         function returnProduct(orderId) {
             Swal.fire({
-                title: 'Return Product',
-                text: "Please enter a reason for returning the product:",
-                input: 'text',
-                inputPlaceholder: 'Enter your reason here...',
+                title: 'Are you sure?',
+                text: "Do you want to return this product?",
+                icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Submit',
-                cancelButtonText: 'Cancel',
-                showLoaderOnConfirm: true,
-                preConfirm: (reason) => {
-                    if (!reason) {
-                        Swal.showValidationMessage('Reason is required');
-                        return false;
-                    }
-                    return fetch(`/order/return/${orderId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ reason })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            return true;
-                        } else {
-                            throw new Error('Failed to submit return request');
-                        }
-                    })
-                    .catch(error => {
-                        Swal.showValidationMessage(`Request failed: ${error}`);
-                        return false;
-                    });
-                }
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, return it!',
+                cancelButtonText: 'No, keep it'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Return request submitted successfully!',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        window.location.reload();
-                    });
+                    fetch(`/order/return/${orderId}`, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Product returned successfully!',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to return the product. Please try again.',
+                                });
+                            }
+                        });
                 }
             });
         }
     </script>
 </body>
-
 </html>
-
-<%- include("../layouts/profile_footer.ejs") %>

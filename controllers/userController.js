@@ -1374,6 +1374,43 @@ const deleteAddress = async (req, res) => {
     }
 };
 
+
+// const getOrderListing = async (req, res) => {
+//     try {
+//         // Ensure the user is logged in and has a session
+//         if (!req.session.user || !req.session.user.userId) {
+//             return res.status(401).send('Unauthorized');
+//         }
+
+//         // Fetch orders for the logged-in user and sort them by creation date in descending order
+//         const orders = await Order.find({ userId: req.session.user.userId })
+//             .populate('products.productId')
+//             .sort({ createdAt: -1 });
+
+//         // Map the order products to include detailed product information
+//         const ordersWithProductDetails = orders.map(order => {
+//             return {
+//                 ...order.toObject(),
+//                 products: order.products.map(product => ({
+//                     name: product.productId.name,
+//                     images: product.productId.images,
+//                     price: product.productId.price,
+//                     quantity: product.quantity
+//                 }))
+//             };
+//         });
+
+//         // Debugging output to check if images are correctly populated
+//         console.log('Orders with product details:', ordersWithProductDetails);
+
+//         // Render the order listing page with populated orders
+//         res.render('orderListing', { orders: ordersWithProductDetails });
+//     } catch (error) {
+//         console.error('Error fetching orders:', error);
+//         res.status(500).send('Server Error');
+//     }
+// };
+
 const getOrderListing = async (req, res) => {
     try {
         // Ensure the user is logged in and has a session
@@ -1381,35 +1418,46 @@ const getOrderListing = async (req, res) => {
             return res.status(401).send('Unauthorized');
         }
 
-        // Fetch orders for the logged-in user and sort them by creation date in descending order
+        // Get the current page number from query parameters (default to 1 if not provided)
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;  // Number of orders per page
+        const skip = (page - 1) * limit;
+
+        // Fetch total count of orders for pagination
+        const totalOrders = await Order.countDocuments({ userId: req.session.user.userId });
+
+        // Fetch paginated orders for the logged-in user, sorted by creation date in descending order
         const orders = await Order.find({ userId: req.session.user.userId })
             .populate('products.productId')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip(skip);
 
         // Map the order products to include detailed product information
-        const ordersWithProductDetails = orders.map(order => {
-            return {
-                ...order.toObject(),
-                products: order.products.map(product => ({
-                    name: product.productId.name,
-                    images: product.productId.images,
-                    price: product.productId.price,
-                    quantity: product.quantity
-                }))
-            };
+        const ordersWithProductDetails = orders.map(order => ({
+            ...order.toObject(),
+            products: order.products.map(product => ({
+                name: product.productId.name,
+                images: product.productId.images,
+                price: product.productId.price,
+                quantity: product.quantity
+            }))
+        }));
+
+        // Calculate total pages for pagination
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        // Render the order listing page with populated orders and pagination data
+        res.render('orderListing', {
+            orders: ordersWithProductDetails,
+            currentPage: page,
+            totalPages: totalPages,
         });
-
-        // Debugging output to check if images are correctly populated
-        console.log('Orders with product details:', ordersWithProductDetails);
-
-        // Render the order listing page with populated orders
-        res.render('orderListing', { orders: ordersWithProductDetails });
     } catch (error) {
         console.error('Error fetching orders:', error);
         res.status(500).send('Server Error');
     }
 };
-
 
 
 const updateProfile = async (req, res) => {

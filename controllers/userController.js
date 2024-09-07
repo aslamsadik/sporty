@@ -824,6 +824,156 @@ const getCheckoutPage = async (req, res) => {
     }
 };
 
+// const placeOrder = async (req, res) => {
+//     try {
+//         const {
+//             couponCode,
+//             discountAmount = 0,
+//             paymentMethod, 
+//             shippingAddressId,
+//             razorpay_payment_id,
+//             razorpay_order_id,
+//             razorpay_signature
+//         } = req.body;
+
+//         const userId = req.session.user?.userId;
+
+//         if (!userId) {
+//             return res.status(400).json({ success: false, message: 'User not logged in' });
+//         }
+
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ success: false, message: 'User not found' });
+//         }
+
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+//         if (!cart || cart.products.length === 0) {
+//             return res.status(400).json({ success: false, message: 'Cart is empty' });
+//         }
+
+//         let appliedCoupon = null;
+//         let appliedDiscount = discountAmount;
+//         if (couponCode) {
+//             appliedCoupon = await Coupon.findOne({ code: couponCode });
+//             if (!appliedCoupon) {
+//                 return res.status(400).json({ success: false, message: 'Invalid coupon' });
+//             }
+//             appliedCoupon.usedCount += 1;
+//             await appliedCoupon.save();
+
+//             // Apply coupon discount if available
+//             if (appliedCoupon.discountType === 'percentage') {
+//                 // Calculate percentage discount
+//                 appliedDiscount = (appliedCoupon.discountValue / 100) * cartTotal;
+
+//                 // Ensure discount does not exceed the cart total
+//                 if (appliedDiscount > cartTotal) {
+//                     appliedDiscount = cartTotal; // Cap discount to cart total
+//                 }
+//             } else if (appliedCoupon.discountType === 'fixed') {
+//                 // Apply fixed discount
+//                 appliedDiscount = appliedCoupon.discountValue;
+
+//                 // Ensure fixed discount does not exceed the cart total
+//                 if (appliedDiscount > cartTotal) {
+//                     appliedDiscount = cartTotal; // Cap discount to cart total
+//                 }
+//             }
+//         }
+
+//         // Offer discount logic
+//         let offerDiscount = 0;
+
+//         // Fetch all active offers
+//         const activeOffers = await Offer.find({ 
+//             isActive: true, 
+//             startDate: { $lte: new Date() }, 
+//             endDate: { $gte: new Date() }
+//         });
+
+//         // Iterate over cart products and apply applicable offers
+//         cart.products.forEach(cartItem => {
+//             activeOffers.forEach(offer => {
+//                 if (offer.offerType === 'product' && offer.applicableProducts.includes(cartItem.productId._id)) {
+//                     if (offer.discountType === 'percentage') {
+//                         offerDiscount += (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
+//                     } else {
+//                         offerDiscount += offer.discountValue * cartItem.quantity;
+//                     }
+//                 } else if (offer.offerType === 'category' && offer.applicableCategories.includes(cartItem.productId.category)) {
+//                     if (offer.discountType === 'percentage') {
+//                         offerDiscount += (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
+//                     } else {
+//                         offerDiscount += offer.discountValue * cartItem.quantity;
+//                     }
+//                 }
+//             });
+//         });
+
+//         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
+//         const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
+
+//         if (paymentMethod === 'wallet') {
+//             const wallet = await Wallet.findOne({ user: userId });
+//             if (!wallet || wallet.balance < finalPrice) {
+//                 return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+//             }
+
+//             wallet.balance -= finalPrice;
+//             wallet.transactions.push({ type: 'debit', amount: finalPrice, description: 'Order payment' });
+//             await wallet.save();
+//         } else if (paymentMethod === 'Razorpay') {
+//             const razorpay = new Razorpay({
+//                 key_id: process.env.RAZORPAY_KEY_ID,
+//                 key_secret: process.env.RAZORPAY_KEY_SECRET
+//             });
+
+//             const isValidSignature = razorpay.utils.verifyPaymentSignature({
+//                 order_id: razorpay_order_id,
+//                 payment_id: razorpay_payment_id,
+//                 signature: razorpay_signature
+//             });
+
+//             if (!isValidSignature) {
+//                 return res.status(400).json({ success: false, message: 'Invalid Razorpay payment signature' });
+//             }
+//         }
+
+//         const newOrder = new Order({
+//             userId,
+//             products: cart.products.map(p => ({
+//                 productId: p.productId._id,
+//                 quantity: p.quantity
+//             })),
+//             totalPrice: finalPrice,
+//             discountAmount: appliedDiscount,
+//             shippingAddressId,
+//             paymentMethod,  
+//             status: 'Pending'
+//         });
+
+//         await newOrder.save();
+
+//         // Log the order ID
+//         console.log('New Order ID:', newOrder._id);
+
+//         // Clear the cart after the order is placed
+//         await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
+
+//         // Return success response with orderId and message
+//         return res.json({
+//             success: true,
+//             message: 'Order placed successfully',
+//             orderId: newOrder._id
+//         });
+
+//     } catch (error) {
+//         console.error('Error placing order:', error.message);
+//         res.status(500).json({ success: false, message: 'Error placing order' });
+//     }
+// };
+
 const placeOrder = async (req, res) => {
     try {
         const {
@@ -852,8 +1002,12 @@ const placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Cart is empty' });
         }
 
+        const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
+
         let appliedCoupon = null;
         let appliedDiscount = discountAmount;
+        let couponDeduction = 0;
+
         if (couponCode) {
             appliedCoupon = await Coupon.findOne({ code: couponCode });
             if (!appliedCoupon) {
@@ -865,21 +1019,24 @@ const placeOrder = async (req, res) => {
             // Apply coupon discount if available
             if (appliedCoupon.discountType === 'percentage') {
                 // Calculate percentage discount
-                appliedDiscount = (appliedCoupon.discountValue / 100) * cartTotal;
+                couponDeduction = (appliedCoupon.discountValue / 100) * cartTotal;
 
                 // Ensure discount does not exceed the cart total
-                if (appliedDiscount > cartTotal) {
-                    appliedDiscount = cartTotal; // Cap discount to cart total
+                if (couponDeduction > cartTotal) {
+                    couponDeduction = cartTotal; // Cap discount to cart total
                 }
             } else if (appliedCoupon.discountType === 'fixed') {
                 // Apply fixed discount
-                appliedDiscount = appliedCoupon.discountValue;
+                couponDeduction = appliedCoupon.discountValue;
 
                 // Ensure fixed discount does not exceed the cart total
-                if (appliedDiscount > cartTotal) {
-                    appliedDiscount = cartTotal; // Cap discount to cart total
+                if (couponDeduction > cartTotal) {
+                    couponDeduction = cartTotal; // Cap discount to cart total
                 }
             }
+
+            // Deduct coupon amount from the final discount
+            appliedDiscount = couponDeduction;
         }
 
         // Offer discount logic
@@ -911,7 +1068,6 @@ const placeOrder = async (req, res) => {
             });
         });
 
-        const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
         const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
 
         if (paymentMethod === 'wallet') {
@@ -948,15 +1104,13 @@ const placeOrder = async (req, res) => {
             })),
             totalPrice: finalPrice,
             discountAmount: appliedDiscount,
+            couponDeduction, // Store coupon deduction in the order
             shippingAddressId,
             paymentMethod,  
             status: 'Pending'
         });
 
         await newOrder.save();
-
-        // Log the order ID
-        console.log('New Order ID:', newOrder._id);
 
         // Clear the cart after the order is placed
         await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
@@ -973,6 +1127,7 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error placing order' });
     }
 };
+
 
 
 const getOrderConfirmpage = async (req, res) => {

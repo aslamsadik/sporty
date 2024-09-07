@@ -1151,6 +1151,64 @@ const getOrderConfirmpage = async (req, res) => {
 };
 
 
+// const cancelOrder = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         console.log(`Attempting to cancel order with ID: ${orderId}`);
+
+//         const order = await Order.findById(orderId);
+//         if (!order) {
+//             console.log('Order not found');
+//             return res.status(404).json({ success: false, message: 'Order not found' });
+//         }
+
+//         if (order.status !== 'Pending') {
+//             console.log(`Order status is ${order.status}, cannot cancel`);
+//             return res.status(400).json({ success: false, message: 'Only pending orders can be cancelled' });
+//         }
+
+//         // Update order status and timestamp
+//         order.status = 'Cancelled';
+//         order.updatedAt = new Date();
+//         await order.save();
+//         console.log('Order status updated to Cancelled');
+
+//         // Refund to wallet if payment was through wallet
+//         if ('wallet'||'cashOnDelivery'|| 'razorpay'.includes(order.paymentMethod)) {
+//             console.log('Processing refund to wallet');
+        
+//             let wallet = await Wallet.findOne({ user: order.userId });
+//             if (!wallet) {
+//                 console.log('Wallet not found, creating a new one');
+//                 wallet = new Wallet({ user: order.userId, balance: 0, transactions: [] });
+//             }
+        
+//             console.log(`Current Wallet Balance: ₹${wallet.balance}`);
+//             console.log(`Refunding ₹${order.totalPrice} to wallet`);
+        
+//             // Ensure totalPrice is a valid number
+//             if (typeof order.totalPrice !== 'number' || isNaN(order.totalPrice) || order.totalPrice < 0) {
+//                 throw new Error('Invalid totalPrice value');
+//             }
+        
+//             wallet.balance += order.totalPrice;
+//             wallet.transactions.push({
+//                 amount: order.totalPrice,
+//                 type: 'credit',
+//                 description: 'Order cancelled and refunded',
+//             });
+        
+//             await wallet.save();
+//             console.log('Wallet updated successfully. New Balance:', wallet.balance);
+//         }
+
+//         res.json({ success: true, message: 'Order cancelled successfully' });
+//     } catch (error) {
+//         console.error('Error cancelling order:', error.message);
+//         res.status(500).json({ success: false, message: 'Error cancelling order. Please try again.' });
+//     }
+// };
+
 const cancelOrder = async (req, res) => {
     try {
         const orderId = req.params.orderId;
@@ -1173,8 +1231,8 @@ const cancelOrder = async (req, res) => {
         await order.save();
         console.log('Order status updated to Cancelled');
 
-        // Refund to wallet if payment was through wallet
-        if ('wallet'||'cashOnDelivery'|| 'razorpay'.includes(order.paymentMethod)) {
+        // Process refund to wallet only for non-COD payments (e.g., wallet, razorpay)
+        if (['wallet', 'razorpay'].includes(order.paymentMethod)) {
             console.log('Processing refund to wallet');
         
             let wallet = await Wallet.findOne({ user: order.userId });
@@ -1200,6 +1258,8 @@ const cancelOrder = async (req, res) => {
         
             await wallet.save();
             console.log('Wallet updated successfully. New Balance:', wallet.balance);
+        } else {
+            console.log('Payment method is COD, no refund to wallet.');
         }
 
         res.json({ success: true, message: 'Order cancelled successfully' });
@@ -1208,6 +1268,7 @@ const cancelOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error cancelling order. Please try again.' });
     }
 };
+
 
 
 

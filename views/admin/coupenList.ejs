@@ -19,6 +19,7 @@
                 <thead>
                     <tr>
                         <th>Coupon Code</th>
+                        <th>Minimum Price</th>
                         <th>Discount</th>
                         <th>Expiration Date</th>
                         <th>Usage Limit</th>
@@ -29,6 +30,7 @@
                     <% coupons.forEach(coupon => { %>
                         <tr>
                             <td><%= coupon.code %></td>
+                            <td><%= coupon.minPrice %></td>
                             <td><%= coupon.discountValue %>%</td>
                             <td><%= new Date(coupon.expirationDate).toLocaleDateString() %></td>
                             <td><%= coupon.usageLimit %></td>

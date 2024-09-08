@@ -17,7 +17,7 @@
         <% } %>
 
         <form action='/admin/editCoupon/<%= coupon._id %>' method="POST" onsubmit="validateCouponForm(event)">
-            <div class="row">
+            <div class="row"></div>
                 <div class="col-lg-6">
                     <div class="card mb-4">
                         <div class="card-body">
@@ -30,6 +30,10 @@
                                         <label class="form-label">Coupon Code</label>
                                         <input type="text" placeholder="Enter coupon code" class="form-control" name="code" value="<%= coupon.code %>" required>
                                     </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Minimum Order Price</label>
+                                        <input type="number" placeholder="e.g., 50" class="form-control" name="minPrice" value="<%= coupon.minPrice %>" required>
+                                    </div>                                    
                                     <div class="mb-4">
                                         <label class="form-label">Discount Type</label>
                                         <select class="form-select" name="discountType" required>

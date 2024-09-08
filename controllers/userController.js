@@ -1270,8 +1270,6 @@ const cancelOrder = async (req, res) => {
 };
 
 
-
-
 const getProfilePage = async (req, res) => {
     try {
         const userId = req.session.user.userId;
@@ -1975,6 +1973,30 @@ const getWishlist = async (req, res) => {
 
 
 
+// const getWalletDetails = async (req, res) => {
+//     try {
+//         if (!req.session.user) {
+//             return res.status(401).send('User not authenticated');
+//         }
+
+//         const userId = req.session.user.userId;
+//         let wallet = await Wallet.findOne({ user: userId });
+
+//         // If wallet doesn't exist, create one
+//         if (!wallet) {
+//             wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
+//             await wallet.save();
+//         }
+
+//         console.log('Wallet Details:', wallet);  // Log the wallet details for debugging
+
+//         res.render('wallet', { wallet });
+//     } catch (error) {
+//         console.log('Error retrieving wallet details:', error.message);
+//         res.status(500).send('Server Error');
+//     }
+// };
+
 const getWalletDetails = async (req, res) => {
     try {
         if (!req.session.user) {
@@ -1990,15 +2012,26 @@ const getWalletDetails = async (req, res) => {
             await wallet.save();
         }
 
-        console.log('Wallet Details:', wallet);  // Log the wallet details for debugging
+        const page = parseInt(req.query.page) || 1; // Get current page, default to 1
+        const limit = 5; // Limit of transactions per page
+        const skip = (page - 1) * limit; // Calculate the number of documents to skip
 
-        res.render('wallet', { wallet });
+        // Paginated transactions
+        const totalTransactions = wallet.transactions.length;
+        const totalPages = Math.ceil(totalTransactions / limit);
+
+        const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+
+        res.render('wallet', { 
+            wallet: { ...wallet.toObject(), transactions: paginatedTransactions },
+            currentPage: page,
+            totalPages 
+        });
     } catch (error) {
         console.log('Error retrieving wallet details:', error.message);
         res.status(500).send('Server Error');
     }
 };
-
 
 
 const addFunds = async (req, res) => {

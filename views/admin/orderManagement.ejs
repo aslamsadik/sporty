@@ -139,46 +139,120 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
     <script>
+        // function updateOrderStatus(orderId, newStatus) {
+        //     fetch(`/admin/update-order-status`, {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         },
+        //         body: JSON.stringify({ orderId, status: newStatus })
+        //     }).then(response => response.json())
+        //       .then(data => {
+        //         if (data.message) {
+        //             alert('Order status updated successfully');
+        //         } else {
+        //             alert('Failed to update order status');
+        //         }
+        //     });
+        // }
         function updateOrderStatus(orderId, newStatus) {
-            fetch(`/admin/update-order-status`, {
+    fetch(`/admin/update-order-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId, status: newStatus })
+    }).then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Order status updated successfully',
+                confirmButtonText: 'Ok'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Failed to update order status',
+                confirmButtonText: 'Ok'
+            });
+        }
+    });
+}
+
+
+        // function deleteOrder(orderId) {
+        //     console.log("Delete button clicked for order:", orderId); // Debugging line
+        //     if (confirm("Are you sure you want to delete this order?")) {
+        //         fetch(`/admin/delete-order`, {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json'
+        //             },
+        //             body: JSON.stringify({ orderId })
+        //         })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             console.log("Response from delete:", data); // Debugging line
+        //             if (data.message) {
+        //                 alert('Order deleted successfully');
+        //                 window.location.reload();
+        //             } else {
+        //                 alert('Failed to delete order');
+        //             }
+        //         })
+        //         .catch(error => console.error('Delete order error:', error));
+        //     }
+        // }
+        function deleteOrder(orderId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You won\'t be able to undo this!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/delete-order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ orderId, status: newStatus })
-            }).then(response => response.json())
-              .then(data => {
+                body: JSON.stringify({ orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
                 if (data.message) {
-                    alert('Order status updated successfully');
+                    Swal.fire(
+                        'Deleted!',
+                        'The order has been deleted.',
+                        'success'
+                    ).then(() => {
+                        window.location.reload(); // Refresh page after deletion
+                    });
                 } else {
-                    alert('Failed to update order status');
+                    Swal.fire(
+                        'Error!',
+                        'Failed to delete order.',
+                        'error'
+                    );
                 }
+            })
+            .catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'There was an error deleting the order.',
+                    'error'
+                );
             });
         }
+    });
+}
 
-        function deleteOrder(orderId) {
-            console.log("Delete button clicked for order:", orderId); // Debugging line
-            if (confirm("Are you sure you want to delete this order?")) {
-                fetch(`/admin/delete-order`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ orderId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Response from delete:", data); // Debugging line
-                    if (data.message) {
-                        alert('Order deleted successfully');
-                        window.location.reload();
-                    } else {
-                        alert('Failed to delete order');
-                    }
-                })
-                .catch(error => console.error('Delete order error:', error));
-            }
-        }
 
         function viewOrderDetails(orderId) {
             console.log("View button clicked for order:", orderId); // Debugging line

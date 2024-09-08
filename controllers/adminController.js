@@ -5,6 +5,7 @@ const Category = require('../models/categoryModel');
 const Offer = require('../models/offerModel');
 const Order = require('../models/orderShema'); // Adjust the path as necessary
 const Coupon = require('../models/coupenModel');
+const Wallet = require('../models/walletModel');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -739,18 +740,76 @@ const getOrderManagementPage = async (req, res) => {
 
   
   // Update order status function
-  const updateOrderStatus = async (req, res) => {
+//   const updateOrderStatus = async (req, res) => {
+//     try {
+//         const { orderId, status } = req.body;
+
+//         await Order.findByIdAndUpdate(orderId, { status });
+
+//         res.json({ message: 'Order status updated successfully' });
+//     } catch (error) {
+//         console.error('Error updating order status:', error);
+//         res.status(500).json({ message: 'Failed to update order status' });
+//     }
+// };
+
+const updateOrderStatus = async (req, res) => {
     try {
         const { orderId, status } = req.body;
 
-        await Order.findByIdAndUpdate(orderId, { status });
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
 
-        res.json({ message: 'Order status updated successfully' });
+        const previousStatus = order.status;
+        order.status = status;
+        await order.save();
+
+        // If the status is changed from 'Cancelled' or 'Returned' to any other status, deduct the refunded amount from the wallet
+        if (['Cancelled', 'Returned'].includes(previousStatus) && !['Cancelled', 'Returned'].includes(status)) {
+            let wallet = await Wallet.findOne({ user: order.userId });
+            if (wallet && wallet.balance >= order.totalPrice) {
+                wallet.balance -= order.totalPrice;
+                wallet.transactions.push({
+                    amount: -order.totalPrice,
+                    type: 'debit',
+                    description: `Order status updated, refund revoked (Order ID: ${order._id})`
+                });
+
+                await wallet.save();
+            } else {
+                return res.status(400).json({ message: 'Insufficient wallet balance to revoke refund.' });
+            }
+        }
+
+        res.json({ message: 'Order status updated and wallet adjusted if necessary.' });
     } catch (error) {
         console.error('Error updating order status:', error);
-        res.status(500).json({ message: 'Failed to update order status' });
+        res.status(500).json({ message: 'Failed to update order status.' });
     }
 };
+
+
+// const approveReturn = async (req, res) => {
+//     try {
+//         const { orderId } = req.body;
+
+//         const order = await Order.findById(orderId);
+//         if (!order || !order.returnRequested) {
+//             return res.status(400).json({ success: false, message: 'No return request found for this order.' });
+//         }
+
+//         order.status = 'Returned'; // Update status to returned
+//         order.returnRequested = false; // Clear the return request
+//         await order.save();
+
+//         res.json({ success: true, message: 'Return approved successfully.' });
+//     } catch (error) {
+//         console.error('Error approving return:', error);
+//         res.status(500).json({ success: false, message: 'Failed to approve return.' });
+//     }
+// };
 
 const approveReturn = async (req, res) => {
     try {
@@ -761,11 +820,27 @@ const approveReturn = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No return request found for this order.' });
         }
 
-        order.status = 'Returned'; // Update status to returned
-        order.returnRequested = false; // Clear the return request
+        // Update the order status to 'Returned'
+        order.status = 'Returned';
+        order.returnRequested = false;
         await order.save();
 
-        res.json({ success: true, message: 'Return approved successfully.' });
+        // Process refund to wallet, regardless of payment method (COD, Razorpay, or Wallet)
+        let wallet = await Wallet.findOne({ user: order.userId });
+        if (!wallet) {
+            wallet = new Wallet({ user: order.userId, balance: 0, transactions: [] });
+        }
+
+        wallet.balance += order.totalPrice;  // Add the refunded amount to the wallet
+        wallet.transactions.push({
+            amount: order.totalPrice,
+            type: 'credit',
+            description: `Order returned and refunded (Order ID: ${order._id})`
+        });
+
+        await wallet.save();
+
+        res.json({ success: true, message: 'Return approved and amount refunded to wallet.' });
     } catch (error) {
         console.error('Error approving return:', error);
         res.status(500).json({ success: false, message: 'Failed to approve return.' });

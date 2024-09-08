@@ -51,12 +51,15 @@
                                             <td>
                                                 <!-- Edit button to redirect to the edit form for this offer -->
                                                 <a href="/admin/offers/<%= offer._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                
                                                 <!-- Optional: Add delete functionality -->
-                                                <form action="/admin/offers/<%= offer._id %>" method="POST" style="display:inline;">
+                                                <form action="/admin/offers/delete/<%= offer._id %>" method="POST" style="display:inline;">
                                                     <input type="hidden" name="_method" value="DELETE">
                                                     <button class="btn btn-sm btn-danger" type="submit">Delete</button>
                                                 </form>
+                                                <!-- <form action="/admin/offers/delete/<%= offer._id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this offer?');">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form> -->
+                                                
                                             </td>
                                         </tr>
                                     <% }) %>

@@ -50,7 +50,8 @@ Admin_router.post('/deleteCoupon/:id', adminController.deleteCoupon);
 // Offer Routes
 Admin_router.get('/offersList', adminController.getOffers);
 Admin_router.post('/offers/add', adminController.addOffer);
-// Admin_router.get('/offers/:id/edit', adminController.editOffers);
+Admin_router.get('/offers/:id/edit', adminController.getOfferForEdit);
+Admin_router.post('/offers/:id/edit', adminController.editOffer);
 Admin_router.get('/offers', adminController.addOfferPage);
 Admin_router.post('/offers/delete/:offerId', adminController.deleteOffer);
 

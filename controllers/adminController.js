@@ -1030,15 +1030,13 @@ const addOffer = async (req, res) => {
       // Save the new offer
       await newOffer.save();
   
-      res.redirect('/offerListing');
+      res.redirect('/admin/offersList');
     } catch (error) {
       console.error('Error creating offer:', error);
       res.status(500).send('Error creating offer');
     }
   };
   
-
-
   // Get Offers for Products and Categories
 const getOffers = async (req, res) => {
     try {
@@ -1054,12 +1052,68 @@ const getOffers = async (req, res) => {
     }
   };
   
-  
-  // Delete Offer
+  const getOfferForEdit = async (req, res) => {
+    try {
+        const offer = await Offer.findById(req.params.id)
+            .populate('applicableProducts')
+            .populate('applicableCategories');
+
+        if (!offer) {
+            return res.status(404).send('Offer not found');
+        }
+
+        // Fetch products and categories for the form
+        const products = await Product.find();
+        const categories = await Category.find();
+
+        res.render('editOffer', { offer, products, categories });
+    } catch (error) {
+        console.error('Error fetching offer for edit:', error);
+        res.status(500).send('Error fetching offer for edit');
+    }
+};
+
+const editOffer = async (req, res) => {
+    try {
+        const { offerName, offerType, discountType, discountValue, applicableIds, usageLimit, startDate, endDate } = req.body;
+
+        // Convert applicableIds to an array if it's not already
+        let applicableIdsArray = Array.isArray(applicableIds) ? applicableIds : [applicableIds];
+
+        const updatedOffer = {
+            offerName,
+            offerType,
+            discountType,
+            discountValue,
+            usageLimit,
+            startDate,
+            endDate
+        };
+
+        // Assign applicable products or categories based on offerType
+        if (offerType === 'product') {
+            updatedOffer.applicableProducts = applicableIdsArray;
+            updatedOffer.applicableCategories = [];
+        } else if (offerType === 'category') {
+            updatedOffer.applicableCategories = applicableIdsArray;
+            updatedOffer.applicableProducts = [];
+        }
+
+        // Update the offer
+        await Offer.findByIdAndUpdate(req.params.id, updatedOffer);
+
+        res.redirect('/admin/offersList');
+    } catch (error) {
+        console.error('Error updating offer:', error);
+        res.status(500).send('Error updating offer');
+    }
+};
+
+// Delete Offer
   const deleteOffer = async (req, res) => {
     try {
       await Offer.findByIdAndDelete(req.params.offerId);
-      res.redirect('/admin/offers');
+      res.redirect('/admin/offersList');
     } catch (error) {
       console.error(error);
       res.status(500).send('Error deleting offer');
@@ -1556,6 +1610,8 @@ module.exports = {
     addOffer,
     getOffers,
     deleteOffer,
+    getOfferForEdit,
+    editOffer,
     addOfferPage,
     getSalesReport,
     exportSalesReportCSV,

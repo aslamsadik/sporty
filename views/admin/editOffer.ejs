@@ -12,76 +12,88 @@
     <section class="content-main">
         <div class="content-header">
             <div>
-                <h2 class="content-title card-title">Create Offer</h2>
+                <h2 class="content-title card-title">Edit Offer</h2>
             </div>
         </div>
         <div class="card">
             <div class="card-body">
-              <form action="/admin/offers/add" method="POST">
+                <form action="/admin/offers/<%= offer._id %>/edit" method="POST">
+                    <!-- Offer Name -->
                     <div class="mb-4">
                         <label for="offerName" class="form-label">Offer Name</label>
-                        <input type="text" class="form-control" id="offerName" name="offerName" placeholder="Enter offer name" required />
+                        <input type="text" class="form-control" id="offerName" name="offerName" value="<%= offer.offerName %>" required />
                     </div>
-
+                
+                    <!-- Offer Type -->
                     <div class="mb-4">
                         <label for="offerType" class="form-label">Offer Type</label>
                         <select class="form-control" id="offerType" name="offerType" required>
-                            <option value="product">Product</option>
-                            <option value="category">Category</option>
+                            <option value="product" <%= offer.offerType === 'product' ? 'selected' : '' %>>Product</option>
+                            <option value="category" <%= offer.offerType === 'category' ? 'selected' : '' %>>Category</option>
                         </select>
                     </div>
-
-                    <!-- Products and Categories -->
-                    <div class="mb-4" id="applicableProductsContainer">
+                
+                    <!-- Applicable Products -->
+                    <div class="mb-4" id="applicableProductsContainer" style="<%= offer.offerType === 'product' ? '' : 'display: none;' %>">
                         <label for="applicableProducts" class="form-label">Applicable Products</label>
                         <select class="form-control" id="applicableProducts" name="applicableIds" multiple>
                             <% products.forEach(product => { %>
-                                <option value="<%= product._id %>"><%= product.name %></option>
+                                <option value="<%= product._id %>" <%= offer.applicableProducts.includes(product._id) ? 'selected' : '' %>>
+                                    <%= product.name %>
+                                </option>
                             <% }) %>
                         </select>
                     </div>
-
-                    <div class="mb-4" id="applicableCategoriesContainer" style="display: none;">
+                
+                    <!-- Applicable Categories -->
+                    <div class="mb-4" id="applicableCategoriesContainer" style="<%= offer.offerType === 'category' ? '' : 'display: none;' %>">
                         <label for="applicableCategories" class="form-label">Applicable Categories</label>
                         <select class="form-control" id="applicableCategories" name="applicableIds" multiple>
                             <% categories.forEach(category => { %>
-                                <option value="<%= category._id %>"><%= category.name %></option>
+                                <option value="<%= category._id %>" <%= offer.applicableCategories.includes(category._id) ? 'selected' : '' %>>
+                                    <%= category.name %>
+                                </option>
                             <% }) %>
                         </select>
                     </div>
-
+                
+                    <!-- Discount Type -->
                     <div class="mb-4">
                         <label for="discountType" class="form-label">Discount Type</label>
                         <select class="form-control" id="discountType" name="discountType" required>
-                            <option value="percentage">Percentage</option>
-                            <option value="fixed">Fixed</option>
+                            <option value="percentage" <%= offer.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
+                            <option value="fixed" <%= offer.discountType === 'fixed' ? 'selected' : '' %>>Fixed</option>
                         </select>
                     </div>
-
+                
+                    <!-- Discount Value -->
                     <div class="mb-4">
                         <label for="discountValue" class="form-label">Discount Value</label>
-                        <input type="number" class="form-control" id="discountValue" name="discountValue" required />
+                        <input type="number" class="form-control" id="discountValue" name="discountValue" value="<%= offer.discountValue %>" required />
                     </div>
-
+                
+                    <!-- Start Date -->
                     <div class="mb-4">
                         <label for="startDate" class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="startDate" name="startDate" required />
+                        <input type="date" class="form-control" id="startDate" name="startDate" value="<%= offer.startDate.toISOString().split('T')[0] %>" required />
                     </div>
-
+                
+                    <!-- End Date -->
                     <div class="mb-4">
                         <label for="endDate" class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="endDate" name="endDate" required />
+                        <input type="date" class="form-control" id="endDate" name="endDate" value="<%= offer.endDate.toISOString().split('T')[0] %>" required />
                     </div>
-
+                
+                    <!-- Usage Limit -->
                     <div class="mb-4">
                         <label for="usageLimit" class="form-label">Usage Limit (optional)</label>
-                        <input type="number" class="form-control" id="usageLimit" name="usageLimit" />
+                        <input type="number" class="form-control" id="usageLimit" name="usageLimit" value="<%= offer.usageLimit %>" />
                     </div>
-
+                
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Edit Offer</button>
                     </div>
-                </form>
+                </form>                              
             </div>
         </div>
     </section>

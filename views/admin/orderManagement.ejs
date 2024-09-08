@@ -92,10 +92,20 @@
                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                             </select>
                         </td>
-                        <td>
+                        <!-- <td>
                             <button class="btn btn-info btn-sm" onclick="viewOrderDetails('<%= order._id %>')">View</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteOrder('<%= order._id %>')">Delete</button>
+                        </td> -->
+
+                        <td>
+                            <% if (order.status === 'Return Requested') { %>
+                                <button class="btn btn-success btn-sm" onclick="approveReturn('<%= order._id %>')">Approve Return</button>
+                            <% } else { %>
+                                <button class="btn btn-info btn-sm" onclick="viewOrderDetails('<%= order._id %>')">View</button>
+                            <% } %>
+                            <button class="btn btn-danger btn-sm" onclick="deleteOrder('<%= order._id %>')">Delete</button>
                         </td>
+                        
                     </tr>
                     <% }) %>
                 </tbody>
@@ -126,6 +136,7 @@
     <footer>
         <p>2024 ©, Evara - HTML Ecommerce Template. All rights reserved</p>
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
     <script>
         function updateOrderStatus(orderId, newStatus) {
@@ -192,6 +203,55 @@
                 })
                 .catch(error => console.error('View order details error:', error));
         }
+
+        function approveReturn(orderId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You are about to approve the return for this order!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, approve it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/approve-return`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Approved!',
+                        'The return has been approved successfully.',
+                        'success'
+                    ).then(() => {
+                        window.location.reload(); // Refresh the page to update the order status
+                    });
+                } else {
+                    Swal.fire(
+                        'Failed!',
+                        'Failed to approve the return.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error approving return:', error);
+                Swal.fire(
+                    'Error!',
+                    'There was an error while approving the return.',
+                    'error'
+                );
+            });
+        }
+    });
+}
+
     </script>
 </body>
 </html>

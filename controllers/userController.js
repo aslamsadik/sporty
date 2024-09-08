@@ -1598,6 +1598,42 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
+// const returnOrder = async (req, res) => {
+//     try {
+//         const { orderId } = req.params;
+//         const { reason } = req.body;
+
+//         const order = await Order.findById(orderId);
+//         if (!order) {
+//             return res.status(404).json({ success: false, message: 'Order not found' });
+//         }
+
+//         if (order.status !== 'Delivered') {
+//             return res.status(400).json({ success: false, message: 'Only delivered products can be returned.' });
+//         }
+
+//         order.returnRequested = true;
+//         order.returnReason = reason;
+//         order.status = 'Return Requested'; // Updating status for user's view
+//         await order.save();
+
+//         // Refund to wallet
+//         const wallet = await Wallet.findOne({ user: order.userId });
+//         wallet.balance += order.totalPrice;
+//         wallet.transactions.push({
+//             amount: order.totalPrice,
+//             type: 'credit',
+//             description: 'Order returned and refunded',
+//         });
+//         await wallet.save();
+
+//         res.json({ success: true, message: 'Return request submitted successfully.' });
+//     } catch (error) {
+//         console.error('Error requesting return:', error);
+//         res.status(500).json({ success: false, message: 'Failed to request return.' });
+//     }
+// };
+
 const returnOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
@@ -1614,18 +1650,8 @@ const returnOrder = async (req, res) => {
 
         order.returnRequested = true;
         order.returnReason = reason;
-        order.status = 'Return Requested'; // Updating status for user's view
+        order.status = 'Return Requested'; // Update status
         await order.save();
-
-        // Refund to wallet
-        const wallet = await Wallet.findOne({ user: order.userId });
-        wallet.balance += order.totalPrice;
-        wallet.transactions.push({
-            amount: order.totalPrice,
-            type: 'credit',
-            description: 'Order returned and refunded',
-        });
-        await wallet.save();
 
         res.json({ success: true, message: 'Return request submitted successfully.' });
     } catch (error) {
@@ -1633,6 +1659,7 @@ const returnOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to request return.' });
     }
 };
+
 
 const getforgotPassword = async (req, res) => {
     try {
@@ -1891,7 +1918,8 @@ const addToWishlist = async (req, res) => {
         if (!wishlist.products.includes(productId)) {
             wishlist.products.push(productId);
             await wishlist.save();
-            // return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+            return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+            
         } else {
             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
         }
@@ -1909,7 +1937,7 @@ const removeFromWishlist = async (req, res) => {
       if (wishlist) {
         wishlist.products = wishlist.products.filter(productId => productId.toString() !== req.body.productId);
         await wishlist.save();
-        // res.status(200).json({ success: true, message: 'Product removed from wishlist' });
+        res.status(200).json({ success: true, message: 'Product removed from wishlist' });
       } else {
         res.status(404).json({ success: false, message: 'Wishlist not found' });
       }

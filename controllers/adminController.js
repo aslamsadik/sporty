@@ -679,18 +679,40 @@ const deleteCategory = async (req, res) => {
     }
 };
 
+// const getOrderManagementPage = async (req, res) => {
+//     try {
+//         const orders = await Order.find()
+//             .populate('userId', 'username') // Populate the user's username
+//             .populate('products.productId')
+//             .populate('shippingAddressId')
+//             .sort({ createdAt: -1 });
+
+//         const ordersWithDetails = orders.map(order => ({
+//             ...order.toObject(),
+//             shippingAddress: order.shippingAddressId ? `${order.shippingAddressId.street}, ${order.shippingAddressId.city}` : 'N/A'
+//         }));
+
+//         res.render('orderManagement', { orders: ordersWithDetails });
+//     } catch (error) {
+//         console.error('Error fetching orders:', error);
+//         res.status(500).send('Server Error');
+//     }
+// };
+
 const getOrderManagementPage = async (req, res) => {
     try {
         const orders = await Order.find()
-            .populate('userId', 'username') // Populate the user's username
+            .populate('userId', 'username addresses') // Fetch both username and addresses
             .populate('products.productId')
-            .populate('shippingAddressId')
             .sort({ createdAt: -1 });
 
-        const ordersWithDetails = orders.map(order => ({
-            ...order.toObject(),
-            shippingAddress: order.shippingAddressId ? `${order.shippingAddressId.street}, ${order.shippingAddressId.city}` : 'N/A'
-        }));
+        const ordersWithDetails = orders.map(order => {
+            const userAddress = order.userId.addresses.find(addr => addr._id.equals(order.shippingAddressId));
+            return {
+                ...order.toObject(),
+                shippingAddress: userAddress ? `${userAddress.address1}, ${userAddress.city}` : 'N/A'
+            };
+        });
 
         res.render('orderManagement', { orders: ordersWithDetails });
     } catch (error) {
@@ -698,6 +720,7 @@ const getOrderManagementPage = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
 
 
   // Delete order function
@@ -728,6 +751,27 @@ const getOrderManagementPage = async (req, res) => {
         res.status(500).json({ message: 'Failed to update order status' });
     }
 };
+
+const approveReturn = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        const order = await Order.findById(orderId);
+        if (!order || !order.returnRequested) {
+            return res.status(400).json({ success: false, message: 'No return request found for this order.' });
+        }
+
+        order.status = 'Returned'; // Update status to returned
+        order.returnRequested = false; // Clear the return request
+        await order.save();
+
+        res.json({ success: true, message: 'Return approved successfully.' });
+    } catch (error) {
+        console.error('Error approving return:', error);
+        res.status(500).json({ success: false, message: 'Failed to approve return.' });
+    }
+};
+
 
 // View order details function
 const viewOrderDetails = async (req, res) => {
@@ -1394,6 +1438,7 @@ module.exports = {
     getOrderManagementPage,
     deleteOrder,
     updateOrderStatus,
+    approveReturn,
     viewOrderDetails,
     getAddCouponPage,
     addCoupon,

@@ -35,6 +35,8 @@ Admin_router.post('/catagories/delete/:id', isAdminAuthenticated, adminControlle
 Admin_router.get('/orders', isAdminAuthenticated, adminController.getOrderManagementPage);
 Admin_router.post('/delete-order', isAdminAuthenticated, adminController.deleteOrder);
 Admin_router.post('/update-order-status', isAdminAuthenticated, adminController.updateOrderStatus);
+// Admin route for approving return
+Admin_router.post('/approve-return', isAdminAuthenticated, adminController.approveReturn);
 Admin_router.get('/view-order-details/:orderId', isAdminAuthenticated, adminController.viewOrderDetails);
 
 //coupen ,anagement

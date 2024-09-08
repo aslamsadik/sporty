@@ -5,27 +5,6 @@
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <!-- Modal Structure -->
-          <div id="messageModal" class="modal fade" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">Wishlist Notification</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <p id="modalMessage"></p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Wishlist Table -->
           <div class="table-responsive">
             <% if (wishlist && wishlist.products.length > 0) { %>
               <table class="table shopping-summery text-center">
@@ -72,9 +51,6 @@
                           <input type="hidden" name="productId" value="<%= product._id %>">
                           <button type="submit" class="button button-remove-from-wishlist">Remove</button>
                         </form>
-                        
-                        
-                      
                       </td>
                     </tr>
                   <% }); %>
@@ -90,97 +66,141 @@
   </section>
 </main>
 
-<!-- Ensure jQuery and Bootstrap JS are included -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>>
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
 <script>
+  // document.addEventListener("DOMContentLoaded", function () {
+  //   const showAlert = (type, title, message) => {
+  //     Swal.fire({
+  //       icon: type,
+  //       title: title,
+  //       text: message,
+  //       confirmButtonText: 'OK'
+  //     });
+  //   };
+
+  //   // Add event listener for wishlist removal
+  //   document.querySelectorAll(".remove-from-wishlist-form").forEach(form => {
+  //     form.addEventListener("submit", function (e) {
+  //       e.preventDefault();
+
+  //       const formData = new FormData(this);
+  //       const productId = formData.get("productId");
+
+  //       fetch(this.action, {
+  //         method: "POST",
+  //         body: formData
+  //       })
+  //       .then(response => response.json())
+  //       .then(data => {
+  //         if (data.success) {
+  //           showAlert('success', 'Removed!', data.message);
+  //           const productRow = document.querySelector(`[data-product-id="${productId}"]`);
+  //           if (productRow) {
+  //             productRow.remove();
+  //           }
+  //         } else {
+  //           showAlert('error', 'Error', data.message);
+  //         }
+  //       })
+  //       .catch(error => {
+  //         showAlert('error', 'Error', "An error occurred. Please try again.");
+  //       });
+  //     });
+  //   });
+
+  //   // Add event listener for adding to wishlist
+  //   document.querySelectorAll(".add-to-cart-form").forEach(form => {
+  //     form.addEventListener("submit", function (e) {
+  //       e.preventDefault();
+
+  //       const formData = new FormData(this);
+  //       const productId = formData.get("productId");
+
+  //       fetch(this.action, {
+  //         method: "POST",
+  //         body: formData
+  //       })
+  //       .then(response => response.json())
+  //       .then(data => {
+  //         if (data.success) {
+  //           showAlert('success', 'Added!', data.message);
+  //         } else {
+  //           showAlert('error', 'Error', data.message);
+  //         }
+  //       })
+  //       .catch(error => {
+  //         showAlert('error', 'Error', "An error occurred. Please try again.");
+  //       });
+  //     });
+  //   });
+  // });
+
   document.addEventListener("DOMContentLoaded", function () {
-    const showMessageModal = (message) => {
-      document.getElementById("modalMessage").innerText = message;
-      $('#messageModal').modal('show');
-    };
+  const showMessageAlert = (type, title, message) => {
+    Swal.fire({
+      icon: type,
+      title: title,
+      text: message,
+      confirmButtonText: 'OK'
+    });
+  };
 
-    document.querySelectorAll(".addToCartForm, .removeFromWishlistForm").forEach(form => {
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
+  // Handle adding to wishlist
+  document.querySelectorAll(".add-to-wishlist-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
 
-        fetch(this.action, {
-          method: "POST",
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showMessageModal(data.message);
-            setTimeout(() => location.reload(), 1500);
-          } else {
-            showMessageModal(data.message);
-          }
-        })
-        .catch(error => {
-          showMessageModal("An error occurred. Please try again.");
-        });
+      fetch(this.action, {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showMessageAlert('success', 'Success', data.message);
+          setTimeout(() => location.reload(), 1500); // Reload after success
+        } else {
+          showMessageAlert('error', 'Error', data.message);
+        }
+      })
+      .catch(error => {
+        showMessageAlert('error', 'Error', "An error occurred. Please try again.");
       });
     });
   });
-</script>
 
-<!-- <script>
-  document.addEventListener("DOMContentLoaded", function () {
-      const showMessageAlert = (type, title, message) => {
-          Swal.fire({
-              icon: type,
-              title: title,
-              text: message,
-              confirmButtonText: 'OK'
-          });
-      };
+  // Handle removing from wishlist
+  document.querySelectorAll(".remove-from-wishlist-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const productId = formData.get('productId');
 
-      document.querySelectorAll(".remove-from-wishlist-form").forEach(form => {
-        form.addEventListener("submit", function (e) {
-  e.preventDefault();
-  
-  const formData = new FormData(this);
-  const productId = formData.get('productId'); // Ensure productId is captured correctly
-  
-  if (!productId) {
-    showMessageAlert('error', 'Error', 'Product ID is missing');
-    return; // Prevent submission if productId is missing
-  }
-  
-  fetch(this.action, {
-    method: "POST",
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      showMessageAlert('success', 'Success', data.message);
-      const productRow = document.querySelector(`[data-product-id="${productId}"]`);
-      if (productRow) {
-        productRow.remove();
-      }
-    } else {
-      showMessageAlert('error', 'Error', data.message);
-    }
-  })
-  .catch(error => {
-    showMessageAlert('error', 'Error', "An error occurred. Please try again.");
-  });
-
-          });
+      fetch(this.action, {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showMessageAlert('success', 'Success', data.message);
+          const productRow = document.querySelector(`[data-product-id="${productId}"]`);
+          if (productRow) {
+            productRow.remove();
+          }
+        } else {
+          showMessageAlert('error', 'Error', data.message);
+        }
+      })
+      .catch(error => {
+        showMessageAlert('error', 'Error', "An error occurred. Please try again.");
       });
+    });
   });
-</script> -->
+});
 
-
-
-
-
-
-
-
-
+</script>

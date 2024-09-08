@@ -851,25 +851,57 @@ const approveReturn = async (req, res) => {
 // View order details function
 const viewOrderDetails = async (req, res) => {
     try {
-      const orderId = req.params.orderId;
-      const order = await Order.findById(orderId)
-        .populate('userId', 'username')
-        .populate('products.productId')
-        .populate('shippingAddressId');
-        
-      const orderDetails = {
-        ...order.toObject(),
-        shippingAddress: order.shippingAddressId ? `${order.shippingAddressId.street}, ${order.shippingAddressId.city}` : 'N/A'
-      };
-  
-      res.status(200).json(orderDetails);
+        const { orderId } = req.params;
+
+        // Fetch order details with populated user and product data
+        const order = await Order.findById(orderId)
+            .populate('userId') // Populate user details
+            .populate({
+                path: 'products.productId', // Populate product details
+                select: 'name image' // Select the fields you need
+            })
+            .exec();
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Extract shipping address from user's addresses if needed
+        const shippingAddress = order.userId.addresses.id(order.shippingAddressId) || {};
+
+        // Prepare the response object with additional details
+        const response = {
+            _id: order._id,
+            userId: order.userId ? order.userId.username : 'N/A',
+            shippingAddress: {
+                firstName: shippingAddress.firstName || 'N/A',
+                lastName: shippingAddress.lastName || 'N/A',
+                address1: shippingAddress.address1 || 'N/A',
+                city: shippingAddress.city || 'N/A',
+                state: shippingAddress.state || 'N/A',
+                zip: shippingAddress.zip || 'N/A'
+            },
+            totalPrice: order.totalPrice || 'N/A',
+            status: order.status || 'N/A',
+            products: order.products.map(product => ({
+                ...product._doc,
+                productId: {
+                    ...product.productId._doc,
+                    image: product.productId.image || 'default-image.jpg' // Fallback image
+                }
+            }))
+        };
+
+        // Send formatted order details as JSON
+        res.json(response);
     } catch (error) {
-      console.error('Error fetching order details:', error);
-      res.status(500).json({ message: 'Error fetching order details' });
+        console.error('Error fetching order details:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
-  };
-  
-  const getAddCouponPage = async (req, res) => {
+};
+
+
+const getAddCouponPage = async (req, res) => {
     try {
         // Set your message and messageType based on your logic
         const message = 'Your message here';

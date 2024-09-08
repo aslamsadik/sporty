@@ -19,9 +19,9 @@
                     <h2 class="h5">Order ID: <%= order._id %></h2>
                     <p><strong>Status:</strong> <%= order.status %></p>
                     <p><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p> <!-- Order Date -->
-                    <p><strong>Original Amount:</strong> $<%= (order.totalPrice + order.discountAmount).toFixed(2) %></p> <!-- Original Amount -->
-                    <p><strong>Discount:</strong> -$<%= order.discountAmount.toFixed(2) %></p> <!-- Discount Amount -->
-                    <p><strong>Total Price After Discount:</strong> $<%= order.totalPrice.toFixed(2) %></p> <!-- Final Price After Discount -->
+                    <p><strong>Original Amount:</strong> ₹<%= (order.totalPrice + order.discountAmount).toFixed(2) %></p> <!-- Original Amount -->
+                    <p><strong>Discount:</strong> -₹<%= order.discountAmount.toFixed(2) %></p> <!-- Discount Amount -->
+                    <p><strong>Total Price After Discount:</strong> ₹<%= order.totalPrice.toFixed(2) %></p> <!-- Final Price After Discount -->
                     <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
                     <p><strong>Order Notes:</strong> <%= order.orderNotes || 'N/A' %></p>
                 </div>
@@ -46,7 +46,7 @@
                                     <div>
                                         <p><strong>Name:</strong> <%= product.productId.name %></p>
                                         <p><strong>Quantity:</strong> <%= product.quantity %></p>
-                                        <p><strong>Price:</strong> $<%= product.productId.price.toFixed(2) %></p>
+                                        <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
                                     </div>
                                 </div>
                             </li>

@@ -55,21 +55,6 @@ Admin_router.post('/offers/:id/edit', adminController.editOffer);
 Admin_router.get('/offers', adminController.addOfferPage);
 Admin_router.post('/offers/delete/:offerId', adminController.deleteOffer);
 
-// // Offer management routes
-// Admin_router.get('/offers', adminController.addOfferPage);
-
-// // Route to handle form submission for creating a new offer
-// Admin_router.post('/offers', adminController.createOffer);
-
-// // Route to display offer edit page
-// Admin_router.get('/offers/:id/edit', adminController.editOffers);
-
-// // Route to handle form submission for updating an existing offer
-// Admin_router.post('/offers/:id/edit', adminController.updateOffer);
-
-// // Route to list all offers
-// Admin_router.get('/offersList', adminController.listOffers);
-
 Admin_router.get('/sales-report', adminController.getSalesReport);
 
 // Export sales report as CSV

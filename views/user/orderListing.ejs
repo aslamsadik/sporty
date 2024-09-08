@@ -142,14 +142,14 @@
                             <% } %>
                             <div class="product-info">
                                 <p><strong><%= product.name %></strong></p>
-                                <p>Price: $<%= product.price %></p>
+                                <p>Price: ₹<%= product.price %></p>
                                 <p>Quantity: <%= product.quantity %></p>
                             </div>
                         </div>
                     <% }) %>
                     <div class="order-summary">
                         <p>Status: <strong><%= order.status %></strong></p>
-                        <p>Total Price: <strong>$<%= order.totalPrice %></strong></p>
+                        <p>Total Price: <strong>₹<%= order.totalPrice %></strong></p>
                         <p>Order Date: <strong><%= new Date(order.createdAt).toLocaleDateString() %></strong></p>
                     </div>
                     <a href="/orderDetails/<%= order._id %>" class="view-button">View Order</a>
@@ -197,7 +197,7 @@
                 cancelButtonText: 'No, keep it'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/order/cancel/${orderId}`, { method: 'POST' })
+                    fetch(`/order/cancel/₹{orderId}`, { method: 'POST' })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
@@ -233,7 +233,7 @@
                 cancelButtonText: 'No, keep it'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/order/return/${orderId}`, { method: 'POST' })
+                    fetch(`/order/return/₹{orderId}`, { method: 'POST' })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {

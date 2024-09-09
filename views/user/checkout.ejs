@@ -338,7 +338,7 @@ $('#placeOrderForm').submit(function(e) {
       title: 'Order Placed!',
       text: 'Your order has been placed successfully.'
   }).then(() => {
-      window.location.href = '/order-confirmation'; // Redirect to order confirmation page
+      window.location.href =  `/orderConfirm/${data.orderId}`; // Redirect to order confirmation page
   });
 } else {
   Swal.fire({

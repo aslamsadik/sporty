@@ -1492,7 +1492,6 @@ const placeOrder = async (req, res) => {
     }
 };
 
-
 const getOrderConfirmpage = async (req, res) => {
     try {
         const orderId = req.params.orderId;

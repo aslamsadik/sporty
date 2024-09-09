@@ -1,3 +1,4 @@
+
 const User = require('../models/userModel');
 const Otp = require('../models/otp_model');
 const Product = require('../models/productModel');
@@ -1532,11 +1533,11 @@ const fetchSalesData = async ({ startDate, endDate, category }) => {
 
     // Handle category filtering
     if (category) {
-        matchCriteria['products.category'] = category;
+        matchCriteria['productDetails.category'] = category;  // Use productDetails.category in match
     }
 
     try {
-        console.log('Match Criteria:', matchCriteria);  // Debug: Print match criteria
+        console.log('Match Criteria:', JSON.stringify(matchCriteria, null, 2));  // Debug: Print match criteria
 
         const salesData = await Order.aggregate([
             { $match: matchCriteria },
@@ -1570,13 +1571,14 @@ const fetchSalesData = async ({ startDate, endDate, category }) => {
             }
         ]);
 
-        console.log('Fetched Sales Data:', salesData);  // Debug: Print fetched data
+        console.log('Fetched Sales Data:', JSON.stringify(salesData, null, 2));  // Debug: Print fetched data
         return salesData;
     } catch (err) {
         console.error('Error fetching sales data:', err);
         throw err;
     }
 };
+
 
 
 module.exports = {

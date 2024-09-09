@@ -248,7 +248,7 @@
           <% } else { %>
             <p>No products found in cart.</p>
           <% } %>
-    
+          <input type="hidden" name="paymentMethod" id="paymentMethod" value="">
           <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
         </div>
       </div>
@@ -333,22 +333,21 @@ $('#placeOrderForm').submit(function(e) {
         console.log('Response from server:', data); // Log the entire response for debugging
 
         if (data.success) {
-            // SweetAlert success for order placed
-            Swal.fire({
-                icon: 'success',
-                title: 'Order Placed!',
-                text: data.message
-            }).then(() => {
-                window.location.href = `/orderConfirm/${data.orderId}`; // Update URL with the actual orderId
-            });
-        } else {
-            // SweetAlert error for failed order placement
-            Swal.fire({
-                icon: 'error',
-                title: 'Order Failed',
-                text: data.message || 'Something went wrong. Please try again.'
-            });
-        }
+  Swal.fire({
+      icon: 'success',
+      title: 'Order Placed!',
+      text: 'Your order has been placed successfully.'
+  }).then(() => {
+      window.location.href = '/order-confirmation'; // Redirect to order confirmation page
+  });
+} else {
+  Swal.fire({
+      icon: 'error',
+      title: 'Order Failed!',
+      text: 'There was a problem placing your order.'
+  });
+}
+
     }).fail(function(response) {
         console.error('Failed response:', response);
         // SweetAlert error for server-side issues
@@ -363,7 +362,6 @@ $('#placeOrderForm').submit(function(e) {
 
 
     // Razorpay button handler
-        // Razorpay button handler
   $('#razorpayButton').click(function(e) {
     e.preventDefault(); // Prevent the form from submitting
 

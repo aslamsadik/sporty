@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -228,7 +227,7 @@
         </div>
     
         <div class="summary-section">
-          <h4>Order Summary</h4>
+          <!-- <h4>Order Summary</h4>
           <% if (cart && cart.products && cart.products.length > 0) { %>
             <ul class="list-group order-summary mb-3">
               <% cart.products.forEach((product) => { %>
@@ -247,7 +246,39 @@
             </ul>
           <% } else { %>
             <p>No products found in cart.</p>
-          <% } %>
+          <% } %> -->
+          <div class="checkout-summary">
+            <h2>Order Summary</h2>
+            
+            <div class="summary-item">
+                <span>Original Amount:</span>
+                <span>₹<%= cartTotal.toFixed(2) %></span>
+            </div>
+            
+            <div class="summary-item">
+                <span>Offer Discount:</span>
+                <span>- ₹<%= offerDiscount.toFixed(2) %></span>
+            </div>
+        
+            <hr>
+        
+            <div class="summary-item">
+                <strong>Total Amount:</strong>
+                <strong>₹<%= finalAmount.toFixed(2) %></strong>
+            </div>
+        
+            <div class="summary-item">
+                <span>Wallet Balance:</span>
+                <span>₹<%= walletBalance.toFixed(2) %></span>
+            </div>
+        
+            <!-- Payment Gateway Button (if Razorpay is integrated) -->
+            <form action="/payment" method="POST">
+                <input type="hidden" name="razorpayOrderId" value="<%= razorpayOrderId %>">
+                <button type="submit">Proceed to Payment</button>
+            </form>
+        </div>
+        
           <input type="hidden" name="paymentMethod" id="paymentMethod" value="">
           <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
         </div>

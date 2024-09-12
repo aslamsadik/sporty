@@ -122,7 +122,7 @@ router.get('/wallet',isAuthenticated, userController.getWalletDetails);
 router.post('/wallet/add-funds', userController.addFunds);
 
 
-router.post('/apply-offer',isAuthenticated, userController.applyOffer);
+// router.post('/apply-offer',isAuthenticated, userController.applyOffer);
 
 router.post('/create-razorpay-order', userController.createRazorpayOrder);
 router.post('/verify-razorpay-payment', userController.verifyPayment);

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -252,35 +251,33 @@
             
             <div class="summary-item">
                 <span>Original Amount:</span>
-                <span>₹<%= cartTotal.toFixed(2) %></span>
+                <span>₹<%= cart.products.reduce((acc, product) => acc + (product.productId.price * product.quantity), 0).toFixed(2) %></span>
             </div>
             
             <div class="summary-item">
                 <span>Offer Discount:</span>
-                <span>- ₹<%= offerDiscount.toFixed(2) %></span>
+                <span>- ₹<%= cart.products.reduce((acc, product) => acc + ((product.productId.price * product.quantity) - (product.priceAfterOffer ? product.priceAfterOffer * product.quantity : 0)), 0).toFixed(2) %></span>
             </div>
         
             <hr>
         
             <div class="summary-item">
                 <strong>Total Amount:</strong>
-                <strong>₹<%= finalAmount.toFixed(2) %></strong>
+                <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer * product.quantity : product.productId.price * product.quantity), 0).toFixed(2) %></strong>
             </div>
         
             <div class="summary-item">
                 <span>Wallet Balance:</span>
                 <span>₹<%= walletBalance.toFixed(2) %></span>
+
             </div>
-        
-            <!-- Payment Gateway Button (if Razorpay is integrated) -->
-            <form action="/payment" method="POST">
-                <input type="hidden" name="razorpayOrderId" value="<%= razorpayOrderId %>">
-                <button type="submit">Proceed to Payment</button>
-            </form>
+
+            
         </div>
         
-          <input type="hidden" name="paymentMethod" id="paymentMethod" value="">
-          <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
+        <input type="hidden" name="paymentMethod" id="paymentMethod" value="">
+            <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">Place Order</button>
+        </div>
         </div>
       </div>
     </form>
@@ -291,13 +288,49 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
-  $(document).on('click', '.apply-coupon-button', function(e) {
-      e.preventDefault(); // Prevent default button action
-      var couponCode = $(this).data('coupon-code');
-      applyCoupon(couponCode); // Call the function to apply the coupon
-  });
+//   $(document).on('click', '.apply-coupon-button', function(e) {
+//       e.preventDefault(); // Prevent default button action
+//       var couponCode = $(this).data('coupon-code');
+//       applyCoupon(couponCode); // Call the function to apply the coupon
+//   });
 
-  function applyCoupon(couponCode) {
+//   function applyCoupon(couponCode) {
+//     console.log('Applying coupon:', couponCode); // Debugging line
+//     $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
+//         console.log('Response data:', data); // Debugging line
+//         // Update hidden inputs and UI with returned values
+//         $('#discountAmountInput').val(data.discountAmount);
+//         $('#finalAmountInput').val(data.finalAmount);
+//         $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
+//         $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
+//         $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
+        
+//         // SweetAlert success message
+//         Swal.fire({
+//             icon: 'success',
+//             title: 'Coupon Applied!',
+//             text: data.message
+//         });
+//     }).fail(function(response) {
+//         console.error('Failed response:', response); // Debugging line
+//         console.error('Error response JSON:', response.responseJSON); // Debugging line
+
+//         // SweetAlert error message
+//         Swal.fire({
+//             icon: 'error',
+//             title: 'Error!',
+//             text: response.responseJSON ? response.responseJSON.message : 'An error occurred'
+//         });
+//     });
+// }
+
+$(document).on('click', '.apply-coupon-button', function(e) {
+    e.preventDefault(); // Prevent default button action
+    var couponCode = $(this).data('coupon-code');
+    applyCoupon(couponCode); // Call the function to apply the coupon
+});
+
+function applyCoupon(couponCode) {
     console.log('Applying coupon:', couponCode); // Debugging line
     $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
         console.log('Response data:', data); // Debugging line
@@ -316,8 +349,6 @@
         });
     }).fail(function(response) {
         console.error('Failed response:', response); // Debugging line
-        console.error('Error response JSON:', response.responseJSON); // Debugging line
-
         // SweetAlert error message
         Swal.fire({
             icon: 'error',

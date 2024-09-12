@@ -1286,7 +1286,10 @@ const getCheckoutPage = async (req, res) => {
 
         // Calculate total discount and final amount
         const totalDiscount = offerDiscount + couponDiscount;
-        const finalAmount = Math.max(cartTotal - totalDiscount, 0);
+
+        // const finalAmount = Math.max(cartTotal - totalDiscount, 0);
+
+        const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal); // Ensure final amount is at least ₹1
         const totalAmountInPaise = finalAmount * 100;  // Razorpay requires the amount in paise
 
         // Create Razorpay order
@@ -2460,7 +2463,10 @@ const applyCoupon = async (req, res) => {
         await coupon.save();
 
         // Calculate the final amount after the discount
-        const finalAmount = cartTotalAfterOffer - discountAmount;
+        // const finalAmount = cartTotalAfterOffer - discountAmount;
+
+        const finalAmount = Math.max(cartTotalAfterOffer - discountAmount); // Ensure minimum amount is ₹1
+
 
         // Respond with the discount amount and the final amount
         return res.status(200).json({
@@ -2613,31 +2619,64 @@ const instance = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
   
-  const createRazorpayOrder = async (req, res) => {
+//   const createRazorpayOrder = async (req, res) => {
+//     const { finalAmount } = req.body;
+  
+//     const options = {
+//       amount: finalAmount * 100, // Amount in paise
+//       currency: 'INR',
+//       receipt: crypto.randomBytes(10).toString('hex'),
+//     };
+  
+//     try {
+//       const order = await instance.orders.create(options);
+//       res.json({
+//         id: order.id,
+//         amount: order.amount,
+//         key: process.env.RAZORPAY_KEY_ID
+//       });
+//     } catch (error) {
+//       console.error('Error creating Razorpay order:', error);
+//       res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+//     }
+//   };
+
+const createRazorpayOrder = async (req, res) => {
     const { finalAmount } = req.body;
-  
-    const options = {
-      amount: finalAmount * 100, // Amount in paise
-      currency: 'INR',
-      receipt: crypto.randomBytes(10).toString('hex'),
-    };
-  
-    try {
-      const order = await instance.orders.create(options);
-      res.json({
-        id: order.id,
-        amount: order.amount,
-        key: process.env.RAZORPAY_KEY_ID
-      });
-    } catch (error) {
-      console.error('Error creating Razorpay order:', error);
-      res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+    console.log("final amount in razorpay order function" + finalAmount);
+    
+    // Check if finalAmount is less than ₹1 (100 paise)
+    if (finalAmount < 1) {
+        return res.status(400).json({
+            success: false,
+            message: 'Order amount is less than the minimum allowed amount (₹1).'
+        });
     }
-  };
+
+    const options = {
+        amount: finalAmount * 100, // Amount in paise (multiply by 100 for rupees)
+        currency: 'INR',
+        receipt: crypto.randomBytes(10).toString('hex'),
+    };
+
+    try {
+        const order = await instance.orders.create(options);
+        res.json({
+            id: order.id,
+            amount: order.amount,
+            key: process.env.RAZORPAY_KEY_ID
+        });
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
+        res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+    }
+};
+
 
   const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
-
+    console.log("finalAmount in varifypayment" + finalAmount);
+    
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
     const generatedSignature = hmac.digest('hex');

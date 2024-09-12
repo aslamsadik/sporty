@@ -232,14 +232,15 @@
             
             <div class="summary-item">
                 <span>Offer Discount:</span>
-                <span>- ₹<%= cart.products.reduce((acc, product) => acc + ((product.productId.price * product.quantity) - (product.priceAfterOffer ? product.priceAfterOffer * product.quantity : 0)), 0).toFixed(2) %></span>
+                <span>- ₹<%= cart.products.reduce((acc, product) => acc + product.offerDiscount, 0).toFixed(2) %></span>
             </div>
         
             <hr>
         
             <div class="summary-item">
                 <strong>Total Amount:</strong>
-                <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer * product.quantity : product.productId.price * product.quantity), 0).toFixed(2) %></strong>
+                <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0).toFixed(2) %></strong>
+
             </div>
         
             <div class="summary-item">

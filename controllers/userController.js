@@ -639,6 +639,45 @@ const clearCart = async (req, res) => {
 
 
 // Function to update the cart quantity
+// const updateCart = async (req, res) => {
+//     try {
+//         const userId = req.session.user.userId;
+//         const { productIds, quantities } = req.body;
+
+//         // Find the user's cart
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+//         if (!cart) {
+//             return res.status(404).json({ message: 'Cart not found' });
+//         }
+
+//         // Loop through product IDs and update their quantities
+//         for (let i = 0; i < productIds.length; i++) {
+//             const productId = productIds[i];
+//             const quantity = quantities[i];
+
+//             // Find the product in the cart
+//             const productIndex = cart.products.findIndex(product => product.productId._id.toString() === productId);
+//             if (productIndex === -1) {
+//                 return res.status(404).json({ message: `Product with ID ${productId} not found in cart` });
+//             }
+
+//             // Update the quantity
+//             cart.products[productIndex].quantity = parseInt(quantity);
+//         }
+
+//         // Recalculate total price and total quantity
+//         cart.totalPrice = cart.products.reduce((acc, product) => acc + product.quantity * product.productId.price, 0);
+//         cart.totalQuantity = cart.products.reduce((acc, product) => acc + product.quantity, 0);
+
+//         await cart.save();
+//         // res.status(200).json({ message: 'Cart updated successfully', cart });
+//         res.redirect('/cart', {message:"cart updated sucessfully"},cart)
+//     } catch (error) {
+//         console.error('Error updating cart:', error);
+//         res.status(500).json({ message: 'Internal server error' });
+//     }
+// };
+
 const updateCart = async (req, res) => {
     try {
         const userId = req.session.user.userId;
@@ -663,20 +702,34 @@ const updateCart = async (req, res) => {
 
             // Update the quantity
             cart.products[productIndex].quantity = parseInt(quantity);
+            
+            // Calculate and update price after offer
+            const product = cart.products[productIndex].productId;
+            if (product.offerPrice) {
+                cart.products[productIndex].priceAfterOffer = product.offerPrice; // Assuming offerPrice exists in the Product model
+            } else {
+                cart.products[productIndex].priceAfterOffer = product.price; // No offer, use original price
+            }
         }
 
-        // Recalculate total price and total quantity
-        cart.totalPrice = cart.products.reduce((acc, product) => acc + product.quantity * product.productId.price, 0);
+        // Recalculate total price and total quantity considering price after offer
+        cart.totalPrice = cart.products.reduce((acc, product) => acc + product.quantity * (product.priceAfterOffer || product.productId.price), 0);
         cart.totalQuantity = cart.products.reduce((acc, product) => acc + product.quantity, 0);
 
         await cart.save();
+
+        // If you want to redirect after updating the cart
+        res.redirect('/cart');  // Simply redirecting to the cart page
+
+        // Alternatively, if you want to send a JSON response
         // res.status(200).json({ message: 'Cart updated successfully', cart });
-        res.redirect('/cart', {message:"cart updated sucessfully"},cart)
     } catch (error) {
         console.error('Error updating cart:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+
 
 // const getCheckoutPage = async (req, res) => {
 //     try {
@@ -1225,40 +1278,43 @@ const getCheckoutPage = async (req, res) => {
             endDate: { $gte: new Date() }
         });
 
-        // Apply offers and store priceAfterOffer in cart
+        // Apply offers and store priceAfterOffer and offerDiscount in cart
         cart.products.forEach(cartItem => {
             let itemTotal = cartItem.productId.price * cartItem.quantity;
             let priceAfterOffer = itemTotal;  // Initialize with original price
+            let itemOfferDiscount = 0;       // Initialize the offer discount for this item
 
             activeOffers.forEach(offer => {
                 if (offer.offerType === 'product' && offer.applicableProducts.includes(cartItem.productId._id)) {
                     if (offer.discountType === 'percentage') {
                         const discount = (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
-                        offerDiscount += discount;
+                        itemOfferDiscount += discount;
                         priceAfterOffer -= discount;
                     } else {
                         const discount = offer.discountValue * cartItem.quantity;
-                        offerDiscount += discount;
+                        itemOfferDiscount += discount;
                         priceAfterOffer -= discount;
                     }
                 } else if (offer.offerType === 'category' && offer.applicableCategories.includes(cartItem.productId.category)) {
                     if (offer.discountType === 'percentage') {
                         const discount = (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
-                        offerDiscount += discount;
+                        itemOfferDiscount += discount;
                         priceAfterOffer -= discount;
                     } else {
                         const discount = offer.discountValue * cartItem.quantity;
-                        offerDiscount += discount;
+                        itemOfferDiscount += discount;
                         priceAfterOffer -= discount;
                     }
                 }
             });
 
-            cartItem.priceAfterOffer = priceAfterOffer;  // Save price after applying offer
-            cartTotal += priceAfterOffer;  // Use price after offer for cart total
+            cartItem.priceAfterOffer = priceAfterOffer;   // Save price after applying offer
+            cartItem.offerDiscount = itemOfferDiscount;   // Save offer discount for this item
+            offerDiscount += itemOfferDiscount;           // Accumulate total offer discount
+            cartTotal += priceAfterOffer;                 // Use price after offer for cart total
         });
 
-        // Save updated cart prices
+        // Save updated cart prices and discounts
         await cart.save();
 
         // Fetch available coupons
@@ -1286,9 +1342,6 @@ const getCheckoutPage = async (req, res) => {
 
         // Calculate total discount and final amount
         const totalDiscount = offerDiscount + couponDiscount;
-
-        // const finalAmount = Math.max(cartTotal - totalDiscount, 0);
-
         const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal); // Ensure final amount is at least ₹1
         const totalAmountInPaise = finalAmount * 100;  // Razorpay requires the amount in paise
 
@@ -1347,6 +1400,7 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 // const placeOrder = async (req, res) => {

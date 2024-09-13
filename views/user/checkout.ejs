@@ -99,6 +99,9 @@
       margin-bottom: 20px;
       width: 400px;
       margin-left: 900px;
+      position: absolute;
+      top: 80%;
+      right: 10%;
     }
     .coupon-item {
       display: flex;
@@ -224,32 +227,54 @@
           <% } %> -->
           <div class="checkout-summary">
             <h2>Order Summary</h2>
-            
-            <div class="summary-item">
-                <span>Original Amount:</span>
-                <span>₹<%= cart.products.reduce((acc, product) => acc + (product.productId.price * product.quantity), 0).toFixed(2) %></span>
-            </div>
-            
-            <div class="summary-item">
-                <span>Offer Discount:</span>
-                <span>- ₹<%= cart.products.reduce((acc, product) => acc + product.offerDiscount, 0).toFixed(2) %></span>
-            </div>
-        
-            <hr>
-        
-            <div class="summary-item">
-                <strong>Total Amount:</strong>
-                <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0).toFixed(2) %></strong>
+           <% if(cart && cart.products && cart.products.length>0 ) {  %>
 
-            </div>
+            <ul class="list-group mb-3">
+              <% cart.products.forEach((product) => { %>
+                  <li class="list-group-item d-flex justify-content-between">
+                      <div>
+                          <!-- Access product name -->
+                          <h6 class="my-0"><%= product.productId.name %></h6>
+                          <!-- Access product quantity -->
+                          <small class="text-muted">Quantity: <%= product.quantity %></small>
+                        <strong><small class="text-muted">₹<%= (product.productId.price * product.quantity).toFixed(2) %></small></strong>  
+                      </div>
+                      <!-- Access product image (first image in array) with smaller size -->
+                      <img src="/user_assets/imgs/shop/<%= product.productId.images[0] %>" 
+                           alt="Product Image" 
+                           class="product-image"
+                           style="width: 35px; height: auto;"/> <!-- Set a smaller width -->
+                      <!-- Access product price -->
+                     
+                  </li>
+              <% }) %>
+          </ul>
         
             <div class="summary-item">
-                <span>Wallet Balance:</span>
-                <span>₹<%= walletBalance.toFixed(2) %></span>
+              <span>Original Amount:</span>
+              <span>₹<%= cart.products.reduce((acc, product) => acc + (product.productId.price * product.quantity), 0).toFixed(2) %></span>
+          </div>
+          
+          <div class="summary-item">
+              <span>Offer Discount:</span>
+              <span>- ₹<%= cart.products.reduce((acc, product) => acc + product.offerDiscount, 0).toFixed(2) %></span>
+          </div>
+      
+          <hr>
+      
+          <div class="summary-item">
+              <strong>Total Amount:</strong>
+              <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0).toFixed(2) %></strong>
 
-            </div>
+          </div>
+      
+          <div class="summary-item">
+              <span>Wallet Balance:</span>
+              <span>₹<%= walletBalance.toFixed(2) %></span>
 
-            
+          </div>
+      <%  } %>
+       
         </div>
         
         <input type="hidden" name="paymentMethod" id="paymentMethod" value="">

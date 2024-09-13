@@ -681,26 +681,6 @@ const deleteCategory = async (req, res) => {
     }
 };
 
-// const getOrderManagementPage = async (req, res) => {
-//     try {
-//         const orders = await Order.find()
-//             .populate('userId', 'username') // Populate the user's username
-//             .populate('products.productId')
-//             .populate('shippingAddressId')
-//             .sort({ createdAt: -1 });
-
-//         const ordersWithDetails = orders.map(order => ({
-//             ...order.toObject(),
-//             shippingAddress: order.shippingAddressId ? `${order.shippingAddressId.street}, ${order.shippingAddressId.city}` : 'N/A'
-//         }));
-
-//         res.render('orderManagement', { orders: ordersWithDetails });
-//     } catch (error) {
-//         console.error('Error fetching orders:', error);
-//         res.status(500).send('Server Error');
-//     }
-// };
-
 const getOrderManagementPage = async (req, res) => {
     try {
         const orders = await Order.find()
@@ -739,21 +719,6 @@ const getOrderManagementPage = async (req, res) => {
     }
 };
 
-  
-  // Update order status function
-//   const updateOrderStatus = async (req, res) => {
-//     try {
-//         const { orderId, status } = req.body;
-
-//         await Order.findByIdAndUpdate(orderId, { status });
-
-//         res.json({ message: 'Order status updated successfully' });
-//     } catch (error) {
-//         console.error('Error updating order status:', error);
-//         res.status(500).json({ message: 'Failed to update order status' });
-//     }
-// };
-
 const updateOrderStatus = async (req, res) => {
     try {
         const { orderId, status } = req.body;
@@ -790,27 +755,6 @@ const updateOrderStatus = async (req, res) => {
         res.status(500).json({ message: 'Failed to update order status.' });
     }
 };
-
-
-// const approveReturn = async (req, res) => {
-//     try {
-//         const { orderId } = req.body;
-
-//         const order = await Order.findById(orderId);
-//         if (!order || !order.returnRequested) {
-//             return res.status(400).json({ success: false, message: 'No return request found for this order.' });
-//         }
-
-//         order.status = 'Returned'; // Update status to returned
-//         order.returnRequested = false; // Clear the return request
-//         await order.save();
-
-//         res.json({ success: true, message: 'Return approved successfully.' });
-//     } catch (error) {
-//         console.error('Error approving return:', error);
-//         res.status(500).json({ success: false, message: 'Failed to approve return.' });
-//     }
-// };
 
 const approveReturn = async (req, res) => {
     try {
@@ -1133,72 +1077,6 @@ const editOffer = async (req, res) => {
     }
 };
 
-
-// Display Sales Report with Filters
-// const getSalesReport = async (req, res) => {
-//     try {
-//         const { startDate, endDate, category } = req.query;
-//         const categories = await Category.find({});
-        
-//         // Define match criteria for filtering
-//         const matchCriteria = {
-//             status: 'Delivered',
-//             createdAt: {
-//                 $gte: new Date(startDate),
-//                 $lte: new Date(endDate)
-//             }
-//         };
-
-//         if (category) {
-//             matchCriteria['products.productId'] = mongoose.Types.ObjectId(category);
-//         }
-
-//         // Aggregate sales data
-//         const salesData = await Order.aggregate([
-//             { $unwind: '$products' },
-//             {
-//                 $lookup: {
-//                     from: 'products',
-//                     localField: 'products.productId',
-//                     foreignField: '_id',
-//                     as: 'productDetails'
-//                 }
-//             },
-//             { $unwind: '$productDetails' },
-//             {
-//                 $lookup: {
-//                     from: 'categories',
-//                     localField: 'productDetails.category',
-//                     foreignField: '_id',
-//                     as: 'categoryDetails'
-//                 }
-//             },
-//             { $unwind: '$categoryDetails' },
-//             { $match: matchCriteria },
-//             {
-//                 $group: {
-//                     _id: '$productDetails._id',
-//                     productName: { $first: '$productDetails.name' },
-//                     category: { $first: '$categoryDetails.name' },
-//                     totalQuantity: { $sum: '$products.quantity' },
-//                     totalRevenue: { $sum: { $multiply: ['$products.quantity', '$productDetails.price'] } }
-//                 }
-//             }
-//         ]);
-
-//         // Render the results
-//         res.render('dashboard', { 
-//             salesData, 
-//             filters: req.query, 
-//             categories: categories,
-//             queryString: new URLSearchParams(req.query).toString() // Pass the query string for export links
-//         });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Server Error');
-//     }
-// };
-
 const getSalesReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
@@ -1282,107 +1160,6 @@ const getSalesReport = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
-
-
-// const getSalesReport = async (req, res) => {
-//     try {
-//         const { startDate, endDate } = req.query;
-
-//         // Adjust startDate to beginning of the day and endDate to the end of the day
-//         const start = new Date(startDate);
-//         start.setHours(0, 0, 0, 0); // Set to start of the day
-
-//         const end = new Date(endDate);
-//         end.setHours(23, 59, 59, 999); // Set to end of the day
-
-//         const matchCriteria = {
-//             status: 'Delivered',
-//             createdAt: {
-//                 $gte: start,
-//                 $lte: end
-//             }
-//         };
-
-//         console.log('Start Date:', start);
-//         console.log('End Date:', end);
-//         console.log('Match Criteria:', matchCriteria);
-
-//         const salesData = await Order.aggregate([
-//             { $unwind: '$products' },
-//             {
-//                 $lookup: {
-//                     from: 'products',
-//                     localField: 'products.productId',
-//                     foreignField: '_id',
-//                     as: 'productDetails'
-//                 }
-//             },
-//             { $unwind: '$productDetails' },
-//             { $match: matchCriteria },
-//             {
-//                 $group: {
-//                     _id: '$productDetails._id',
-//                     productName: { $first: '$productDetails.name' },
-//                     totalQuantity: { $sum: '$products.quantity' },
-//                     totalRevenue: { $sum: { $multiply: ['$products.quantity', '$productDetails.price'] } }
-//                 }
-//             }
-//         ]);
-
-//         console.log('Sales Data:', salesData);
-
-//         res.render('dashboard', { 
-//             salesData, 
-//             filters: req.query, 
-//             queryString: new URLSearchParams(req.query).toString() // Pass the query string for export links
-//         });
-//     } catch (err) {
-//         console.error('Error in getSalesReport:', err);
-//         res.status(500).send('Server Error');
-//     }
-// };
-
-
-// Export Sales Report as CSV
-// const exportSalesReportCSV = async (req, res) => {
-//     try {
-//         const { startDate, endDate, category } = req.query;
-        
-//         // Fetch sales data using same logic as getSalesReport
-//         const salesData = await fetchSalesData({ startDate, endDate, category });
-
-//         const csvWriter = createCsvWriter({
-//             path: 'sales_report.csv',
-//             header: [
-//                 { id: 'productName', title: 'Product Name' },
-//                 { id: 'categoryName', title: 'Category' },
-//                 { id: 'totalQuantity', title: 'Total Quantity Sold' },
-//                 { id: 'totalRevenue', title: 'Total Revenue' }
-//             ]
-//         });
-
-//         // Prepare data for CSV
-//         const records = salesData.map(item => ({
-//             productName: item.productName,
-//             categoryName: item.categoryName,
-//             totalQuantity: item.totalQuantity,
-//             totalRevenue: item.totalRevenue.toFixed(2)
-//         }));
-
-//         await csvWriter.writeRecords(records);
-
-//         res.download('sales_report.csv', 'sales_report.csv', (err) => {
-//             if (err) {
-//                 console.error('Error downloading CSV file:', err);
-//                 res.status(500).send('Error downloading file');
-//             }
-//         });
-//     } catch (error) {
-//         console.error('Error exporting sales report as CSV:', error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
 
 const exportSalesReportCSV = async (req, res) => {
     try {
@@ -1468,56 +1245,6 @@ const exportSalesReportExcel = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
-
-// Export Sales Report as Excel
-// const exportSalesReportExcel = async (req, res) => {
-//     try {
-//         const { startDate, endDate, category } = req.query;
-
-//         // Fetch sales data using same logic as getSalesReport
-//         const salesData = await fetchSalesData({ startDate, endDate, category });
-
-//         const workbook = new ExcelJS.Workbook();
-//         const worksheet = workbook.addWorksheet('Sales Report');
-
-//         // Define columns
-//         worksheet.columns = [
-//             { header: 'Product Name', key: 'productName', width: 30 },
-//             { header: 'Category', key: 'categoryName', width: 20 },
-//             { header: 'Total Quantity Sold', key: 'totalQuantity', width: 20 },
-//             { header: 'Total Revenue', key: 'totalRevenue', width: 20 }
-//         ];
-
-//         // Add rows
-//         salesData.forEach(item => {
-//             worksheet.addRow({
-//                 productName: item.productName,
-//                 categoryName: item.categoryName,
-//                 totalQuantity: item.totalQuantity,
-//                 totalRevenue: item.totalRevenue.toFixed(2)
-//             });
-//         });
-
-//         // Set response headers
-//         res.setHeader(
-//             'Content-Type',
-//             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-//         );
-//         res.setHeader(
-//             'Content-Disposition',
-//             'attachment; filename=' + 'sales_report.xlsx'
-//         );
-
-//         // Write workbook to response
-//         await workbook.xlsx.write(res);
-//         res.end();
-//     } catch (error) {
-//         console.error('Error exporting sales report as Excel:', error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
-
 
 // Helper function to fetch sales data
 const fetchSalesData = async ({ startDate, endDate, category }) => {

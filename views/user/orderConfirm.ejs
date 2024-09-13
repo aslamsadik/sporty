@@ -18,7 +18,7 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .card-header {
-      background-color: #007bff;
+      background-color: #28a745; /* Green background for order confirmation */
       color: white;
       border-radius: 10px 10px 0 0;
       text-align: center;
@@ -58,83 +58,99 @@
 </head>
 <body>
   <div class="container">
-      <div class="row mt-5">
-          <div class="col-md-8 offset-md-2">
-              <div class="card">
-                  <div class="card-header">
-                      <h1>
-                          <% if (orderDetails && orderDetails.status === 'Cancelled') { %>
-                              Order Cancelled
-                          <% } else { %>
-                              Order Confirmation
-                          <% } %>
-                      </h1>
-                  </div>
-                  <div class="card-body">
-                      <!-- Display success or error messages -->
-                      <% if (message && messageType === 'success') { %>
-                          <div class="alert alert-success">
-                              <%= message %>
-                          </div>
-                      <% } else if (message && messageType === 'error') { %>
-                          <div class="alert alert-danger">
-                              <%= message %>
-                          </div>
-                      <% } %>
-
-                      <!-- Order details section -->
-                      <% if (orderDetails && orderDetails._id) { %>
-                        <p class="card-text">Order ID: <span><%= orderDetails._id %></span></p>
-                        <p class="card-text">Status: <span><%= orderDetails.status || 'Unknown' %></span></p>
-                    
-                        <!-- Handle cases where products might be undefined or empty -->
-                        <h2>Products</h2>
-                        <ul class="list-group">
-                            <% if (orderDetails.products && orderDetails.products.length > 0) { %>
-                                <% orderDetails.products.forEach(item => { %>
-                                    <li class="list-group-item">
-                                        <%= item.productId ? item.productId.name : 'Unknown Product' %> 
-                                        - Quantity: <span><%= item.quantity %></span> 
-                                        - Price: <span>₹<%= item.productId && item.productId.price ? item.productId.price.toFixed(2) : '0.00' %></span>
-                                    </li>
-                                <% }); %>
-                            <% } else { %>
-                                <li class="list-group-item">No products found.</li>
-                            <% } %>
-                        </ul>
-                    
-                        <p class="card-text mt-3">Subtotal: <span>₹<%= orderDetails.totalPrice ? (orderDetails.totalPrice + orderDetails.discountAmount).toFixed(2) : '0.00' %></span></p>
-                        <p class="card-text">Discount Applied: <span>₹<%= orderDetails.discountAmount ? orderDetails.discountAmount.toFixed(2) : '0.00' %></span></p>
-                        <p class="card-text">Total Amount after Discount: <span>₹<%= orderDetails.totalPrice ? orderDetails.totalPrice.toFixed(2) : '0.00' %></span></p>
-                    
-                        <h2>Shipping Address</h2>
-                        <% if (orderDetails.shippingAddressId) { %>
-                            <p class="card-text">
-                                <%= orderDetails.shippingAddressId.addressLine1 %>, 
-                                <%= orderDetails.shippingAddressId.city %>, 
-                                <%= orderDetails.shippingAddressId.postalCode %>
-                            </p>
-                        <% } else { %>
-                            <p class="card-text">Shipping address not available.</p>
-                        <% } %>
-                    <% } else { %>
-                        <p class="card-text">No order details available.</p>
-                    <% } %>
-                    
-
-                      <!-- Cancel order button for pending orders -->
-                      <% if (orderDetails && orderDetails.status === 'Pending') { %>
-                          <form action="/order/cancel/<%= orderDetails._id %>" method="POST">
-                              <button type="submit" class="btn btn-danger mt-3">Cancel Order</button>
-                          </form>
-                      <% } %>
-                  </div>
-              </div>
+    <div class="row mt-5">
+      <div class="col-md-8 offset-md-2">
+        <div class="card">
+          <div class="card-header">
+            <h1>
+              <% if (orderDetails && orderDetails.status === 'Cancelled') { %>
+                Order Cancelled
+              <% } else { %>
+                Order Confirmation
+              <% } %>
+            </h1>
           </div>
+          <div class="card-body">
+            <% if (message && messageType === 'success') { %>
+              <div class="alert alert-success">
+                <%= message %>
+              </div>
+            <% } else if (message && messageType === 'error') { %>
+              <div class="alert alert-danger">
+                <%= message %>
+              </div>
+            <% } %>
+
+            <% if (orderDetails && orderDetails._id) { %>
+              <p class="card-text">Order ID: <span><%= orderDetails._id %></span></p>
+              <p class="card-text">Status: <span><%= orderDetails.status || 'Unknown' %></span></p>
+
+              <!-- Product details -->
+              <h2>Products</h2>
+              <ul class="list-group">
+                <% if (orderDetails.products && orderDetails.products.length > 0) { %>
+                  <% orderDetails.products.forEach(item => { %>
+                    <li class="list-group-item">
+                      <%= item.productId ? item.productId.name : 'Unknown Product' %> 
+                      - Quantity: <span><%= item.quantity %></span> 
+                      - Price: <span>₹<%= item.productId && item.productId.price ? item.productId.price.toFixed(2) : '0.00' %></span>
+                    </li>
+                  <% }); %>
+                <% } else { %>
+                  <li class="list-group-item">No products found.</li>
+                <% } %>
+              </ul>
+
+              <!-- Price details -->
+              <h2>Price Breakdown</h2>
+              <p class="card-text">Subtotal: <span>₹<%= orderDetails.totalPrice ? (orderDetails.totalPrice + orderDetails.totaldiscountAmount).toFixed(2) : '0.00' %></span></p>
+              <p class="card-text">Total Discount: <span>₹<%= orderDetails.totaldiscountAmount ? orderDetails.totaldiscountAmount.toFixed(2) : '0.00' %></span></p>
+              <p class="card-text">Offers Discount: <span>₹<%= orderDetails.offersDiscount ? orderDetails.offersDiscount.toFixed(2) : '0.00' %></span></p>
+              <p class="card-text">Coupon Deduction: <span>₹<%= orderDetails.couponDeduction ? orderDetails.couponDeduction.toFixed(2) : '0.00' %></span></p>
+              <p class="card-text">Total Amount after Discount: <span>₹<%= orderDetails.totalPrice ? orderDetails.totalPrice.toFixed(2) : '0.00' %></span></p>
+
+              <!-- Shipping Address -->
+              <!-- <h2>Shipping Address</h2>
+              <% if (orderDetails.shippingAddressId) { %>
+                <p class="card-text">
+                  <%= orderDetails.shippingAddressId.addressLine1 %>, 
+                  <%= orderDetails.shippingAddressId.city %>, 
+                  <%= orderDetails.shippingAddressId.postalCode %>
+                </p>
+              <% } else { %>
+                <p class="card-text">Shipping address not available.</p>
+              <% } %> -->
+
+              <!-- Payment Method -->
+              <p class="card-text">Payment Method: <span><%= orderDetails.paymentMethod %></span></p>
+
+              <!-- Order Notes -->
+              <% if (orderDetails.orderNotes) { %>
+                <p class="card-text">Order Notes: <span><%= orderDetails.orderNotes %></span></p>
+              <% } %>
+
+              <!-- Return Request -->
+              <% if (orderDetails.returnRequested) { %>
+                <p class="card-text">Return Requested: <span>Yes</span></p>
+                <p class="card-text">Return Reason: <span><%= orderDetails.returnReason %></span></p>
+              <% } %>
+
+              <!-- Cancel order button for pending orders -->
+              <% if (orderDetails.status === 'Pending') { %>
+                <form action="/order/cancel/<%= orderDetails._id %>" method="POST">
+                  <button type="submit" class="btn btn-danger mt-3">Cancel Order</button>
+                </form>
+              <% } %>
+            <% } else { %>
+              <p class="card-text">No order details available.</p>
+            <% } %>
+          </div>
+        </div>
       </div>
+    </div>
   </div>
   <div class="return-link text-center mt-4">
-      <a href="/" class="btn btn-secondary"><i class="fas fa-home"></i> Return to Home Page</a>
+    <a href="/" class="btn btn-secondary"><i class="fas fa-home"></i> Return to Home Page</a>
   </div>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

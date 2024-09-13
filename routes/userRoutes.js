@@ -124,8 +124,8 @@ router.post('/wallet/add-funds', userController.addFunds);
 
 // router.post('/apply-offer',isAuthenticated, userController.applyOffer);
 
-router.post('/create-razorpay-order', userController.createRazorpayOrder);
-router.post('/verify-razorpay-payment', userController.verifyPayment);
+router.post('/create-razorpay-order',isAuthenticated, userController.createRazorpayOrder);
+router.post('/verify-razorpay-payment',isAuthenticated, userController.verifyPayment);
 
 
 

@@ -1721,7 +1721,9 @@ const createRazorpayOrder = async (req, res) => {
 
 const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
-
+    const userId = req.session.user?.userId;
+    console.log("userid" +userId);
+    
     // Log all incoming request data for debugging
     console.log("Received data from frontend:");
     console.log("Razorpay Order ID:", razorpay_order_id);
@@ -1744,22 +1746,18 @@ const verifyPayment = async (req, res) => {
 
         try {
             // Check if the user and cart session exist
-            if (!req.user) {
-                console.error('User not logged in.');
-                return res.status(400).json({ success: false, message: 'User not logged in.' });
-            }
+            // if (!req.session.user) {
+            //     console.error('User not logged in.');
+            //     return res.status(400).json({ success: false, message: 'User not logged in.' });
+            // }
 
-            if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
-                console.error('Cart is empty.');
-                return res.status(400).json({ success: false, message: 'Cart is empty.' });
-            }
 
-            console.log("User ID:", req.user._id);
+            console.log("User ID:", req.session.user.user._id);
             console.log("Cart Products:", req.session.cart.products);
 
             // Create and save the order
             const order = new Order({
-                userId: req.user._id, // Logged-in user
+                userId,// Logged-in user
                 products: req.session.cart.products, // Cart products
                 shippingAddressId: shippingAddressId,
                 totalPrice: finalAmount,
@@ -1786,8 +1784,6 @@ const verifyPayment = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 };
-
-
 
 module.exports = {
     signUpPage,

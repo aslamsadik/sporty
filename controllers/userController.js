@@ -1648,6 +1648,8 @@ const placeOrder = async (req, res) => {
         });
 
         const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
+        console.log("offerdiscount" + offerDiscount);
+        
 
         if (paymentMethod === 'wallet') {
             const wallet = await Wallet.findOne({ user: userId });
@@ -1674,7 +1676,7 @@ const placeOrder = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Invalid Razorpay payment signature' });
             }
         }
-
+        
         const newOrder = new Order({
             userId,
             products: cart.products.map(p => ({
@@ -1683,7 +1685,8 @@ const placeOrder = async (req, res) => {
             })),
             totalPrice: finalPrice,
             discountAmount: appliedDiscount,
-            couponDeduction, // Store coupon deduction in the order
+            couponDeduction:appliedDiscount, // Store coupon deduction in the order
+            offfersDiscount:offerDiscount,
             shippingAddressId,
             paymentMethod,  
             status: 'Pending'
@@ -2380,82 +2383,6 @@ const calculateCouponDiscount = async (couponCode, totalPrice) => {
         return { success: false, message: error.message };
     }
 };
-
-// Existing applyCoupon route handler
-// const applyCoupon = async (req, res) => {
-//     try {
-//         const userId = req.session.user?.userId;
-//         const { couponCode } = req.body;
-
-//         if (!userId) {
-//             return res.status(400).json({ message: 'User not logged in' });
-//         }
-
-//         console.log('Coupon code received:', couponCode); // Debugging line
-
-//         // Retrieve the user's cart
-//         const cart = await Cart.findOne({ userId }).populate('products.productId');
-//         if (!cart || cart.products.length === 0) {
-//             return res.status(400).json({ message: 'Cart not found or is empty' });
-//         }
-
-//         // Retrieve the coupon by code
-//         const coupon = await Coupon.findOne({ code: couponCode }).exec();
-//         if (!coupon) {
-//             console.log('Coupon not found in the database'); // Debugging line
-//             return res.status(400).json({ message: 'Invalid coupon code' });
-//         }
-
-//         // Check if the coupon is expired
-//         const currentDate = new Date();
-//         if (coupon.expirationDate < currentDate) {
-//             return res.status(400).json({ message: 'Coupon has expired' });
-//         }
-
-//         // Check if the coupon usage limit has been reached
-//         if (coupon.usedCount >= coupon.usageLimit) {
-//             return res.status(400).json({ message: 'Coupon usage limit reached' });
-//         }
-
-//         // Calculate the total cart value
-//         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
-        
-
-//         // Check if the cart total meets the minimum purchase requirement for the coupon
-//         if (cartTotal < coupon.minPrice) {
-//             return res.status(400).json({ message: `Minimum purchase of ₹${coupon.minPrice} is required to apply this coupon.` });
-//         }
-
-//         // Calculate the discount
-//         let discountAmount = 0;
-//         if (coupon.discountType === 'percentage') {
-//             discountAmount = cartTotal * (coupon.discountValue / 100);
-//         } else if (coupon.discountType === 'fixed') {
-//             discountAmount = coupon.discountValue;
-//         }
-
-//         // Ensure discountAmount does not exceed cartTotal
-//         discountAmount = Math.min(discountAmount, cartTotal);
-
-//         // Increment the usedCount since the coupon is being applied
-//         coupon.usedCount += 1;
-//         await coupon.save();
-
-//         // Calculate the final amount
-//         const finalAmount = cartTotal - discountAmount;
-
-//         // Respond with the discount amount and the updated cart total
-//         return res.status(200).json({
-//             message: 'Coupon applied successfully',
-//             discountAmount,
-//             finalAmount
-//         });
-
-//     } catch (error) {
-//         console.error('Error applying coupon:', error.message);
-//         return res.status(500).json({ message: 'Error applying coupon' });
-//     }
-// };
 
 const applyCoupon = async (req, res) => {
     try {

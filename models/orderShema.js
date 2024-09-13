@@ -48,6 +48,8 @@ const orderSchema = new mongoose.Schema({
     shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
     totalPrice: { type: Number, required: true },
     discountAmount: { type: Number, default: 0 },
+    offfersDiscount:{ type: Number, default:0},
+    couponDeduction:{ type:Number, default:0},
     paymentMethod: { type: String, required: true },
     orderNotes: { type: String },
     status: { type: String, default: 'Pending' },

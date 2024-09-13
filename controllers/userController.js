@@ -939,7 +939,7 @@ const placeOrder = async (req, res) => {
             }
         }
         let totalDiscount= Number(offerDiscount) + Number(appliedDiscount);
-        console.log("finalprice in my placeorder function"+ typeof finalPrice)
+        console.log("finalprice in my placeorder function"+ finalPrice)
 
         const newOrder = new Order({
             userId,

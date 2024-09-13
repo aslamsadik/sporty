@@ -1683,20 +1683,84 @@ const createRazorpayOrder = async (req, res) => {
     }
 };
 
+// const verifyPayment = async (req, res) => {
+//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
+//     console.log("finalAmount in varifypayment" + finalAmount);
+    
+//     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+//     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+//     const generatedSignature = hmac.digest('hex');
+
+//     if (generatedSignature === razorpay_signature) {
+//         try {
+//             // Create and save the order
+//             const order = new Order({
+//                 userId: req.user._id, // Assuming you're using req.user to get the logged-in user
+//                 products: req.session.cart.products, // Assuming cart is saved in session
+//                 shippingAddressId: shippingAddressId,
+//                 totalPrice: finalAmount,
+//                 paymentMethod: 'Razorpay',
+//                 status: 'Paid',
+//                 createdAt: new Date()
+//             });
+
+//             await order.save();
+
+//             // Clear cart after order placement
+//             req.session.cart = null;
+
+//             res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
+//         } catch (error) {
+//             console.error('Error placing order:', error);
+//             res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
+//         }
+//     } else {
+//         res.status(400).json({ success: false, message: 'Payment verification failed' });
+//     }
+// };
+
 const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
-    console.log("finalAmount in varifypayment" + finalAmount);
+
+    // Log all incoming request data for debugging
+    console.log("Received data from frontend:");
+    console.log("Razorpay Order ID:", razorpay_order_id);
+    console.log("Razorpay Payment ID:", razorpay_payment_id);
+    console.log("Razorpay Signature:", razorpay_signature);
+    console.log("Shipping Address ID:", shippingAddressId);
+    console.log("Final Amount:", finalAmount);
+    console.log("Coupon Code:", couponCode);
     
+    // Verify Razorpay signature
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
     const generatedSignature = hmac.digest('hex');
 
+    console.log("Generated Signature:", generatedSignature);
+    console.log("Razorpay Signature (from frontend):", razorpay_signature);
+
     if (generatedSignature === razorpay_signature) {
+        console.log("Signature verified successfully.");
+
         try {
+            // Check if the user and cart session exist
+            if (!req.user) {
+                console.error('User not logged in.');
+                return res.status(400).json({ success: false, message: 'User not logged in.' });
+            }
+
+            if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
+                console.error('Cart is empty.');
+                return res.status(400).json({ success: false, message: 'Cart is empty.' });
+            }
+
+            console.log("User ID:", req.user._id);
+            console.log("Cart Products:", req.session.cart.products);
+
             // Create and save the order
             const order = new Order({
-                userId: req.user._id, // Assuming you're using req.user to get the logged-in user
-                products: req.session.cart.products, // Assuming cart is saved in session
+                userId: req.user._id, // Logged-in user
+                products: req.session.cart.products, // Cart products
                 shippingAddressId: shippingAddressId,
                 totalPrice: finalAmount,
                 paymentMethod: 'Razorpay',
@@ -1704,20 +1768,25 @@ const verifyPayment = async (req, res) => {
                 createdAt: new Date()
             });
 
-            await order.save();
+            console.log("Order to be saved:", order);
+
+            await order.save(); // Save order to the database
+            console.log("Order placed successfully!");
 
             // Clear cart after order placement
             req.session.cart = null;
 
-            res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
+            return res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
         } catch (error) {
             console.error('Error placing order:', error);
-            res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
+            return res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
         }
     } else {
-        res.status(400).json({ success: false, message: 'Payment verification failed' });
+        console.error('Signature verification failed.');
+        return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 };
+
 
 
 module.exports = {

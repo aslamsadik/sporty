@@ -2461,7 +2461,8 @@ const applyCoupon = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
         const { couponCode } = req.body;
-
+         console.log("entred coupen function in backend")
+         
         if (!userId) {
             return res.status(400).json({ message: 'User not logged in' });
         }
@@ -2493,7 +2494,7 @@ const applyCoupon = async (req, res) => {
 
         // Calculate the total based on `priceAfterOffer`
         const cartTotalAfterOffer = cart.products.reduce((total, product) => {
-            return total + (product.priceAfterOffer ? product.priceAfterOffer * product.quantity : product.productId.price * product.quantity);
+            return total + (product.priceAfterOffer ? product.priceAfterOffer  : product.productId.price );
         }, 0);
 
         // Check if the cart total meets the minimum purchase requirement for the coupon
@@ -2510,7 +2511,7 @@ const applyCoupon = async (req, res) => {
         }
 
         // Ensure discountAmount does not exceed the cart total
-        discountAmount = Math.min(discountAmount, cartTotalAfterOffer);
+        // discountAmount = Math.min(discountAmount, cartTotalAfterOffer);
 
         // Increment the usedCount for the coupon
         coupon.usedCount += 1;
@@ -2520,7 +2521,11 @@ const applyCoupon = async (req, res) => {
         // const finalAmount = cartTotalAfterOffer - discountAmount;
 
         const finalAmount = Math.max(cartTotalAfterOffer - discountAmount); // Ensure minimum amount is ₹1
-
+        console.log("carttoatlafteroffer" + cartTotalAfterOffer);
+        
+        console.log("final amount in coupen function backend" + finalAmount);
+        console.log("discount amount in coupen function" + discountAmount);
+        
 
         // Respond with the discount amount and the final amount
         return res.status(200).json({

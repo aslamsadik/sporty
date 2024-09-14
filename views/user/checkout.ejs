@@ -152,8 +152,9 @@
     <!-- Form for placing the order -->
     <form id="placeOrderForm" action="/place-order" method="POST">
       <input type="hidden" name="discountAmount" id="discountAmount" value="<%= discountAmount %>">
-      <input type="hidden" name="couponCode" id="couponCode" value="<%= appliedCouponCode || '' %>">
+      <input type="hidden" name="couponCode" id="couponCode" value="<%= couponCode || '' %>">      
       <input type="hidden" name="finalAmount" id="finalAmount" value="<%= finalAmount %>">
+      <input type="hidden" name="forCopuen" id="forCopuen" value="<%= forCopuen %>">
       <input type="hidden" name="razorpayPaymentId" id="razorpayPaymentId">
       <input type="hidden" name="razorpayOrderId" id="razorpayOrderId">
       <input type="hidden" name="razorpaySignature" id="razorpaySignature">
@@ -319,170 +320,6 @@
   
   <script>
 
-//        $(document).on('click', '.apply-coupon-button', function(e) {
-//       e.preventDefault(); // Prevent default button action
-//     var couponCode = $(this).data('coupon-code');
-//     applyCoupon(couponCode); // Call the function to apply the coupon
-//    });
-
-//        function applyCoupon(couponCode) {
-//         console.log('Applying coupon:', couponCode); // Debugging line
-
-//       $.post('/apply-coupon', { couponCode: couponCode }, function(data) {
-//         console.log('Response data:', data); // Debugging line
-//         // Update hidden inputs and UI with returned values
-//         $('#discountAmountInput').val(data.discountAmount);
-//         $('#finalAmountInput').val(data.finalAmount);
-//         $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
-//         $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
-//         $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
-        
-//         // SweetAlert success message
-//         Swal.fire({
-//             icon: 'success',
-//             title: 'Coupon Applied!',
-//             text: data.message
-//         });
-//     }).fail(function(response) {
-//         console.error('Failed response:', response); // Debugging line
-//         // SweetAlert error message
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Error!',
-//             text: response.responseJSON ? response.responseJSON.message : 'An error occurred'
-//         });
-//     });
-// }
-
-
-// $('#placeOrderForm').submit(function(e) {
-//     e.preventDefault(); // Prevent default form submission
-
-//     const paymentMethod = $('input[name="paymentMethod"]:checked').val();
-
-//     if (!paymentMethod || typeof paymentMethod !== 'string') {
-//         // SweetAlert error for missing payment method
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Payment Method Required',
-//             text: 'Please select a valid payment method.'
-//         });
-//         return;
-//     }
-
-//     $('#paymentMethod').val(paymentMethod);
-
-//     const couponCode = $('#couponCode').val();
-//     const discountAmount = parseFloat($('#discountAmount').val()) || 0;
-//     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
-//     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
-
-//     if (!shippingAddressId) {
-//         // SweetAlert error for missing shipping address
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Shipping Address Required',
-//             text: 'Please select a shipping address.'
-//         });
-//         return;
-//     }
-
-//     $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
-//         console.log('Response from server:', data); // Log the entire response for debugging
-
-//         if (data.success) {
-//   Swal.fire({
-//       icon: 'success',
-//       title: 'Order Placed!',
-//       text: 'Your order has been placed successfully.'
-//   }).then(() => {
-//       window.location.href =  `/orderConfirm/${data.orderId}`; // Redirect to order confirmation page
-//   });
-// } else {
-//   Swal.fire({
-//       icon: 'error',
-//       title: 'Order Failed!',
-//       text: 'There was a problem placing your order.'
-//   });
-// }
-
-//     }).fail(function(response) {
-//         console.error('Failed response:', response);
-//         // SweetAlert error for server-side issues
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Order Failed',
-//             text: response.responseJSON ? response.responseJSON.message : 'Failed to place order. Please try again.'
-//         });
-//     });
-// });
-
-//   // Razorpay button handler
-// $('#razorpayButton').click(function(e) {
-//     e.preventDefault(); // Prevent the form from submitting
-
-//     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
-//     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
-//     const couponCode = $('#couponCode').val() || null;
-
-//     if (!shippingAddressId) {
-//       alert('Please select a shipping address.');
-//       return;
-//     }
-
-//     // Ensure finalAmount is greater than or equal to the minimum amount (₹1)
-//     if (finalAmount < 1) {
-//       alert('Order amount must be at least ₹1 after applying coupons or offers.');
-//       return;
-//     }
-
-//     // Fetch the Razorpay order details
-//     $.post('/create-razorpay-order', { finalAmount, shippingAddressId, couponCode}, function(orderData) {
-//       console.log("orderData" + orderData);
-      
-//       const options = {
-//         key: orderData.key, // Your Razorpay Key ID
-//         amount: orderData.amount, // Amount in paise (multiply by 100 for rupees)
-//         currency: 'INR',
-//         name: 'Sporty',
-//         description: 'Order Payment',
-//         order_id: orderData.id, // Order ID returned from Razorpay
-//         handler: function(response) {
-//           // After payment completion, post payment details to your server
-//           $.post('/verify-razorpay-payment', {
-//             razorpayPaymentId: response.razorpay_payment_id,
-//             razorpayOrderId: response.razorpay_order_id,
-//             razorpaySignature: response.razorpay_signature,
-//             shippingAddressId: shippingAddressId,
-//             finalAmount: finalAmount,
-//             couponCode: couponCode
-//           }, function(paymentResult) {
-//             if (paymentResult.success) {
-//               alert('Payment successful!');
-//               window.location.href = '/orderConfirm/:orderId'; // Redirect to order success page
-//             } else {
-//               alert(paymentResult.message);
-//             }
-//           });
-//         },
-//         prefill: {
-//           name: '<%= user.firstName %> <%= user.lastName %>',
-//           email: '<%= user.email %>',
-//           contact: '<%= user.phone %>',
-//         },
-//         theme: {
-//           color: '#3399cc'
-//         }
-//       };
-
-//       const razorpay = new Razorpay(options);
-//       razorpay.open();
-//     }).fail(function(response) {
-//       console.error('Failed response:', response);
-//       alert('Unable to initiate payment. Please try again.');
-//     });
-// });
-
 $(document).on('click', '.apply-coupon-button', function(e) {
     e.preventDefault(); // Prevent default button action
     var couponCode = $(this).data('coupon-code');
@@ -499,6 +336,9 @@ function applyCoupon(couponCode) {
         $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
         $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
         $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
+
+        // Update the hidden couponCode field in placeOrderForm
+        $('input[name="couponCode"]').val(couponCode);
 
         // SweetAlert success message
         Swal.fire({
@@ -517,6 +357,7 @@ function applyCoupon(couponCode) {
     });
 }
 
+
 $('#placeOrderForm').submit(function(e) {
     e.preventDefault(); // Prevent default form submission
 
@@ -533,9 +374,12 @@ $('#placeOrderForm').submit(function(e) {
 
     $('#paymentMethod').val(paymentMethod);
 
-    const couponCode = $('#couponCode').val();
+    const couponCode = $('#couponCode').val();  // Coupon code should be updated here
+    console.log("couponCode in frontend:", couponCode);  // It should log the applied coupon
+    
     const discountAmount = parseFloat($('#discountAmount').val()) || 0;
     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
+    const forCopuen = 0;
     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
 
     if (!shippingAddressId) {
@@ -547,7 +391,7 @@ $('#placeOrderForm').submit(function(e) {
         return;
     }
 
-    $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
+    $.post('/place-order', { couponCode, forCopuen, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
         console.log('Response from server:', data); // Log the entire response for debugging
 
         if (data.success) {
@@ -575,6 +419,7 @@ $('#placeOrderForm').submit(function(e) {
         });
     });
 });
+
 
 // Razorpay button handler
 $('#razorpayButton').click(function(e) {

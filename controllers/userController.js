@@ -654,6 +654,171 @@ const updateCart = async (req, res) => {
     }
 };
 
+// const getCheckoutPage = async (req, res) => {
+//     try {
+//         const userId = req.session.user?.userId;
+
+//         if (!userId) {
+//             return res.redirect('/login');
+//         }
+
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+//         const user = await User.findById(userId);
+//         const wallet = await Wallet.findOne({ user: userId });
+        
+//         let forCopuen=0;
+
+//         console.log('Cart on Checkout Page:', cart);
+//         if (!cart || cart.products.length === 0) {
+//             return res.render('checkout', {
+//                 message: 'Your cart is empty',
+//                 messageType: 'error',
+//                 cart: null,
+//                 user,
+//                 coupons: [],
+//                 razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+//                 razorpayOrderId: null,
+//                 cartTotal: 0,
+//                 discountAmount: 0,
+//                 finalAmount: 0,
+//                 appliedCouponCode: null,
+//                 walletBalance: wallet?.balance || 0,
+//             });
+//         }
+
+//         // Calculate total and price after offer
+//         let cartTotal = 0;
+//         let offerDiscount = 0;
+//         const activeOffers = await Offer.find({
+//             isActive: true,
+//             startDate: { $lte: new Date() },
+//             endDate: { $gte: new Date() }
+//         });
+
+//         // Apply offers and store priceAfterOffer and offerDiscount in cart
+//         cart.products.forEach(cartItem => {
+//             let itemTotal = cartItem.productId.price * cartItem.quantity;
+//             let priceAfterOffer = itemTotal;  // Initialize with original price
+//             let itemOfferDiscount = 0;       // Initialize the offer discount for this item
+
+//             activeOffers.forEach(offer => {
+//                 if (offer.offerType === 'product' && offer.applicableProducts.includes(cartItem.productId._id)) {
+//                     if (offer.discountType === 'percentage') {
+//                         const discount = (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
+//                         itemOfferDiscount += discount;
+//                         priceAfterOffer -= discount;
+//                     } else {
+//                         const discount = offer.discountValue * cartItem.quantity;
+//                         itemOfferDiscount += discount;
+//                         priceAfterOffer -= discount;
+//                     }
+//                 } else if (offer.offerType === 'category' && offer.applicableCategories.includes(cartItem.productId.category)) {
+//                     if (offer.discountType === 'percentage') {
+//                         const discount = (cartItem.productId.price * cartItem.quantity * offer.discountValue) / 100;
+//                         itemOfferDiscount += discount;
+//                         priceAfterOffer -= discount;
+//                     } else {
+//                         const discount = offer.discountValue * cartItem.quantity;
+//                         itemOfferDiscount += discount;
+//                         priceAfterOffer -= discount;
+//                     }
+//                 }
+//             });
+
+//             cartItem.priceAfterOffer = priceAfterOffer;   // Save price after applying offer
+//             cartItem.offerDiscount = itemOfferDiscount;   // Save offer discount for this item
+//             offerDiscount += itemOfferDiscount;           // Accumulate total offer discount
+//             cartTotal += priceAfterOffer;                 // Use price after offer for cart total
+//         });
+
+//         // Save updated cart prices and discounts
+//         await cart.save();
+//         console.log('Updated Cart After Applying Offers:', cart);
+//         // Fetch available coupons
+//         const currentDate = new Date();
+//         const coupons = await Coupon.find({
+//             expirationDate: { $gte: currentDate },
+//             $expr: { $lt: ["$usedCount", "$usageLimit"] }
+//         });
+
+//         const appliedCouponCode = req.query.couponCode;
+//         let couponDiscount = 0;
+
+//         // Apply coupon if provided
+//         if (appliedCouponCode) {
+//             const appliedCoupon = coupons.find(coupon => coupon.code === appliedCouponCode);
+
+//             if (appliedCoupon && cartTotal >= appliedCoupon.minPurchaseAmount) {
+//                 if (appliedCoupon.discountType === 'percentage') {
+//                     couponDiscount = cartTotal * (appliedCoupon.discountValue / 100);
+//                 } else if (appliedCoupon.discountType === 'fixed') {
+//                     couponDiscount = appliedCoupon.discountValue;
+//                 }
+//             }
+//         }
+
+//         // Calculate total discount and final amount
+//         const totalDiscount = offerDiscount + couponDiscount;
+//         const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal); // Ensure final amount is at least ₹1
+//         const totalAmountInPaise = finalAmount * 100;  // Razorpay requires the amount in paise
+
+//         // Create Razorpay order
+//         const razorpay = new Razorpay({
+//             key_id: process.env.RAZORPAY_KEY_ID,
+//             key_secret: process.env.RAZORPAY_KEY_SECRET,
+//         });
+
+//         const options = {
+//             amount: totalAmountInPaise,
+//             currency: "INR",
+//             receipt: `receipt_${Date.now()}`
+//         };
+
+//         try {
+//             const order = await razorpay.orders.create(options);
+
+//             res.render('checkout', {
+//                 message: null,
+//                 messageType: null,
+//                 forCopuen,
+//                 cart,
+//                 user,
+//                 coupons,
+//                 razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+//                 razorpayOrderId: order.id,
+//                 cartTotal,
+//                 offerDiscount,
+//                 discountAmount: totalDiscount,
+//                 finalAmount,
+//                 appliedCouponCode,
+//                 walletBalance: wallet?.balance || 0
+//             });
+
+//         } catch (error) {
+//             console.error('Error creating Razorpay order:', error.message);
+//             return res.render('checkout', {
+//                 message: 'Failed to initiate payment. Please try again later.',
+//                 messageType: 'error',
+//                 cart,
+//                 user,
+//                 coupons,
+//                 razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+//                 razorpayOrderId: null,
+//                 cartTotal,
+//                 offerDiscount,
+//                 discountAmount: totalDiscount,
+//                 finalAmount,
+//                 appliedCouponCode,
+//                 walletBalance: wallet?.balance || 0
+//             });
+//         }
+
+//     } catch (error) {
+//         console.error('Error fetching checkout page:', error.message);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
 const getCheckoutPage = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
@@ -665,7 +830,10 @@ const getCheckoutPage = async (req, res) => {
         const cart = await Cart.findOne({ userId }).populate('products.productId');
         const user = await User.findById(userId);
         const wallet = await Wallet.findOne({ user: userId });
+        
+        let forCopuen = 0;
 
+        console.log('Cart on Checkout Page:', cart);
         if (!cart || cart.products.length === 0) {
             return res.render('checkout', {
                 message: 'Your cart is empty',
@@ -678,7 +846,7 @@ const getCheckoutPage = async (req, res) => {
                 cartTotal: 0,
                 discountAmount: 0,
                 finalAmount: 0,
-                appliedCouponCode: null,
+                couponCode: '', // Changed here to match your form's hidden input
                 walletBalance: wallet?.balance || 0,
             });
         }
@@ -692,11 +860,10 @@ const getCheckoutPage = async (req, res) => {
             endDate: { $gte: new Date() }
         });
 
-        // Apply offers and store priceAfterOffer and offerDiscount in cart
         cart.products.forEach(cartItem => {
             let itemTotal = cartItem.productId.price * cartItem.quantity;
-            let priceAfterOffer = itemTotal;  // Initialize with original price
-            let itemOfferDiscount = 0;       // Initialize the offer discount for this item
+            let priceAfterOffer = itemTotal;
+            let itemOfferDiscount = 0;
 
             activeOffers.forEach(offer => {
                 if (offer.offerType === 'product' && offer.applicableProducts.includes(cartItem.productId._id)) {
@@ -722,28 +889,28 @@ const getCheckoutPage = async (req, res) => {
                 }
             });
 
-            cartItem.priceAfterOffer = priceAfterOffer;   // Save price after applying offer
-            cartItem.offerDiscount = itemOfferDiscount;   // Save offer discount for this item
-            offerDiscount += itemOfferDiscount;           // Accumulate total offer discount
-            cartTotal += priceAfterOffer;                 // Use price after offer for cart total
+            cartItem.priceAfterOffer = priceAfterOffer;
+            cartItem.offerDiscount = itemOfferDiscount;
+            offerDiscount += itemOfferDiscount;
+            cartTotal += priceAfterOffer;
         });
 
-        // Save updated cart prices and discounts
         await cart.save();
+        console.log('Updated Cart After Applying Offers:', cart);
 
-        // Fetch available coupons
         const currentDate = new Date();
         const coupons = await Coupon.find({
             expirationDate: { $gte: currentDate },
             $expr: { $lt: ["$usedCount", "$usageLimit"] }
         });
 
-        const appliedCouponCode = req.query.couponCode;
+        const couponCode = req.query.couponCode || ''; // Ensure couponCode is defined
+        
+        
         let couponDiscount = 0;
 
-        // Apply coupon if provided
-        if (appliedCouponCode) {
-            const appliedCoupon = coupons.find(coupon => coupon.code === appliedCouponCode);
+        if (couponCode) {
+            const appliedCoupon = coupons.find(coupon => coupon.code === couponCode);
 
             if (appliedCoupon && cartTotal >= appliedCoupon.minPurchaseAmount) {
                 if (appliedCoupon.discountType === 'percentage') {
@@ -754,12 +921,10 @@ const getCheckoutPage = async (req, res) => {
             }
         }
 
-        // Calculate total discount and final amount
         const totalDiscount = offerDiscount + couponDiscount;
-        const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal); // Ensure final amount is at least ₹1
-        const totalAmountInPaise = finalAmount * 100;  // Razorpay requires the amount in paise
+        const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal);
+        const totalAmountInPaise = finalAmount * 100;
 
-        // Create Razorpay order
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID,
             key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -777,6 +942,7 @@ const getCheckoutPage = async (req, res) => {
             res.render('checkout', {
                 message: null,
                 messageType: null,
+                forCopuen,
                 cart,
                 user,
                 coupons,
@@ -786,7 +952,7 @@ const getCheckoutPage = async (req, res) => {
                 offerDiscount,
                 discountAmount: totalDiscount,
                 finalAmount,
-                appliedCouponCode,
+                couponCode, // Updated to ensure it's correctly passed
                 walletBalance: wallet?.balance || 0
             });
 
@@ -804,7 +970,7 @@ const getCheckoutPage = async (req, res) => {
                 offerDiscount,
                 discountAmount: totalDiscount,
                 finalAmount,
-                appliedCouponCode,
+                couponCode, // Updated to ensure it's correctly passed
                 walletBalance: wallet?.balance || 0
             });
         }
@@ -815,10 +981,12 @@ const getCheckoutPage = async (req, res) => {
     }
 };
 
+
 const placeOrder = async (req, res) => {
     try {
         const {
             couponCode,
+            forCopuen,
             discountAmount = 0,
             paymentMethod, 
             shippingAddressId,
@@ -829,6 +997,10 @@ const placeOrder = async (req, res) => {
 
         const userId = req.session.user?.userId;
 
+        
+        console.log("Request body in place order function:", req.body);
+        console.log("Coupon code in place order function:", couponCode);
+        
         if (!userId) {
             return res.status(400).json({ success: false, message: 'User not logged in' });
         }
@@ -846,10 +1018,15 @@ const placeOrder = async (req, res) => {
         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
 
         let appliedCoupon = null;
-        let appliedDiscount =Number(discountAmount);
+        let appliedDiscount = couponCode? Number(discountAmount):0;
         let couponDeduction = 0;
 
+        console.log("applieddiscount before"+ appliedDiscount);
+        
+
         if (couponCode) {
+            console.log("appliedcoupen inside if coupen function:" + couponCode);
+            
             appliedCoupon = await Coupon.findOne({ code: couponCode });
             if (!appliedCoupon) {
                 return res.status(400).json({ success: false, message: 'Invalid coupon' });
@@ -878,7 +1055,9 @@ const placeOrder = async (req, res) => {
 
             // Deduct coupon amount from the final discount
             appliedDiscount = couponDeduction;
+            
         }
+        
 
         // Offer discount logic
         let offerDiscount = 0;
@@ -908,8 +1087,13 @@ const placeOrder = async (req, res) => {
                 }
             });
         });
+        
 
-        const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
+        // const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
+       
+        const finalPrice=Math.max(cartTotal-appliedDiscount-offerDiscount)
+        console.log("applieddiscount" + appliedDiscount);
+        
         console.log("offerdiscount" + offerDiscount);
         
 
@@ -1430,17 +1614,100 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// const applyCoupon = async (req, res) => {
+//     try {
+//         const userId = req.session.user?.userId;
+//         const { couponCode } = req.body;
+//          console.log("entred coupen function in backend")
+         
+//         if (!userId) {
+//             return res.status(400).json({ message: 'User not logged in' });
+//         }
+
+//         console.log('Coupon code received:', couponCode); // Debugging line
+
+//         // Retrieve the user's cart
+//         const cart = await Cart.findOne({ userId }).populate('products.productId');
+//         if (!cart || cart.products.length === 0) {
+//             return res.status(400).json({ message: 'Cart not found or is empty' });
+//         }
+
+//         // Retrieve the coupon by code
+//         const coupon = await Coupon.findOne({ code: couponCode }).exec();
+//         if (!coupon) {
+//             return res.status(400).json({ message: 'Invalid coupon code' });
+//             discountAmount=0;
+//         }
+
+//         // Check if the coupon is expired
+//         const currentDate = new Date();
+//         if (coupon.expirationDate < currentDate) {
+//             return res.status(400).json({ message: 'Coupon has expired' });
+//         }
+
+//         // Check if the coupon usage limit has been reached
+//         if (coupon.usedCount >= coupon.usageLimit) {
+//             return res.status(400).json({ message: 'Coupon usage limit reached' });
+//         }
+
+//         // Calculate the total based on `priceAfterOffer`
+//         const cartTotalAfterOffer = cart.products.reduce((total, product) => {
+//             return total + (product.priceAfterOffer ? product.priceAfterOffer  : product.productId.price );
+//         }, 0);
+
+//         // Check if the cart total meets the minimum purchase requirement for the coupon
+//         if (cartTotalAfterOffer < coupon.minPrice) {
+//             return res.status(400).json({ message: `Minimum purchase of ₹${coupon.minPrice} is required to apply this coupon.` });
+//         }
+
+//         // Calculate the discount
+//         let discountAmount = 0;
+//         if (coupon.discountType === 'percentage') {
+//             discountAmount = cartTotalAfterOffer * (coupon.discountValue / 100);
+//         } else if (coupon.discountType === 'fixed') {
+//             discountAmount = coupon.discountValue;
+//         }
+
+//         // Ensure discountAmount does not exceed the cart total
+//         // discountAmount = Math.min(discountAmount, cartTotalAfterOffer);
+
+//         // Increment the usedCount for the coupon
+//         coupon.usedCount += 1;
+//         await coupon.save();
+
+//         // Calculate the final amount after the discount
+//         // const finalAmount = cartTotalAfterOffer - discountAmount;
+
+//         const finalAmount = Math.max(cartTotalAfterOffer - discountAmount); // Ensure minimum amount is ₹1
+//         console.log("carttoatlafteroffer" + cartTotalAfterOffer);
+        
+//         console.log("final amount in coupen function backend" + finalAmount);
+//         console.log("discount amount in coupen function" + discountAmount);
+        
+
+//         // Respond with the discount amount and the final amount
+//         return res.status(200).json({
+//             message: 'Coupon applied successfully',
+//             discountAmount,
+//             finalAmount
+//         });
+
+//     } catch (error) {
+//         console.error('Error applying coupon:', error.message);
+//         return res.status(500).json({ message: 'Error applying coupon' });
+//     }
+// };
+
 const applyCoupon = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
         const { couponCode } = req.body;
-         console.log("entred coupen function in backend")
-         
+
         if (!userId) {
             return res.status(400).json({ message: 'User not logged in' });
         }
 
-        console.log('Coupon code received:', couponCode); // Debugging line
+        console.log('Coupon code received in applycouepn function:', couponCode);
 
         // Retrieve the user's cart
         const cart = await Cart.findOne({ userId }).populate('products.productId');
@@ -1448,35 +1715,65 @@ const applyCoupon = async (req, res) => {
             return res.status(400).json({ message: 'Cart not found or is empty' });
         }
 
+        let discountAmount = 0; // Default discount amount
+
+        // If no coupon code is provided, skip coupon logic and return with zero discount
+        if (!couponCode) {
+            const cartTotalAfterOffer = cart.products.reduce((total, product) => {
+                return total + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price);
+            }, 0);
+
+            return res.status(200).json({
+                message: 'No coupon applied',
+                discountAmount: 0,
+                finalAmount: cartTotalAfterOffer
+            });
+        }
+
         // Retrieve the coupon by code
         const coupon = await Coupon.findOne({ code: couponCode }).exec();
         if (!coupon) {
-            return res.status(400).json({ message: 'Invalid coupon code' });
+            return res.status(200).json({
+                message: 'Invalid coupon code',
+                discountAmount: 0, // Return zero discount when the coupon is invalid
+                finalAmount: cart.products.reduce((total, product) => total + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0)
+            });
         }
 
         // Check if the coupon is expired
         const currentDate = new Date();
         if (coupon.expirationDate < currentDate) {
-            return res.status(400).json({ message: 'Coupon has expired' });
+            return res.status(200).json({
+                message: 'Coupon has expired',
+                discountAmount: 0,
+                finalAmount: cart.products.reduce((total, product) => total + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0)
+            });
         }
 
         // Check if the coupon usage limit has been reached
         if (coupon.usedCount >= coupon.usageLimit) {
-            return res.status(400).json({ message: 'Coupon usage limit reached' });
+            return res.status(200).json({
+                message: 'Coupon usage limit reached',
+                discountAmount: 0,
+                finalAmount: cart.products.reduce((total, product) => total + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0)
+            });
         }
 
         // Calculate the total based on `priceAfterOffer`
         const cartTotalAfterOffer = cart.products.reduce((total, product) => {
-            return total + (product.priceAfterOffer ? product.priceAfterOffer  : product.productId.price );
+            return total + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price);
         }, 0);
 
         // Check if the cart total meets the minimum purchase requirement for the coupon
         if (cartTotalAfterOffer < coupon.minPrice) {
-            return res.status(400).json({ message: `Minimum purchase of ₹${coupon.minPrice} is required to apply this coupon.` });
+            return res.status(200).json({
+                message: `Minimum purchase of ₹${coupon.minPrice} is required to apply this coupon.`,
+                discountAmount: 0,
+                finalAmount: cartTotalAfterOffer
+            });
         }
 
-        // Calculate the discount
-        let discountAmount = 0;
+        // Calculate the discount based on coupon type
         if (coupon.discountType === 'percentage') {
             discountAmount = cartTotalAfterOffer * (coupon.discountValue / 100);
         } else if (coupon.discountType === 'fixed') {
@@ -1484,21 +1781,14 @@ const applyCoupon = async (req, res) => {
         }
 
         // Ensure discountAmount does not exceed the cart total
-        // discountAmount = Math.min(discountAmount, cartTotalAfterOffer);
+        discountAmount = Math.min(discountAmount, cartTotalAfterOffer);
 
         // Increment the usedCount for the coupon
         coupon.usedCount += 1;
         await coupon.save();
 
         // Calculate the final amount after the discount
-        // const finalAmount = cartTotalAfterOffer - discountAmount;
-
-        const finalAmount = Math.max(cartTotalAfterOffer - discountAmount); // Ensure minimum amount is ₹1
-        console.log("carttoatlafteroffer" + cartTotalAfterOffer);
-        
-        console.log("final amount in coupen function backend" + finalAmount);
-        console.log("discount amount in coupen function" + discountAmount);
-        
+        const finalAmount = Math.max(cartTotalAfterOffer - discountAmount, 1); // Ensure minimum final amount is ₹1
 
         // Respond with the discount amount and the final amount
         return res.status(200).json({

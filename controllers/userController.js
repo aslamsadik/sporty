@@ -1163,13 +1163,9 @@ const placeOrder = async (req, res) => {
     try {
         const {
             couponCode,
-            forCopuen,
             discountAmount = 0,
             paymentMethod, 
-            shippingAddressId,
-            razorpay_payment_id,
-            razorpay_order_id,
-            razorpay_signature
+            shippingAddressId
         } = req.body;
 
         const userId = req.session.user?.userId;
@@ -1181,9 +1177,7 @@ const placeOrder = async (req, res) => {
         console.log("Discount amount passed:", discountAmount);
         console.log("Payment method selected:", paymentMethod);
         console.log("Shipping address ID:", shippingAddressId);
-        console.log("Razorpay Payment ID:", razorpay_payment_id);
-        console.log("Razorpay Order ID:", razorpay_order_id);
-        console.log("Razorpay Signature:", razorpay_signature);
+    
 
         if (!userId) {
             console.log("User not logged in");
@@ -1281,24 +1275,7 @@ const placeOrder = async (req, res) => {
             wallet.transactions.push({ type: 'debit', amount: finalPrice, description: 'Order payment' });
             await wallet.save();
             console.log("Wallet balance updated:", wallet.balance);
-        } else if (paymentMethod === 'Razorpay') {
-            const razorpay = new Razorpay({
-                key_id: process.env.RAZORPAY_KEY_ID,
-                key_secret: process.env.RAZORPAY_KEY_SECRET
-            });
-
-            const isValidSignature = razorpay.utils.verifyPaymentSignature({
-                order_id: razorpay_order_id,
-                payment_id: razorpay_payment_id,
-                signature: razorpay_signature
-            });
-
-            if (!isValidSignature) {
-                console.log("Invalid Razorpay payment signature");
-                return res.status(400).json({ success: false, message: 'Invalid Razorpay payment signature' });
-            }
-            console.log("Razorpay payment verified");
-        }
+        } 
 
         let totalDiscount = Number(offerDiscount) + Number(appliedDiscount);
         console.log("Total discount applied:", totalDiscount);

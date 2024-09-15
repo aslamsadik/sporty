@@ -154,10 +154,6 @@
       <input type="hidden" name="discountAmount" id="discountAmount" value="<%= discountAmount %>">
       <input type="hidden" name="couponCode" id="couponCode" value="<%= couponCode || '' %>">      
       <input type="hidden" name="finalAmount" id="finalAmount" value="<%= finalAmount %>">
-      <input type="hidden" name="forCopuen" id="forCopuen" value="<%= forCopuen %>">
-      <input type="hidden" name="razorpayPaymentId" id="razorpayPaymentId">
-      <input type="hidden" name="razorpayOrderId" id="razorpayOrderId">
-      <input type="hidden" name="razorpaySignature" id="razorpaySignature">
       <!-- Razorpay payment method will be dynamically set below -->
     
       <div class="checkout-row">
@@ -379,7 +375,6 @@ $('#placeOrderForm').submit(function(e) {
     
     const discountAmount = parseFloat($('#discountAmount').val()) || 0;
     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
-    const forCopuen = 0;
     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
 
     if (!shippingAddressId) {
@@ -391,7 +386,7 @@ $('#placeOrderForm').submit(function(e) {
         return;
     }
 
-    $.post('/place-order', { couponCode, forCopuen, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
+    $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
         console.log('Response from server:', data); // Log the entire response for debugging
 
         if (data.success) {

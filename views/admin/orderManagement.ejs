@@ -82,7 +82,7 @@
                             N/A
                             <% } %>
                         </td>
-                        <td>$<%= order.totalPrice %></td>
+                        <td>₹<%= order.totalPrice %></td>
                         <td>
                             <select class="status-select form-control" onchange="updateOrderStatus('<%= order._id %>', this.value)">
                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
@@ -92,11 +92,7 @@
                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                             </select>
                         </td>
-                        <!-- <td>
-                            <button class="btn btn-info btn-sm" onclick="viewOrderDetails('<%= order._id %>')">View</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteOrder('<%= order._id %>')">Delete</button>
-                        </td> -->
-
+                    
                         <td>
                             <% if (order.status === 'Return Requested') { %>
                                 <button class="btn btn-success btn-sm" onclick="approveReturn('<%= order._id %>')">Approve Return</button>

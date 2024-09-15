@@ -44,8 +44,8 @@
                                         <td><%= product.category ? product.category.name : 'No Category' %></td>
                                         <td class="text-end">
                                             <button class="btn btn-primary btn-sm" onclick="openOfferModal('<%= product._id %>')">Add Offer</button>
-                                            <a href="/admin/products/edit/<%= product._id %>" class="btn btn-light btn-sm">Edit</a>
-                                            <form action="/admin/products/delete/<%= product._id %>" method="POST" style="display:inline;">
+                                            <a href="/admin/editProduct/<%= product._id %>" class="btn btn-light btn-sm">Edit</a>
+                                            <form action="/admin/deleteProduct/<%= product._id %>" method="POST" style="display:inline;">
                                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                             </form>
                                         </td>

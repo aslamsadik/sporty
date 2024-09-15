@@ -1924,10 +1924,10 @@ const applyCoupon = async (req, res) => {
 
         // Check if the cart total meets the minimum purchase requirement for the coupon
         if (cartTotalAfterOffer < coupon.minPrice) {
-            return res.status(200).json({
+            return res.status(400).json({
                 message: `Minimum purchase of ₹${coupon.minPrice} is required to apply this coupon.`,
                 discountAmount: 0,
-                finalAmount: cartTotalAfterOffer
+                finalAmount: cartTotalAfterOffer,
             });
         }
 

@@ -56,7 +56,7 @@ Admin_router.get('/offers', adminController.addOfferPage);
 Admin_router.post('/offers/delete/:offerId', adminController.deleteOffer);
 
 Admin_router.get('/sales-report', adminController.getSalesReport);
-
+Admin_router.get('/sales-report/export/pdf', adminController.exportSalesReportPDF);
 // Export sales report as CSV
 Admin_router.get('/sales-report/export/csv', adminController.exportSalesReportCSV);
 

@@ -14,6 +14,9 @@ const mongoose = require('mongoose');
 const moment = require('moment');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+
 
 
 const Admin_login = async (req, res) => {
@@ -1358,6 +1361,73 @@ const fetchSalesData = async ({ startDate, endDate, category }) => {
     }
 };
 
+const exportSalesReportPDF = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        const salesData = await fetchSalesData({ startDate, endDate });
+
+        // Create a new PDF document
+        const doc = new PDFDocument({ margin: 30 });
+
+        // Pipe the PDF into a writable stream
+        const filePath = 'sales_report.pdf';
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
+
+        // Add Title to PDF
+        doc.fontSize(20).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
+        doc.moveDown(2);
+
+        // Draw table headers
+        doc.fontSize(12)
+            .font('Helvetica-Bold')
+            .text('Product Name', 30, doc.y, { width: 200, continued: true })
+            .text('Total Quantity', 230, doc.y, { width: 100, align: 'center', continued: true })
+            .text('Total Revenue (INR)', 330, doc.y, { width: 100, align: 'center', continued: true })
+            .text('Discount (INR)', 430, doc.y, { width: 100, align: 'center', continued: true })
+            .text('Coupons Deduction (INR)', 530, doc.y, { width: 100, align: 'center' });
+
+        doc.moveDown();
+
+        // Table content (rows)
+        salesData.forEach(item => {
+            doc.font('Helvetica')
+                .text(item.productName, 30, doc.y, { width: 200, continued: true })
+                .text(item.totalQuantity, 230, doc.y, { width: 100, align: 'center', continued: true });
+
+            const totalRevenue = item.totalRevenue ? item.totalRevenue.toFixed(2) : '0.00';
+            const totalDiscount = item.totalDiscount ? item.totalDiscount.toFixed(2) : '0.00';
+            const couponsDeduction = item.couponsDeduction ? item.couponsDeduction.toFixed(2) : '0.00';
+
+            doc.text(totalRevenue, 330, doc.y, { width: 100, align: 'center', continued: true })
+                .text(totalDiscount, 430, doc.y, { width: 100, align: 'center', continued: true })
+                .text(couponsDeduction, 530, doc.y, { width: 100, align: 'center' });
+
+            doc.moveDown(1);  // Move down slightly between rows
+            doc.lineWidth(0.5).moveTo(30, doc.y).lineTo(630, doc.y).stroke();  // Draw line after each row
+        });
+
+        // Close the PDF and finish writing
+        doc.end();
+
+        // Download the PDF
+        stream.on('finish', function () {
+            res.download(filePath, 'sales_report.pdf', (err) => {
+                if (err) {
+                    console.error('Error downloading PDF file:', err);
+                    res.status(500).send('Error downloading file');
+                }
+                // Optionally, delete the file after download
+                fs.unlinkSync(filePath);
+            });
+        });
+    } catch (error) {
+        console.error('Error exporting sales report as PDF:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
 
 
 module.exports = {
@@ -1396,5 +1466,6 @@ module.exports = {
     addOfferPage,
     getSalesReport,
     exportSalesReportCSV,
-    exportSalesReportExcel
+    exportSalesReportExcel,
+    exportSalesReportPDF 
 };

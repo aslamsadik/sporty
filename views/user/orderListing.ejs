@@ -157,7 +157,7 @@
                         <p>Order Date: <strong><%= new Date(order.createdAt).toLocaleDateString() %></strong></p>
                     </div>
                     <a href="/orderDetails/<%= order._id %>" class="view-button">View Order</a>
-                    <% if (order.status === 'Pending') { %>
+                    <% if (order.status === 'Pending' || order.status==='Shipped') { %>
                         <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
                     <% } else if (order.status === 'Delivered') { %>
                         <button class="return-button" onclick="returnProduct('<%= order._id %>')">Return Product</button>

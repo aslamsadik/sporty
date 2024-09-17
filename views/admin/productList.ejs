@@ -25,6 +25,7 @@
                                 <th>Name</th>
                                 <th>Price</th>
                                 <th>Category</th>
+                                <th>Stock</th>
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
@@ -42,6 +43,7 @@
                                         <td><%= product.name %></td>
                                         <td><%= product.price %></td>
                                         <td><%= product.category ? product.category.name : 'No Category' %></td>
+                                        <td><%=product.stock?product.stock:"Out Of Stock" %></td>
                                         <td class="text-end">
                                             <button class="btn btn-primary btn-sm" onclick="openOfferModal('<%= product._id %>')">Add Offer</button>
                                             <a href="/admin/editProduct/<%= product._id %>" class="btn btn-light btn-sm">Edit</a>

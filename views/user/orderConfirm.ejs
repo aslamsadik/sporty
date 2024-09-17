@@ -105,7 +105,7 @@
               <h2>Price Breakdown</h2>
               <p class="card-text">Subtotal: <span>₹<%= orderDetails.totalPrice ? (orderDetails.totalPrice + orderDetails.totaldiscountAmount).toFixed(2) : '0.00' %></span></p>
               <p class="card-text">Total Discount: <span>₹<%= orderDetails.totaldiscountAmount ? orderDetails.totaldiscountAmount.toFixed(2) : '0.00' %></span></p>
-              <p class="card-text">Offers Discount: <span>₹<%= orderDetails.offersDiscount ? orderDetails.offersDiscount.toFixed(2) : '0.00' %></span></p>
+              <p class="card-text">Offers Discount: <span>₹<%= orderDetails.offfersDiscount ? orderDetails.offfersDiscount.toFixed(2) : '0.00' %></span></p>
               <p class="card-text">Coupon Deduction: <span>₹<%= orderDetails.couponDeduction ? orderDetails.couponDeduction.toFixed(2) : '0.00' %></span></p>
               <p class="card-text">Total Amount after Discount: <span>₹<%= orderDetails.totalPrice ? orderDetails.totalPrice.toFixed(2) : '0.00' %></span></p>
 

@@ -858,31 +858,6 @@ const getAddCouponPage = async (req, res) => {
     }
 };
 
-
-// Add Coupon
-// const addCoupon = async (req, res) => {
-//     try {
-//         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
-
-//         const newCoupon = new Coupon({
-//             code,
-//             discountType,
-//             discountValue,
-//             expirationDate,
-//             usageLimit: usageLimit || 1, // Default to 1 if not provided
-//             minPrice
-//         });
-
-//         await newCoupon.save();
-//         console.log('Coupon added:', newCoupon);
-
-//         res.redirect('/admin/couponList?message=Coupon added successfully!&messageType=success');
-//     } catch (error) {
-//         console.error('Error adding coupon:', error.message);
-//         res.redirect('/admin/addCouponPage?message=Error adding coupon.&messageType=error');
-//     }
-// };
-
 const addCoupon = async (req, res) => {
     try {
         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
@@ -910,21 +885,11 @@ const addCoupon = async (req, res) => {
     }
 };
 
-// const getCouponList = async (req, res) => {
-//     try {
-//         const coupons = await Coupon.find({});
-//         const { message, messageType } = req.query; // Get message and type from query params
-//         res.render('coupenList', { coupons, message, messageType });
-//     } catch (error) {
-//         res.render('coupenList', { coupons: [], message: 'Error fetching coupons.', messageType: 'error' });
-//     }
-// };
-
 const getCouponList = async (req, res) => {
     try {
         // Set default values for page and limit
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10; // Show 10 coupons per page by default
+        const limit = parseInt(req.query.limit) || 5; // Show 10 coupons per page by default
 
         // Calculate total coupons and the number of pages
         const totalCoupons = await Coupon.countDocuments({});
@@ -952,7 +917,6 @@ const getCouponList = async (req, res) => {
     }
 };
 
-
 const getEditCouponPage = async (req, res) => {
     try {
         const coupon = await Coupon.findById(req.params.id);
@@ -962,27 +926,6 @@ const getEditCouponPage = async (req, res) => {
         res.redirect('/admin/couponList?message=Error fetching coupon details.&messageType=error');
     }
 };
-
-// Edit Coupon
-// const editCoupon = async (req, res) => {
-//     try {
-//         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
-
-//         await Coupon.findByIdAndUpdate(req.params.id, {
-//             code,
-//             discountType,
-//             discountValue,
-//             expirationDate,
-//             usageLimit,
-//             minPrice
-//         });
-
-//         res.redirect(`/admin/couponList?message=Coupon updated successfully!&messageType=success`);
-//     } catch (error) {
-//         console.error('Error updating coupon:', error.message);
-//         res.redirect(`/admin/editCoupon/${req.params.id}?message=Error updating coupon.&messageType=error`);
-//     }
-// };
 
 const editCoupon = async (req, res) => {
     try {
@@ -1071,12 +1014,35 @@ const addOffer = async (req, res) => {
   // Get Offers for Products and Categories
 const getOffers = async (req, res) => {
     try {
-      const offers = await Offer.find().populate('applicableProducts').populate('applicableCategories');
+      // Set default values for page and limit
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5; // Show 10 coupons per page by default
+
+      // Calculate total coupons and the number of pages
+      const totalOffers = await Coupon.countDocuments({});
+      const totalPages = Math.ceil(totalOffers / limit);
+
+      // Fetch the coupons for the current page
+      const offers = await Offer.find({})
+          .populate('applicableProducts').populate('applicableCategories')
+          .skip((page - 1) * limit)  // Skip the previous pages
+          .limit(limit);  // Limit the number of results
+          
+
+
+
+      //   const offers = await Offer.find().populate('applicableProducts').populate('applicableCategories');
   
       // Pass a message and messageType if they are present in the query parameters
       const { message, messageType } = req.query;
   
-      res.render('offerListing', { offers, message, messageType });
+      res.render('offerListing', {
+         offers,
+         message,
+         messageType, 
+         currentPage: page,
+         totalPages,
+         limit });
     } catch (error) {
       console.error(error);
       res.status(500).send('Error fetching offers');

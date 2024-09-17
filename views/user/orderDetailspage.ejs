@@ -19,8 +19,18 @@
                     <h2 class="h5">Order ID: <%= order._id %></h2>
                     <p><strong>Status:</strong> <%= order.status %></p>
                     <p><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p> <!-- Order Date -->
-                    <p><strong>Original Amount:</strong> ₹<%= (order.totalPrice + order.discountAmount).toFixed(2) %></p> <!-- Original Amount -->
-                    <p><strong>Discount:</strong> -₹<%= order.discountAmount.toFixed(2) %></p> <!-- Discount Amount -->
+                    <p><strong>Original Amount:</strong> ₹<%= (order.totalPrice + order.totaldiscountAmount).toFixed(2) %></p> <!-- Original Amount -->
+
+                    <p><strong>Total Discount:</strong> -₹<%= order.totaldiscountAmount.toFixed(2) %></p> <!-- Total Discount -->
+
+                    <% if (order.offfersDiscount) { %>
+                        <p><strong>Offer Discount:</strong> -₹<%= order.offfersDiscount.toFixed(2) %></p> <!-- Offer Discount -->
+                    <% } %>
+
+                    <% if (order.couponDeduction) { %>
+                        <p><strong>Coupon Deduction:</strong> -₹<%= order.couponDeduction.toFixed(2) %></p> <!-- Coupon Deduction -->
+                    <% } %>
+
                     <p><strong>Total Price After Discount:</strong> ₹<%= order.totalPrice.toFixed(2) %></p> <!-- Final Price After Discount -->
                     <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
                     <p><strong>Order Notes:</strong> <%= order.orderNotes || 'N/A' %></p>

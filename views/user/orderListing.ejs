@@ -144,6 +144,10 @@
                                 <p><strong><%= product.name %></strong></p>
                                 <p>Price: ₹<%= product.price %></p>
                                 <p>Quantity: <%= product.quantity %></p>
+                                <p>Sub Total: <strong><%=order.totalPrice ? (order.totalPrice + order.totaldiscountAmount).toFixed(2) : '0.00' %></strong></p>
+                                <p>Offers Discount: <strong><%=order.offfersDiscount ? order.offfersDiscount.toFixed(2) : '0.00' %></strong></p>
+                                <p>Coupen Discount: <strong><%=order.couponDeduction ? order.couponDeduction.toFixed(2) : '0.00' %></strong></p>
+                                <p>Total Discount: <strong><%=order.totaldiscountAmount ? order.totaldiscountAmount.toFixed(2) : '0.00' %></strong></p>
                             </div>
                         </div>
                     <% }) %>

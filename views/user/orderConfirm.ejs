@@ -109,18 +109,7 @@
               <p class="card-text">Coupon Deduction: <span>₹<%= orderDetails.couponDeduction ? orderDetails.couponDeduction.toFixed(2) : '0.00' %></span></p>
               <p class="card-text">Total Amount after Discount: <span>₹<%= orderDetails.totalPrice ? orderDetails.totalPrice.toFixed(2) : '0.00' %></span></p>
 
-              <!-- Shipping Address -->
-              <!-- <h2>Shipping Address</h2>
-              <% if (orderDetails.shippingAddressId) { %>
-                <p class="card-text">
-                  <%= orderDetails.shippingAddressId.addressLine1 %>, 
-                  <%= orderDetails.shippingAddressId.city %>, 
-                  <%= orderDetails.shippingAddressId.postalCode %>
-                </p>
-              <% } else { %>
-                <p class="card-text">Shipping address not available.</p>
-              <% } %> -->
-
+              
               <!-- Payment Method -->
               <p class="card-text">Payment Method: <span><%= orderDetails.paymentMethod %></span></p>
 

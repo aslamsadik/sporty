@@ -1399,6 +1399,65 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+const cancelProduct = async (req, res) => {
+    try {
+        console.log("Entered cancelProduct function");
+
+        const { orderId, productId } = req.params;
+        console.log(`Attempting to cancel product ${productId} in order ${orderId}`);
+
+        // Find the order by ID
+        const order = await Order.findById(orderId);
+        if (!order) {
+            console.log(`Order ${orderId} not found`);
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        // Find the product within the order
+        const product = order.products.find(p => p.productId.equals(productId));
+        if (!product) {
+            console.log(`Product ${productId} not found in order ${orderId}`);
+            return res.status(404).json({ success: false, message: 'Product not found in order' });
+        }
+
+        // Check if the product has already been cancelled
+        if (product.cancellationStatus === 'Cancelled') {
+            console.log(`Product ${productId} already cancelled`);
+            return res.status(400).json({ success: false, message: 'Product already cancelled' });
+        }
+
+        // Update product's cancellation status
+        product.cancellationStatus = 'Cancelled';
+        order.updatedAt = new Date(); // Update order's last modified time
+        await order.save();
+
+        // Optionally refund part of the order price based on the cancelled product
+        if (['wallet', 'razorpay'].includes(order.paymentMethod)) {
+            let wallet = await Wallet.findOne({ user: order.userId });
+            if (!wallet) {
+                wallet = new Wallet({ user: order.userId, balance: 0, transactions: [] });
+            }
+
+            const refundAmount = product.quantity * product.price;
+            wallet.balance += refundAmount; // Refund product price
+            wallet.transactions.push({
+                amount: refundAmount,
+                type: 'credit',
+                description: `Refund for cancelled product: ${product.name}`
+            });
+
+            await wallet.save();
+        }
+
+        // Return success response
+        console.log(`Product ${productId} cancelled successfully`);
+        res.json({ success: true, message: 'Product cancelled successfully' });
+    } catch (error) {
+        console.error('Error cancelling product:', error.message);
+        res.status(500).json({ success: false, message: 'Error cancelling product. Please try again.' });
+    }
+};
+
 
 const getProfilePage = async (req, res) => {
     try {
@@ -2274,5 +2333,6 @@ module.exports = {
     getWalletDetails,
     addFunds,
     createRazorpayOrder,
-    verifyPayment
+    verifyPayment,
+    cancelProduct
 };

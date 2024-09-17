@@ -94,6 +94,9 @@ router.post('/order/cancel/:orderId', isAuthenticated, userController.cancelOrde
 router.get('/orders', isAuthenticated, userController.getOrderListing);
 router.get('/orderDetails/:orderId', isAuthenticated, userController.getOrderDetails);
 router.post('/order/return/:orderId', isAuthenticated, userController.returnOrder);
+// router.post('/order/cancelProduct/:id', isAuthenticated, userController.cancelProduct);
+router.post('/cancelProduct/:orderId/:productId', isAuthenticated, userController.cancelProduct);
+
 
 // Profile and address management (protected)
 router.get('/profile', isAuthenticated, userController.getProfilePage);

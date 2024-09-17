@@ -860,22 +860,49 @@ const getAddCouponPage = async (req, res) => {
 
 
 // Add Coupon
+// const addCoupon = async (req, res) => {
+//     try {
+//         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
+
+//         const newCoupon = new Coupon({
+//             code,
+//             discountType,
+//             discountValue,
+//             expirationDate,
+//             usageLimit: usageLimit || 1, // Default to 1 if not provided
+//             minPrice
+//         });
+
+//         await newCoupon.save();
+//         console.log('Coupon added:', newCoupon);
+
+//         res.redirect('/admin/couponList?message=Coupon added successfully!&messageType=success');
+//     } catch (error) {
+//         console.error('Error adding coupon:', error.message);
+//         res.redirect('/admin/addCouponPage?message=Error adding coupon.&messageType=error');
+//     }
+// };
+
 const addCoupon = async (req, res) => {
     try {
         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
+
+        const maxDiscountValue = 100; // Set maximum discount limit
+
+        if (discountValue > maxDiscountValue) {
+            return res.redirect('/admin/addCouponPage?message=Discount exceeds maximum allowed value.&messageType=error');
+        }
 
         const newCoupon = new Coupon({
             code,
             discountType,
             discountValue,
             expirationDate,
-            usageLimit: usageLimit || 1, // Default to 1 if not provided
+            usageLimit: usageLimit || 1,
             minPrice
         });
 
         await newCoupon.save();
-        console.log('Coupon added:', newCoupon);
-
         res.redirect('/admin/couponList?message=Coupon added successfully!&messageType=success');
     } catch (error) {
         console.error('Error adding coupon:', error.message);
@@ -883,16 +910,48 @@ const addCoupon = async (req, res) => {
     }
 };
 
+// const getCouponList = async (req, res) => {
+//     try {
+//         const coupons = await Coupon.find({});
+//         const { message, messageType } = req.query; // Get message and type from query params
+//         res.render('coupenList', { coupons, message, messageType });
+//     } catch (error) {
+//         res.render('coupenList', { coupons: [], message: 'Error fetching coupons.', messageType: 'error' });
+//     }
+// };
 
 const getCouponList = async (req, res) => {
     try {
-        const coupons = await Coupon.find({});
-        const { message, messageType } = req.query; // Get message and type from query params
-        res.render('coupenList', { coupons, message, messageType });
+        // Set default values for page and limit
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10; // Show 10 coupons per page by default
+
+        // Calculate total coupons and the number of pages
+        const totalCoupons = await Coupon.countDocuments({});
+        const totalPages = Math.ceil(totalCoupons / limit);
+
+        // Fetch the coupons for the current page
+        const coupons = await Coupon.find({})
+            .skip((page - 1) * limit)  // Skip the previous pages
+            .limit(limit);  // Limit the number of results
+
+        // Get optional message and messageType from query params
+        const { message, messageType } = req.query;
+
+        // Render the coupon list view with pagination info
+        res.render('coupenList', {
+            coupons,
+            message,
+            messageType,
+            currentPage: page,
+            totalPages,
+            limit
+        });
     } catch (error) {
         res.render('coupenList', { coupons: [], message: 'Error fetching coupons.', messageType: 'error' });
     }
 };
+
 
 const getEditCouponPage = async (req, res) => {
     try {
@@ -905,9 +964,35 @@ const getEditCouponPage = async (req, res) => {
 };
 
 // Edit Coupon
+// const editCoupon = async (req, res) => {
+//     try {
+//         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
+
+//         await Coupon.findByIdAndUpdate(req.params.id, {
+//             code,
+//             discountType,
+//             discountValue,
+//             expirationDate,
+//             usageLimit,
+//             minPrice
+//         });
+
+//         res.redirect(`/admin/couponList?message=Coupon updated successfully!&messageType=success`);
+//     } catch (error) {
+//         console.error('Error updating coupon:', error.message);
+//         res.redirect(`/admin/editCoupon/${req.params.id}?message=Error updating coupon.&messageType=error`);
+//     }
+// };
+
 const editCoupon = async (req, res) => {
     try {
         const { code, discountType, discountValue, expirationDate, usageLimit, minPrice } = req.body;
+
+        const maxDiscountValue = 100; // Set maximum discount limit
+
+        if (discountValue > maxDiscountValue) {
+            return res.redirect(`/admin/editCoupon/${req.params.id}?message=Discount exceeds maximum allowed value.&messageType=error`);
+        }
 
         await Coupon.findByIdAndUpdate(req.params.id, {
             code,
@@ -924,6 +1009,7 @@ const editCoupon = async (req, res) => {
         res.redirect(`/admin/editCoupon/${req.params.id}?message=Error updating coupon.&messageType=error`);
     }
 };
+
 
 const deleteCoupon = async (req, res) => {
     try {

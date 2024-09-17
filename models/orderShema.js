@@ -5,7 +5,8 @@ const orderSchema = new mongoose.Schema({
     products: [
         {
             productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-            quantity: { type: Number, required: true }
+            quantity: { type: Number, required: true },
+            cancellationStatus: { type: String, default: 'Not Cancelled' }, // New field for product cancellation
         }
     ],
     shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },

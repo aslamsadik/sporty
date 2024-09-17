@@ -41,9 +41,14 @@
                                             <option value="fixed">Fixed</option>
                                         </select>
                                     </div>
+                                    <!-- <div class="mb-4">
+                                        <label class="form-label">Discount Value</label>
+                                        <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" min="0" required>
+                                    </div> -->
                                     <div class="mb-4">
                                         <label class="form-label">Discount Value</label>
                                         <input type="number" placeholder="e.g., 10" class="form-control" name="discountValue" min="0" required>
+                                        <input type="hidden" id="maxDiscountValue" value="100"> <!-- Max Discount Value -->
                                     </div>
                                     <div class="mb-4">
                                         <label class="form-label">Expiration Date</label>
@@ -53,6 +58,7 @@
                                         <label class="form-label">Usage Limit</label>
                                         <input type="number" placeholder="e.g., 100" class="form-control" name="usageLimit" min="0">
                                     </div>
+
                                 </div>
                             </div>
                             <div>
@@ -64,23 +70,35 @@
             </div>
         </form>        
     </section>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
         function validateCouponForm(event) {
-            const discountInput = document.querySelector('input[name="discount"]');
-            const discount = parseFloat(discountInput.value);
-    
-            // Validate discount
-            if (isNaN(discount) || discount < 0 || discount > 100) {
-                event.preventDefault(); // Prevent form submission if validation fails
-                alert("Discount must be a number between 0 and 100.");
-                discountInput.focus();
-                return false;
-            }
-    
-            // If validation is passed, the form will be submitted
-            return true;
+        const discountInput = document.querySelector('input[name="discountValue"]');
+        const discountValue = parseFloat(discountInput.value);
+        const maxDiscount = 100; // Adjust this value as per your logic
+
+        // Validate discount value
+        if (isNaN(discountValue) || discountValue < 0 || discountValue > maxDiscount) {
+            event.preventDefault(); // Prevent form submission if validation fails
+            
+            // Use SweetAlert for the error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Discount',
+                text: `Discount value must be between 0 and ${maxDiscount}.`,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                discountInput.focus(); // Focus on the input after closing the alert
+            });
+
+            return false;
         }
+
+        // If validation passes, allow the form to be submitted
+        return true;
+    }
+
     </script>
     
     </body>

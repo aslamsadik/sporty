@@ -1375,14 +1375,14 @@ const exportSalesReportPDF = async (req, res) => {
         doc.pipe(stream);
 
         // Add Title to PDF
-        doc.fontSize(20).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
+        doc.fontSize(10).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
         doc.moveDown(2);
 
         // Draw table headers
-        doc.fontSize(12)
+        doc.fontSize(10)
             .font('Helvetica-Bold')
-            .text('Product Name', 30, doc.y, { width: 200, continued: true })
-            .text('Total Quantity', 230, doc.y, { width: 100, align: 'center', continued: true })
+            .text('Product Name', 30, doc.y, { width: 100, continued: true })
+            .text('Total Quantity', 150, doc.y, { width: 100, align: 'center', continued: true })
             .text('Total Revenue (INR)', 330, doc.y, { width: 100, align: 'center', continued: true })
             .text('Discount (INR)', 430, doc.y, { width: 100, align: 'center', continued: true })
             .text('Coupons Deduction (INR)', 530, doc.y, { width: 100, align: 'center' });

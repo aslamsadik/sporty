@@ -1399,65 +1399,133 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+// const cancelProduct = async (req, res) => {
+//     try {
+//         const { orderId, productId } = req.params;
+//         console.log(orderId,productId);
+        
+//         console.log("Entered cancelProduct function in backend userController");
+
+//         // Validate the orderId and productId
+//         if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
+//             return res.status(400).json({ success: false, message: "Invalid Order ID or Product ID" });
+//         }
+
+//         // Find the order by ID
+//         const order = await Order.findById(orderId);
+
+//         if (!order) {
+//             return res.status(404).json({ success: false, message: "Order not found" });
+//         }
+
+//         // Find the product in the order
+//         const product = order.products.find(p => p.productId.toString() === productId);
+        
+//         // Check if the product exists in the order and is not already cancelled
+//         if (!product) {
+//             return res.status(404).json({ success: false, message: "Product not found in the order" });
+//         }
+        
+//         if (product.cancellationStatus === 'Cancelled') {
+//             return res.status(400).json({ success: false, message: "Product already cancelled" });
+//         }
+
+//         // Update cancellation status
+//         product.cancellationStatus = 'Cancelled';
+
+//         // Recalculate total price and discounts
+//         const productPrice = product.price * product.quantity;
+//         order.totalPrice -= productPrice; // Deduct product price from total order price
+
+//         if (product.discount) {
+//             order.totaldiscountAmount -= product.discount; // Adjust discount if applicable
+//         }
+
+//         // Handle refund based on payment method
+//         if (order.paymentMethod === 'wallet') {
+//             // Refund to wallet
+//             await refundToWallet(order.userId, productPrice);
+//         } else if (order.paymentMethod === 'razorpay') {
+//             // Refund via Razorpay API
+//             await refundViaRazorpay(order.razorpayPaymentId, productPrice);
+//         }
+
+//         // Save the updated order
+//         await order.save();
+
+//         // Return success response with the updated order details
+//         return res.json({ success: true, message: "Product cancelled successfully", order });
+
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).json({ success: false, message: "Failed to cancel product" });
+//     }
+// };
+
 const cancelProduct = async (req, res) => {
     try {
-        console.log("Entered cancelProduct function");
-
         const { orderId, productId } = req.params;
-        console.log(`Attempting to cancel product ${productId} in order ${orderId}`);
+        console.log(orderId, productId);
+        
+        console.log("Entered cancelProduct function in backend userController");
+
+        // Validate the orderId and productId
+        if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ success: false, message: "Invalid Order ID or Product ID" });
+        }
 
         // Find the order by ID
         const order = await Order.findById(orderId);
+
         if (!order) {
-            console.log(`Order ${orderId} not found`);
-            return res.status(404).json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: "Order not found" });
         }
 
-        // Find the product within the order
-        const product = order.products.find(p => p.productId.equals(productId));
+        // Find the product in the order
+        const product = order.products.find(p => p.productId.toString() === productId);
+        
+        // Check if the product exists in the order and is not already cancelled
         if (!product) {
-            console.log(`Product ${productId} not found in order ${orderId}`);
-            return res.status(404).json({ success: false, message: 'Product not found in order' });
+            return res.status(404).json({ success: false, message: "Product not found in the order" });
         }
-
-        // Check if the product has already been cancelled
+        
         if (product.cancellationStatus === 'Cancelled') {
-            console.log(`Product ${productId} already cancelled`);
-            return res.status(400).json({ success: false, message: 'Product already cancelled' });
+            return res.status(400).json({ success: false, message: "Product already cancelled" });
         }
 
-        // Update product's cancellation status
+        // Update cancellation status
         product.cancellationStatus = 'Cancelled';
-        order.updatedAt = new Date(); // Update order's last modified time
+
+        // Recalculate total price and discounts
+        const productPrice = (Number(product.price) || 0) * (Number(product.quantity) || 0);
+        console.log(`Product Price Calculation: ${productPrice}`);
+
+        order.totalPrice = (Number(order.totalPrice) || 0) - productPrice; // Deduct product price from total order price
+        order.totaldiscountAmount = (Number(order.totaldiscountAmount) || 0) - (product.discount || 0); // Adjust discount if applicable
+
+        console.log(`New Total Price: ${order.totalPrice}`);
+        console.log(`Total Discount Amount: ${order.totaldiscountAmount}`);
+
+        // Handle refund based on payment method
+        if (order.paymentMethod === 'wallet') {
+            // Refund to wallet
+            await refundToWallet(order.userId, productPrice);
+        } else if (order.paymentMethod === 'razorpay') {
+            // Refund via Razorpay API
+            await refundViaRazorpay(order.razorpayPaymentId, productPrice);
+        }
+
+        // Save the updated order
         await order.save();
 
-        // Optionally refund part of the order price based on the cancelled product
-        if (['wallet', 'razorpay'].includes(order.paymentMethod)) {
-            let wallet = await Wallet.findOne({ user: order.userId });
-            if (!wallet) {
-                wallet = new Wallet({ user: order.userId, balance: 0, transactions: [] });
-            }
+        // Return success response with the updated order details
+        return res.json({ success: true, message: "Product cancelled successfully", order });
 
-            const refundAmount = product.quantity * product.price;
-            wallet.balance += refundAmount; // Refund product price
-            wallet.transactions.push({
-                amount: refundAmount,
-                type: 'credit',
-                description: `Refund for cancelled product: ${product.name}`
-            });
-
-            await wallet.save();
-        }
-
-        // Return success response
-        console.log(`Product ${productId} cancelled successfully`);
-        res.json({ success: true, message: 'Product cancelled successfully' });
-    } catch (error) {
-        console.error('Error cancelling product:', error.message);
-        res.status(500).json({ success: false, message: 'Error cancelling product. Please try again.' });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "Failed to cancel product" });
     }
 };
-
 
 const getProfilePage = async (req, res) => {
     try {
@@ -1588,6 +1656,7 @@ const getOrderListing = async (req, res) => {
         const ordersWithProductDetails = orders.map(order => ({
             ...order.toObject(),
             products: order.products.map(product => ({
+                _id: product.productId._id,
                 name: product.productId.name,
                 images: product.productId.images,
                 price: product.productId.price,
@@ -1597,7 +1666,7 @@ const getOrderListing = async (req, res) => {
 
         // Calculate total pages for pagination
         const totalPages = Math.ceil(totalOrders / limit);
-
+        console.log("orders" ,ordersWithProductDetails[0])
         // Render the order listing page with populated orders and pagination data
         res.render('orderListing', {
             orders: ordersWithProductDetails,

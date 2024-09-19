@@ -38,6 +38,7 @@ const orderSchema = new mongoose.Schema({
             productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
             quantity: { type: Number, required: true },
             cancellationStatus: { type: String, default: 'Not Cancelled' }, // New field for product cancellation
+            originalPrice:{ type: Number,default:0 },
             discountApplied: { type: Number,default:0 },
         }
     ],

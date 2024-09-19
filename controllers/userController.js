@@ -399,7 +399,6 @@ const resendOtp = async (req, res) => {
     }
 };
 
-
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -660,6 +659,12 @@ const getCheckoutPage = async (req, res) => {
 
         if (!userId) {
             return res.redirect('/login');
+        }
+
+        // Load cart and save to session if missing
+        if (!req.session.cart) {
+            const cart = await Cart.findOne({ userId }).populate('products.productId');
+            req.session.cart = cart || { products: [] };
         }
 
         const cart = await Cart.findOne({ userId }).populate('products.productId');
@@ -984,7 +989,6 @@ const getOrderConfirmpage = async (req, res) => {
     }
 };
 
-
 const cancelOrder = async (req, res) => {
     try {
         const orderId = req.params.orderId;
@@ -1044,71 +1048,6 @@ const cancelOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error cancelling order. Please try again.' });
     }
 };
-
-// const cancelProduct = async (req, res) => {
-//     try {
-//         const { orderId, productId } = req.params;
-//         console.log(orderId, productId);
-        
-//         console.log("Entered cancelProduct function in backend userController");
-
-//         // Validate the orderId and productId
-//         if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
-//             return res.status(400).json({ success: false, message: "Invalid Order ID or Product ID" });
-//         }
-
-//         // Find the order by ID
-//         const order = await Order.findById(orderId);
-
-//         if (!order) {
-//             return res.status(404).json({ success: false, message: "Order not found" });
-//         }
-
-//         // Find the product in the order
-//         const product = order.products.find(p => p.productId.toString() === productId);
-        
-//         // Check if the product exists in the order and is not already cancelled
-//         if (!product) {
-//             return res.status(404).json({ success: false, message: "Product not found in the order" });
-//         }
-        
-//         if (product.cancellationStatus === 'Cancelled') {
-//             return res.status(400).json({ success: false, message: "Product already cancelled" });
-//         }
-
-//         // Update cancellation status
-//         product.cancellationStatus = 'Cancelled';
-
-//         // Recalculate total price and discounts
-//         const productPrice = (Number(product.price) || 0) * (Number(product.quantity) || 0);
-//         console.log(`Product Price Calculation: ${productPrice}`);
-
-//         order.totalPrice = (Number(order.totalPrice) || 0) - productPrice; // Deduct product price from total order price
-//         order.totaldiscountAmount = (Number(order.totaldiscountAmount) || 0) - (product.discount || 0); // Adjust discount if applicable
-
-//         console.log(`New Total Price: ${order.totalPrice}`);
-//         console.log(`Total Discount Amount: ${order.totaldiscountAmount}`);
-
-//         // Handle refund based on payment method
-//         if (order.paymentMethod === 'wallet') {
-//             // Refund to wallet
-//             await refundToWallet(order.userId, productPrice);
-//         } else if (order.paymentMethod === 'razorpay') {
-//             // Refund via Razorpay API
-//             await refundViaRazorpay(order.razorpayPaymentId, productPrice);
-//         }
-
-//         // Save the updated order
-//         await order.save();
-
-//         // Return success response with the updated order details
-//         return res.json({ success: true, message: "Product cancelled successfully", order });
-
-//     } catch (err) {
-//         console.error(err);
-//         return res.status(500).json({ success: false, message: "Failed to cancel product" });
-//     }
-// };
 
 const cancelProduct = async (req, res) => {
     try {
@@ -1550,90 +1489,6 @@ const resetPassword = async (req, res) => {
     }
 };
 
-// const applyCoupon = async (req, res) => {
-//     try {
-//         const userId = req.session.user?.userId;
-//         const { couponCode } = req.body;
-//          console.log("entred coupen function in backend")
-         
-//         if (!userId) {
-//             return res.status(400).json({ message: 'User not logged in' });
-//         }
-
-//         console.log('Coupon code received:', couponCode); // Debugging line
-
-//         // Retrieve the user's cart
-//         const cart = await Cart.findOne({ userId }).populate('products.productId');
-//         if (!cart || cart.products.length === 0) {
-//             return res.status(400).json({ message: 'Cart not found or is empty' });
-//         }
-
-//         // Retrieve the coupon by code
-//         const coupon = await Coupon.findOne({ code: couponCode }).exec();
-//         if (!coupon) {
-//             return res.status(400).json({ message: 'Invalid coupon code' });
-//             discountAmount=0;
-//         }
-
-//         // Check if the coupon is expired
-//         const currentDate = new Date();
-//         if (coupon.expirationDate < currentDate) {
-//             return res.status(400).json({ message: 'Coupon has expired' });
-//         }
-
-//         // Check if the coupon usage limit has been reached
-//         if (coupon.usedCount >= coupon.usageLimit) {
-//             return res.status(400).json({ message: 'Coupon usage limit reached' });
-//         }
-
-//         // Calculate the total based on `priceAfterOffer`
-//         const cartTotalAfterOffer = cart.products.reduce((total, product) => {
-//             return total + (product.priceAfterOffer ? product.priceAfterOffer  : product.productId.price );
-//         }, 0);
-
-//         // Check if the cart total meets the minimum purchase requirement for the coupon
-//         if (cartTotalAfterOffer < coupon.minPrice) {
-//             return res.status(400).json({ message: `Minimum purchase of ₹${coupon.minPrice} is required to apply this coupon.` });
-//         }
-
-//         // Calculate the discount
-//         let discountAmount = 0;
-//         if (coupon.discountType === 'percentage') {
-//             discountAmount = cartTotalAfterOffer * (coupon.discountValue / 100);
-//         } else if (coupon.discountType === 'fixed') {
-//             discountAmount = coupon.discountValue;
-//         }
-
-//         // Ensure discountAmount does not exceed the cart total
-//         // discountAmount = Math.min(discountAmount, cartTotalAfterOffer);
-
-//         // Increment the usedCount for the coupon
-//         coupon.usedCount += 1;
-//         await coupon.save();
-
-//         // Calculate the final amount after the discount
-//         // const finalAmount = cartTotalAfterOffer - discountAmount;
-
-//         const finalAmount = Math.max(cartTotalAfterOffer - discountAmount); // Ensure minimum amount is ₹1
-//         console.log("carttoatlafteroffer" + cartTotalAfterOffer);
-        
-//         console.log("final amount in coupen function backend" + finalAmount);
-//         console.log("discount amount in coupen function" + discountAmount);
-        
-
-//         // Respond with the discount amount and the final amount
-//         return res.status(200).json({
-//             message: 'Coupon applied successfully',
-//             discountAmount,
-//             finalAmount
-//         });
-
-//     } catch (error) {
-//         console.error('Error applying coupon:', error.message);
-//         return res.status(500).json({ message: 'Error applying coupon' });
-//     }
-// };
-
 const applyCoupon = async (req, res) => {
     try {
         const userId = req.session.user?.userId;
@@ -1909,56 +1764,22 @@ const createRazorpayOrder = async (req, res) => {
     }
 };
 
-// const verifyPayment = async (req, res) => {
-//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
-//     console.log("finalAmount in varifypayment" + finalAmount);
-    
-//     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
-//     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
-//     const generatedSignature = hmac.digest('hex');
-
-//     if (generatedSignature === razorpay_signature) {
-//         try {
-//             // Create and save the order
-//             const order = new Order({
-//                 userId: req.user._id, // Assuming you're using req.user to get the logged-in user
-//                 products: req.session.cart.products, // Assuming cart is saved in session
-//                 shippingAddressId: shippingAddressId,
-//                 totalPrice: finalAmount,
-//                 paymentMethod: 'Razorpay',
-//                 status: 'Paid',
-//                 createdAt: new Date()
-//             });
-
-//             await order.save();
-
-//             // Clear cart after order placement
-//             req.session.cart = null;
-
-//             res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
-//         } catch (error) {
-//             console.error('Error placing order:', error);
-//             res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
-//         }
-//     } else {
-//         res.status(400).json({ success: false, message: 'Payment verification failed' });
-//     }
-// };
-
 const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
     const userId = req.session.user?.userId;
-    console.log("userid" +userId);
+
+    console.log("userid", userId);
     
     // Log all incoming request data for debugging
-    console.log("Received data from frontend:");
-    console.log("Razorpay Order ID:", razorpay_order_id);
-    console.log("Razorpay Payment ID:", razorpay_payment_id);
-    console.log("Razorpay Signature:", razorpay_signature);
-    console.log("Shipping Address ID:", shippingAddressId);
-    console.log("Final Amount:", finalAmount);
-    console.log("Coupon Code:", couponCode);
-    
+    console.log("Received data from frontend:", {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        shippingAddressId,
+        finalAmount,
+        couponCode
+    });
+
     // Verify Razorpay signature
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
@@ -1971,19 +1792,17 @@ const verifyPayment = async (req, res) => {
         console.log("Signature verified successfully.");
 
         try {
-            // Check if the user and cart session exist
-            // if (!req.session.user) {
-            //     console.error('User not logged in.');
-            //     return res.status(400).json({ success: false, message: 'User not logged in.' });
-            // }
+            // Check if the cart and its products exist in the session
+            if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
+                console.error('Cart is empty or undefined.');
+                return res.status(400).json({ success: false, message: 'Cart is empty or products are missing.' });
+            }
 
-
-            console.log("User ID:", req.session.user.user._id);
             console.log("Cart Products:", req.session.cart.products);
 
             // Create and save the order
             const order = new Order({
-                userId,// Logged-in user
+                userId, // Logged-in user
                 products: req.session.cart.products, // Cart products
                 shippingAddressId: shippingAddressId,
                 totalPrice: finalAmount,
@@ -2010,6 +1829,7 @@ const verifyPayment = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 };
+
 
 module.exports = {
     signUpPage,

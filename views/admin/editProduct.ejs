@@ -158,12 +158,12 @@
                                 <div class="mb-4">
                                     <label class="form-label">Select Category</label>
                                     <select class="form-select" name="category" required>
-                                        <option value="" disabled>Select a category</option>
+                                        <option value="" disabled selected>Select a category</option>
                                         <% categories.forEach(category => { %>
-                                            <option value="<%= category.name %>" <%= category.name === product.category ? 'selected' : '' %>><%= category.name %></option>
+                                            <option value="<%= category._id %>"><%= category.name %></option>  <!-- Use _id as value -->
                                         <% }) %>
                                     </select>
-                                </div>
+                                </div> 
                             </div>                       
                         </div>
                         <hr class="mb-4 mt-0">

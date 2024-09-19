@@ -348,38 +348,15 @@ const Admin_home = async (req, res) => {
     }
 };
 
-// Product Management
-// const Admin_productList = async (req, res) => {
-//     try {
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = 10; // Number of products per page
-//         const totalProducts = await Product.countDocuments();
-//         const totalPages = Math.ceil(totalProducts / limit);
-
-//         const products = await Product.find()
-//             .skip((page - 1) * limit)
-//             .limit(limit);
-
-//         return res.render('productList', {
-//             products,
-//             currentPage: page,
-//             totalPages,
-//         });
-//     } catch (error) {
-//         console.log(error.message);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
-
 const Admin_productList = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 10; // Number of products per page
+        const limit = 10;
         const totalProducts = await Product.countDocuments();
         const totalPages = Math.ceil(totalProducts / limit);
 
         const products = await Product.find()
-            .populate('category')  // Populating category to show category name
+            .populate('category', 'name')  // Only populate the name field of the category
             .skip((page - 1) * limit)
             .limit(limit);
 
@@ -393,7 +370,6 @@ const Admin_productList = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 
 const Admin_addProductPage = async (req, res) => {
@@ -412,58 +388,39 @@ const Admin_addProductPage = async (req, res) => {
     }
 };
 
-// 
+
 const Admin_addProduct = async (req, res) => {
     try {
         const { name, description, price, brand, category, stock } = req.body;
-        const images = req.files.map(file => file.filename);
+        const images = req.files ? req.files.map(file => file.filename) : [];
 
-        // Check if a product with the same name already exists
-        const existingProduct = await Product.findOne({ name });
-        if (existingProduct) {
-            return res.render('productManagement', { 
-                message: 'Product already exists.', 
-                messageType: 'error', 
-                product: req.body,
-                categories: await Category.find()
-            });
+        // Find the selected category by its ID
+        const selectedCategory = await Category.findById(category);
+
+        if (!selectedCategory) {
+            return res.redirect('/admin/addProductPage?message=Category not found&messageType=error');
         }
 
-        // Check if the category exists by name and get its ID
-        const validCategory = await Category.findOne({ name: category });
-        if (!validCategory) {
-            return res.render('productManagement', { 
-                message: 'Category does not exist.', 
-                messageType: 'error', 
-                product: req.body,
-                categories: await Category.find()
-            });
-        }
-
-        // Now, use validCategory._id as the category for the new product
-        const newProduct = new Product({ 
-            name, 
-            description, 
-            price, 
-            brand, 
-            category: validCategory._id,  // Assign the ObjectId here
-            stock, 
-            images 
+        // Create a new product
+        const newProduct = new Product({
+            name,
+            description,
+            price,
+            brand,
+            category: selectedCategory._id,  // Save category as ObjectId
+            stock,
+            images
         });
 
         await newProduct.save();
 
-        res.redirect('/admin/productList');
+        res.redirect('/admin/productList');  // Redirect to product list page
     } catch (error) {
         console.log(error.message);
-        res.status(500).render('productManagement', { 
-            message: 'Internal Server Error', 
-            messageType: 'error', 
-            product: req.body,
-            categories: await Category.find()
-        });
+        res.status(500).send('Internal Server Error');
     }
 };
+
 
 const Admin_editProductPage = async (req, res) => {
     try {
@@ -490,40 +447,6 @@ const Admin_editProductPage = async (req, res) => {
         res.redirect('/admin/productList?message=Internal Server Error&messageType=error');  // Redirect with query params for error
     }
 };
-//real edit product
-
-// const Admin_editProduct = async (req, res) => {
-//     try {
-//         const { name, description, price, brand, category, stock } = req.body;
-//         const productId = req.params.id;
-//         const images = req.files ? req.files.map(file => file.filename) : [];
-
-//         // Find the product to be updated
-//         const product = await Product.findById(productId);
-//         if (!product) {
-//             return res.redirect('/admin/productList?message=Product not found&messageType=error');
-//         }
-
-//         // Update product details
-//         product.name = name;
-//         product.description = description;
-//         product.price = price;
-//         product.brand = brand;
-//         product.category = category;
-//         product.stock = stock; // Update stock
-
-//         if (images.length > 0) {
-//             product.images = images.slice(0, 3); // Only update images if new ones are uploaded
-//         }
-
-//         await product.save();
-
-//         res.redirect('/admin/productList');
-//     } catch (error) {
-//         console.error(error.message);
-//         res.redirect(`/admin/editProduct/${req.params.id}?message=Internal Server Error&messageType=error`);
-//     }
-// };
 
 const Admin_editProduct = async (req, res) => {
     try {
@@ -537,15 +460,10 @@ const Admin_editProduct = async (req, res) => {
             return res.redirect('/admin/productList?message=Product not found&messageType=error');
         }
 
-        // Convert category from string to ObjectId if needed
-        let categoryId = category;
-        if (typeof category === 'string') {
-            const categoryDoc = await Category.findOne({ name: category });
-            if (categoryDoc) {
-                categoryId = categoryDoc._id;
-            } else {
-                return res.redirect(`/admin/editProduct/${productId}?message=Category not found&messageType=error`);
-            }
+        // Ensure category is a valid ObjectId
+        const validCategory = await Category.findById(category);
+        if (!validCategory) {
+            return res.redirect(`/admin/editProduct/${productId}?message=Category not found&messageType=error`);
         }
 
         // Update product details
@@ -553,7 +471,7 @@ const Admin_editProduct = async (req, res) => {
         product.description = description;
         product.price = price;
         product.brand = brand;
-        product.category = categoryId; // Assign the ObjectId here
+        product.category = validCategory._id; // Assign the ObjectId here
         product.stock = stock; // Update stock
 
         if (images.length > 0) {

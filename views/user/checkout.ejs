@@ -423,20 +423,18 @@ $('#razorpayButton').click(function(e) {
     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
     const couponCode = $('#couponCode').val() || null;
+    const offersDiscount = parseFloat($('#offersDiscount').val()) || 0;
+    const couponDeduction = parseFloat($('#couponDeduction').val()) || 0;
+    const totalDiscountAmount = offersDiscount + couponDeduction; // Total discount
 
     if (!shippingAddressId) {
         alert('Please select a shipping address.');
         return;
     }
 
-    // Ensure finalAmount is greater than or equal to the minimum amount (₹1)
-    if (finalAmount < 1) {
-        alert('Order amount must be at least ₹1 after applying coupons or offers.');
-        return;
-    }
-
+    
     // Fetch the Razorpay order details
-    $.post('/create-razorpay-order', { finalAmount, shippingAddressId, couponCode}, function(orderData) {
+    $.post('/create-razorpay-order', { finalAmount, shippingAddressId, couponCode,offersDiscount, couponDeduction, totalDiscountAmount}, function(orderData) {
         console.log("orderData", orderData); // Updated logging
 
         const options = {
@@ -454,7 +452,10 @@ $('#razorpayButton').click(function(e) {
                     razorpay_signature: response.razorpay_signature,
                     shippingAddressId: shippingAddressId,
                     finalAmount: finalAmount,
-                    couponCode: couponCode
+                    couponCode: couponCode,
+                    offersDiscount: offersDiscount,
+                    couponDeduction: couponDeduction,
+                    totalDiscountAmount: totalDiscountAmount
                 }, function(paymentResult) {
                     if (paymentResult.success) {
                         Swal.fire({

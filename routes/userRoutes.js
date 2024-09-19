@@ -25,41 +25,6 @@ router.get('/facebook/callback',
   }
 );
 
-
-// Define the test route
-router.get('/test-order-confirm', (req, res) => {
-  const dummyOrder = {
-      _id: 'order123',
-      status: 'Pending',
-      products: [
-          {
-              productId: { name: 'Product 1', price: 100 },
-              quantity: 2
-          },
-          {
-              productId: { name: 'Product 2', price: 200 },
-              quantity: 1
-          }
-      ],
-      totalPrice: 400,
-      discountAmount: 50,
-      shippingAddressId: {
-          addressLine1: '123 Test Street',
-          city: 'Test City',
-          postalCode: '123456'
-      }
-  };
-
-  res.render('orderConfirm', { 
-      message: 'Test Order', 
-      messageType: 'success', 
-      orderDetails: dummyOrder 
-  });
-});
-
-
-
-
 // Apply isBlockedMiddleware to all routes that require the user to be logged in
 router.use(isBlockedMiddleware);
 
@@ -94,11 +59,7 @@ router.post('/order/cancel/:orderId', isAuthenticated, userController.cancelOrde
 router.get('/orders', isAuthenticated, userController.getOrderListing);
 router.get('/orderDetails/:orderId', isAuthenticated, userController.getOrderDetails);
 router.post('/order/return/:orderId', isAuthenticated, userController.returnOrder);
-// router.post('/order/cancelProduct/:id', isAuthenticated, userController.cancelProduct);
 router.post('/order/:orderId/cancelProduct/:productId', userController.cancelProduct);
-
-
-
 
 // Profile and address management (protected)
 router.get('/profile', isAuthenticated, userController.getProfilePage);

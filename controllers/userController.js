@@ -1764,6 +1764,72 @@ const createRazorpayOrder = async (req, res) => {
     }
 };
 
+// const verifyPayment = async (req, res) => {
+//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
+//     const userId = req.session.user?.userId;
+
+//     console.log("userid", userId);
+    
+//     // Log all incoming request data for debugging
+//     console.log("Received data from frontend:", {
+//         razorpay_order_id,
+//         razorpay_payment_id,
+//         razorpay_signature,
+//         shippingAddressId,
+//         finalAmount,
+//         couponCode
+//     });
+
+//     // Verify Razorpay signature
+//     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+//     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+//     const generatedSignature = hmac.digest('hex');
+
+//     console.log("Generated Signature:", generatedSignature);
+//     console.log("Razorpay Signature (from frontend):", razorpay_signature);
+
+//     if (generatedSignature === razorpay_signature) {
+//         console.log("Signature verified successfully.");
+
+//         try {
+//             // Check if the cart and its products exist in the session
+//             if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
+//                 console.error('Cart is empty or undefined.');
+//                 return res.status(400).json({ success: false, message: 'Cart is empty or products are missing.' });
+//             }
+
+//             console.log("Cart Products:", req.session.cart.products);
+
+//             // Create and save the order
+//             const order = new Order({
+//                 userId, // Logged-in user
+//                 products: req.session.cart.products, // Cart products
+//                 shippingAddressId: shippingAddressId,
+//                 totalPrice: finalAmount,
+//                 paymentMethod: 'Razorpay',
+//                 status: 'Paid',
+//                 createdAt: new Date()
+//             });
+
+//             console.log("Order to be saved:", order);
+
+//             await order.save(); // Save order to the database
+//             console.log("Order placed successfully!");
+
+//             // Clear cart after order placement
+//             req.session.cart = null;
+
+//             return res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
+//         } catch (error) {
+//             console.error('Error placing order:', error);
+//             return res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
+//         }
+//     } else {
+//         console.error('Signature verification failed.');
+//         return res.status(400).json({ success: false, message: 'Payment verification failed' });
+//     }
+// };
+
 const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode } = req.body;
     const userId = req.session.user?.userId;
@@ -1791,7 +1857,7 @@ const verifyPayment = async (req, res) => {
     if (generatedSignature === razorpay_signature) {
         console.log("Signature verified successfully.");
 
-        try {
+        try { 
             // Check if the cart and its products exist in the session
             if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
                 console.error('Cart is empty or undefined.');
@@ -1819,7 +1885,8 @@ const verifyPayment = async (req, res) => {
             // Clear cart after order placement
             req.session.cart = null;
 
-            return res.json({ success: true, message: 'Payment verified successfully, and order placed!' });
+            // Return the orderId in the response
+            return res.json({ success: true, message: 'Payment verified successfully, and order placed!', orderId: order._id });
         } catch (error) {
             console.error('Error placing order:', error);
             return res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });

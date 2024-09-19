@@ -544,9 +544,6 @@ const Admin_userList = async (req, res) => {
     }
 };
 
-
-
-
 // Block/Unblock User
 const Admin_toggleBlockUser = async (req, res) => {
     try {

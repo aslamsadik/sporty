@@ -1,3 +1,34 @@
+// const mongoose = require('mongoose');
+
+// const orderSchema = new mongoose.Schema({
+//     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+//     products: [
+//         {
+//             productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+//             quantity: { type: Number, required: true },
+//             cancellationStatus: { type: String, default: 'Not Cancelled' },
+//             originalPrice: { type: Number },  // Original price of the product
+//             discountApplied: { type: Number }  // Discount applied to this product
+//         }
+//     ],
+//     shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
+//     totalPrice: { type: Number, required: true },
+//     totalDiscountAmount: { type: Number, default: 0 },
+//     offersDiscount: { type: Number, default: 0 },
+//     couponDeduction: { type: Number, default: 0 },
+//     paymentMethod: { type: String, required: true },
+//     orderNotes: { type: String },
+//     status: { type: String, default: 'Pending' },
+//     returnRequested: { type: Boolean, default: false },
+//     returnReason: { type: String },
+//     createdAt: { type: Date, default: Date.now },
+//     updatedAt: { type: Date, default: Date.now },
+//     couponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }
+// });
+
+// module.exports = mongoose.model('Order', orderSchema);
+
+
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
@@ -7,12 +38,13 @@ const orderSchema = new mongoose.Schema({
             productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
             quantity: { type: Number, required: true },
             cancellationStatus: { type: String, default: 'Not Cancelled' }, // New field for product cancellation
+            discountApplied: { type: Number,default:0 },
         }
     ],
     shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
     totalPrice: { type: Number, required: true },
     totaldiscountAmount: { type: Number, default: 0 },
-    offfersDiscount:{ type: Number, default:0},
+    offersDiscount:{ type: Number, default:0},
     couponDeduction:{ type:Number, default:0},
     paymentMethod: { type: String, required: true },
     orderNotes: { type: String },

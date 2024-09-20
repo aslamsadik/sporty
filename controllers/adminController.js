@@ -292,43 +292,39 @@ const Admin_editProductPage = async (req, res) => {
 
 const Admin_editProduct = async (req, res) => {
     try {
-        const { name, description, price, brand, category, stock } = req.body;
+        const { name, description, brand, price, stock, category } = req.body;
         const productId = req.params.id;
-        const images = req.files ? req.files.map(file => file.filename) : [];
 
-        // Find the product to be updated
+        // Fetch the existing product
         const product = await Product.findById(productId);
+
         if (!product) {
-            return res.redirect('/admin/productList?message=Product not found&messageType=error');
+            return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Ensure category is a valid ObjectId
-        const validCategory = await Category.findById(category);
-        if (!validCategory) {
-            return res.redirect(`/admin/editProduct/${productId}?message=Category not found&messageType=error`);
-        }
-
-        // Update product details
+        // Update product fields
         product.name = name;
         product.description = description;
-        product.price = price;
         product.brand = brand;
-        product.category = validCategory._id; // Assign the ObjectId here
-        product.stock = stock; // Update stock
+        product.price = price;
+        product.stock = stock;
+        product.category = category;
 
-        if (images.length > 0) {
-            product.images = images.slice(0, 3); // Only update images if new ones are uploaded
+        // If new images are uploaded, update the product's images field
+        if (req.body.images && req.body.images.length > 0) {
+            product.images = req.body.images;
         }
 
+        // Save the updated product
         await product.save();
 
+        // res.redirect(`/admin/editProduct/${productId}`); // Redirect after saving
         res.redirect('/admin/productList');
     } catch (error) {
-        console.error(error.message);
-        res.redirect(`/admin/editProduct/${req.params.id}?message=Internal Server Error&messageType=error`);
+        console.error('Error editing product:', error);
+        res.status(500).send('Internal Server Error');
     }
 };
-
 
 // Delete product
 const Admin_deleteProduct = async (req, res) => {

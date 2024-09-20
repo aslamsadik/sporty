@@ -1,4 +1,3 @@
-
 const path = require('path');
 const multer = require('multer');
 const sharp = require('sharp');
@@ -11,7 +10,10 @@ const upload = multer({ storage: storage });
 
 // Middleware to process images
 const processImages = async (req, res, next) => {
-    if (!req.files) return next(); // No files to process
+    if (!req.files || req.files.length === 0) {
+        // If no files are uploaded, move on without changing images
+        return next();
+    }
 
     const promises = req.files.map(async (file) => {
         const fileName = `${Date.now()}-${file.originalname}`;

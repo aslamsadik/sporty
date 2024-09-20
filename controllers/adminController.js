@@ -85,163 +85,6 @@ const Admin_logout = async (req, res) => {
     }
 };
 
-// const Admin_home = async (req, res) => {
-//     try {
-//         const filters = {
-//             startDate: req.query.startDate || '',
-//             endDate: req.query.endDate || '',
-//             category: req.query.category || '',
-//         };
-
-//         const categories = await Category.find();
-
-//         const totalRevenue = await Order.aggregate([
-//             { $match: { status: "Delivered" } },  // Changed to "Delivered"
-//             { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } }
-//         ]);
-
-//         const totalOrders = await Order.countDocuments({ status: "Delivered" });  // Changed to "Delivered"
-
-//         const monthlyEarnings = await Order.aggregate([
-//             { 
-//                 $match: { 
-//                     status: "Delivered",  // Changed to "Delivered"
-//                     createdAt: {
-//                         $gte: new Date(new Date().setDate(1)) // Start of the current month
-//                     }
-//                 }
-//             },
-//             { $group: { _id: null, monthlyEarnings: { $sum: "$totalPrice" } } }
-//         ]);
-
-//         // Reuse the getSalesReport logic to fetch sales data for the initial load
-//         const { startDate, endDate, category } = filters;
-//         let matchCriteria = { status: "Delivered" };  // Changed to "Delivered"
-
-//         if (startDate && endDate) {
-//             matchCriteria.createdAt = {
-//                 $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),  // Start of the day
-//                 $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) // End of the day
-//             };
-//         }
-
-//         if (category) {
-//             matchCriteria['products.category'] = category;
-//         }
-
-//         const salesData = await Order.aggregate([
-//             { $match: matchCriteria },
-//             { $unwind: "$products" },
-//             { 
-//                 $lookup: {
-//                     from: "products", 
-//                     localField: "products.productId",
-//                     foreignField: "_id",
-//                     as: "productDetails"
-//                 }
-//             },
-//             { $unwind: "$productDetails" },
-//             { 
-//                 $group: {
-//                     _id: "$products.productId",
-//                     productName: { $first: "$productDetails.name" },
-//                     totalQuantity: { $sum: "$products.quantity" },
-//                     totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
-//                 }
-//             }
-//         ]);
-
-//         // Generate query string
-//         const queryString = new URLSearchParams(filters).toString();
-
-//         res.render('dashboard', {
-//             totalRevenue: totalRevenue[0]?.totalRevenue || 0,
-//             totalOrders,
-//             monthlyEarnings: monthlyEarnings[0]?.monthlyEarnings || 0,
-//             categories, 
-//             filters, 
-//             salesData, 
-//             queryString // Pass queryString to the template
-//         });
-//     } catch (error) {
-//         console.log(error.message);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
-
-// const Admin_home = async (req, res) => {
-//     try {
-//         const filters = {
-//             startDate: req.query.startDate || '',
-//             endDate: req.query.endDate || '',
-//             category: req.query.category || '',
-//         };
-
-//         const categories = await Category.find(); // Fetch categories for the dropdown
-
-//         const { startDate, endDate, category } = filters;
-//         let matchCriteria = { status: "Delivered" }; // Adjust to match your order statuses
-
-//         if (startDate && endDate) {
-//             matchCriteria.createdAt = {
-//                 $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
-//                 $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
-//             };
-//         }
-
-//         let salesDataPipeline = [
-//             { $match: matchCriteria },
-//             { $unwind: "$products" },
-//             {
-//                 $lookup: {
-//                     from: "products",
-//                     localField: "products.productId",
-//                     foreignField: "_id",
-//                     as: "productDetails"
-//                 }
-//             },
-//             { $unwind: "$productDetails" },
-//             {
-//                 $lookup: {
-//                     from: "categories",
-//                     localField: "productDetails.category",
-//                     foreignField: "_id",
-//                     as: "categoryDetails"
-//                 }
-//             },
-//             { $unwind: "$categoryDetails" },
-//         ];
-
-//         if (category) {
-//             salesDataPipeline.push({
-//                 $match: { "categoryDetails._id": mongoose.Types.ObjectId(category) }
-//             });
-//         }
-
-//         salesDataPipeline.push({
-//             $group: {
-//                 _id: "$products.productId",
-//                 productName: { $first: "$productDetails.name" },
-//                 category: { $first: "$categoryDetails.name" }, // Get the category name
-//                 totalQuantity: { $sum: "$products.quantity" },
-//                 totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
-//             }
-//         });
-
-//         const salesData = await Order.aggregate(salesDataPipeline);
-//         const queryString = new URLSearchParams(filters).toString();
-
-//         res.render('dashboard', {
-//             categories,
-//             filters,
-//             salesData,
-//             queryString
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
 
 const Admin_home = async (req, res) => {
     try {
@@ -388,11 +231,10 @@ const Admin_addProductPage = async (req, res) => {
     }
 };
 
-
 const Admin_addProduct = async (req, res) => {
     try {
         const { name, description, price, brand, category, stock } = req.body;
-        const images = req.files ? req.files.map(file => file.filename) : [];
+        const images = req.body.images || []; // Use processed images from middleware
 
         // Find the selected category by its ID
         const selectedCategory = await Category.findById(category);

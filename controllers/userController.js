@@ -762,8 +762,9 @@ const getCheckoutPage = async (req, res) => {
         }
 
         const totalDiscount = offerDiscount + couponDiscount;
+
         const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal);
-        const totalAmountInPaise = finalAmount * 100;
+        const totalAmountInPaise = Math.max(finalAmount * 100) 
 
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID,
@@ -1765,9 +1766,7 @@ const createRazorpayOrder = async (req, res) => {
 };
 
 const verifyPayment = async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, offersDiscount,
-        couponDeduction,
-        totalDiscountAmount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, offersDiscount,couponDeduction,totalDiscountAmount } = req.body;
     const userId = req.session.user?.userId;
 
     console.log("userid", req.body);
@@ -1804,7 +1803,8 @@ const verifyPayment = async (req, res) => {
             }
 
             console.log("Cart Products:", req.session.cart.products);
-
+            console.log("final amount in razorpay", finalAmount);
+            
             // Create and save the order
             const order = new Order({
                 userId,
@@ -1829,7 +1829,7 @@ const verifyPayment = async (req, res) => {
             console.log("Order placed successfully!");
 
             // Clear cart after order placement
-            req.session.cart = null;
+            await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
 
             // Return the orderId in the response
             return res.json({ success: true, message: 'Payment verified successfully, and order placed!', orderId: order._id });
@@ -1843,65 +1843,7 @@ const verifyPayment = async (req, res) => {
     }
 };
 
-// const verifyPayment = async (req, res) => {
-//     const {
-//         razorpay_payment_id,
-//         razorpay_order_id,
-//         razorpay_signature,
-//         shippingAddressId,
-//         finalAmount,
-//         couponCode,
-//         offersDiscount,
-//         couponDeduction,
-//         totalDiscountAmount
-//     } = req.body;
 
-//     try {
-//         // 1. Verify Razorpay signature and payment
-//         const isPaymentValid = verifyPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature);
-
-//         if (!isPaymentValid) {
-//             return res.status(400).json({ success: false, message: 'Invalid payment signature' });
-//         }
-
-//         // 2. Retrieve user's cart
-//         const userId = req.session.user?.userId;
-//         const cart = await Cart.findOne({ userId }).populate('products.productId');
-
-//         if (!cart || cart.products.length === 0) {
-//             return res.status(400).json({ success: false, message: 'Cart is empty' });
-//         }
-
-//         // 3. Create the order in the database
-//         const newOrder = new Order({
-//             userId,
-//             products: cart.products.map((item) => ({
-//                 productId: item.productId._id,
-//                 quantity: item.quantity,
-//                 originalPrice: item.productId.price,
-//                 discountApplied: item.productId.discount || 0 // Assuming discount is stored in product
-//             })),
-//             shippingAddressId,
-//             totalPrice: finalAmount,
-//             offersDiscount,
-//             couponDeduction,
-//             totalDiscountAmount,
-//             paymentMethod: 'Razorpay',
-//             couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null
-//         });
-
-//         const savedOrder = await newOrder.save();
-
-//         // 4. Clear user's cart after successful order
-//         await Cart.findOneAndDelete({ userId });
-
-//         // 5. Return success response
-//         return res.json({ success: true, orderId: savedOrder._id });
-//     } catch (error) {
-//         console.error('Error in verifying payment:', error);
-//         return res.status(500).json({ success: false, message: 'Payment verification failed' });
-//     }
-// };
 
 module.exports = {
     signUpPage,

@@ -3,7 +3,7 @@ const express = require('express');
 const Admin_router = express.Router();
 const adminController = require('../controllers/adminController');
 const { isAdminAuthenticated, isAdminNotAuthenticated } = require('../middlewares/middleware');
-const upload = require('../config/multerConfig'); // Import the multer configuration
+const { upload, processImages } = require('../config/multerConfig'); // Import the multer configuration
 
 // Admin login and logout
 Admin_router.get('/login', isAdminNotAuthenticated, adminController.Admin_login);
@@ -20,9 +20,9 @@ Admin_router.post('/toggleBlockUser/:id', isAdminAuthenticated, adminController.
 // Product Management
 Admin_router.get('/productList', isAdminAuthenticated, adminController.Admin_productList);
 Admin_router.get('/productManagement', isAdminAuthenticated, adminController.Admin_addProductPage);
-Admin_router.post('/addProduct', isAdminAuthenticated, upload.array('images', 3), adminController.Admin_addProduct);
+Admin_router.post('/addProduct', isAdminAuthenticated, upload.array('images', 3),processImages, adminController.Admin_addProduct);
 Admin_router.get('/editProduct/:id', isAdminAuthenticated, adminController.Admin_editProductPage);
-Admin_router.post('/editProduct/:id', isAdminAuthenticated, upload.array('images', 3), adminController.Admin_editProduct);
+Admin_router.post('/editProduct/:id', isAdminAuthenticated, upload.array('images', 3),processImages,adminController.Admin_editProduct);
 Admin_router.post('/deleteProduct/:id', isAdminAuthenticated, adminController.Admin_deleteProduct);
 
 // Category Management

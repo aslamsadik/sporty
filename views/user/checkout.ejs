@@ -261,12 +261,11 @@
           </div>
       
           <hr>
-      
-          <div class="summary-item">
-              <strong>Total Amount:</strong>
-              <strong>₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0).toFixed(2) %></strong>
-
-          </div>
+         <div class="summary-item">
+            <strong>Final Amount:</strong>
+            <strong id="totalPrice">₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0).toFixed(2) %></strong>
+            <!-- <p><strong>Final Amount: ₹<span id="totalAmount"><%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer- discountAmount :priceAfterOffer), 0).toFixed(2) %></span></strong></p> -->
+        </div>
       
           <div class="summary-item">
               <span>Wallet Balance:</span>
@@ -331,7 +330,11 @@ function applyCoupon(couponCode) {
         $('#finalAmountInput').val(data.finalAmount);
         $('#discountAmount').val(data.discountAmount);  // For placeOrderForm
         $('#finalAmount').val(data.finalAmount);        // For placeOrderForm
-        $('#totalPrice').text('₹' + data.finalAmount.toFixed(2));
+
+        // Update the total price and discount in the Order Summary
+        $('#totalPrice').text('₹' + data.finalAmount.toFixed(2)); // Update total price in the order summary
+        $('#offerDiscount').text('- ₹' + data.discountAmount.toFixed(2)); // Update the discount in the summary
+        $('#totalAmount').text('₹' + data.finalAmount.toFixed(2)); // Update the final amount in the summary
 
         // Update the hidden couponCode field in placeOrderForm
         $('input[name="couponCode"]').val(couponCode);

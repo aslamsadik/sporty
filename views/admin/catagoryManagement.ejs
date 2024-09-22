@@ -8,6 +8,17 @@
     <title>Category Management</title>
     <link href="/admin_assets/css/main.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- SweetAlert script -->
+    <style>
+        .error-message {
+           color: red;
+           font-weight: bold;
+             }
+        .success-message {
+           color: green;
+           font-weight: bold;
+         }
+
+    </style>
 </head>
 <body>
     <section class="content-main">
@@ -24,6 +35,11 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
+                        <% if (message) { %>
+                            <div class="<%= messageType === 'error' ? 'error-message' : 'success-message' %>">
+                                <%= message %>
+                            </div>
+                        <% } %>
                         <form action="/admin/catagories/add" method="POST">
                             <div class="mb-4">
                                 <label for="category_name" class="form-label">Name</label>

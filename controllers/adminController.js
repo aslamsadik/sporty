@@ -220,7 +220,7 @@ const Admin_addProductPage = async (req, res) => {
         // Fetch all categories for the dropdown
         const categories = await Category.find();
         const { message, messageType } = req.query;  // Extract query params
-        
+
         return res.render('productManagement', {
             message,
             messageType,
@@ -348,7 +348,55 @@ const Admin_deleteProduct = async (req, res) => {
 const getCategoryPage = async (req, res) => {
     try {
         const categories = await Category.find();
-        res.render('catagoryManagement', { categories });
+        const { message, messageType } = req.query;  // Extract query params
+        res.render('catagoryManagement', { categories,message,messageType});
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const addCategory = async (req, res) => {
+    const { name, description } = req.body;
+    try {
+        // Check if the category already exists
+        const existingCategory = await Category.findOne({ name: name });
+        if (existingCategory) {
+            // Redirect with an error message if the category already exists and return to stop further execution
+            return res.redirect('/admin/catagories/catagoryManagement?message=Category already exists&messageType=error');
+        }
+
+        // If the category does not exist, create a new one
+        const newCategory = new Category({ name, description });
+        await newCategory.save();
+
+        // Redirect to the category management page after successful creation
+        res.redirect('/admin/catagories/catagoryManagement?message=Category added successfully&messageType=success');
+    } catch (error) {
+        // Log the error and send a 500 response
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+const editCategory = async (req, res) => {
+    const { id } = req.params;
+    const { name, description } = req.body;
+    try {
+        await Category.findByIdAndUpdate(id, { name, description });
+        res.redirect('/admin/catagories/catagoryManagement');
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const deleteCategory = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await Category.findByIdAndDelete(id);
+        res.redirect('/admin/catagories/catagoryManagement');
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Internal Server Error');
@@ -408,40 +456,6 @@ const Admin_toggleBlockUser = async (req, res) => {
     }
 };
 
-const addCategory = async (req, res) => {
-    const { name, description } = req.body;
-    try {
-        const newCategory = new Category({ name, description });
-        await newCategory.save();
-        res.redirect('/admin/catagories/catagoryManagement');
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Internal Server Error');
-    }
-};
-
-const editCategory = async (req, res) => {
-    const { id } = req.params;
-    const { name, description } = req.body;
-    try {
-        await Category.findByIdAndUpdate(id, { name, description });
-        res.redirect('/admin/catagories/catagoryManagement');
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Internal Server Error');
-    }
-};
-
-const deleteCategory = async (req, res) => {
-    const { id } = req.params;
-    try {
-        await Category.findByIdAndDelete(id);
-        res.redirect('/admin/catagories/catagoryManagement');
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Internal Server Error');
-    }
-};
 
 const getOrderManagementPage = async (req, res) => {
     try {

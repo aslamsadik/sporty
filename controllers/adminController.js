@@ -1134,6 +1134,72 @@ const fetchSalesData = async ({ startDate, endDate, category }) => {
     }
 };
 
+// const exportSalesReportPDF = async (req, res) => {
+//     try {
+//         const { startDate, endDate } = req.query;
+//         const salesData = await fetchSalesData({ startDate, endDate });
+
+//         // Create a new PDF document
+//         const doc = new PDFDocument({ margin: 30 });
+
+//         // Pipe the PDF into a writable stream
+//         const filePath = 'sales_report.pdf';
+//         const stream = fs.createWriteStream(filePath);
+//         doc.pipe(stream);
+
+//         // Add Title to PDF
+//         doc.fontSize(10).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
+//         doc.moveDown(2);
+
+//         // Draw table headers
+//         doc.fontSize(10)
+//             .font('Helvetica-Bold')
+//             .text('Product Name', 30, doc.y, { width: 100, continued: true })
+//             .text('Total Quantity', 150, doc.y, { width: 100, align: 'center', continued: true })
+//             .text('Total Revenue (INR)', 330, doc.y, { width: 100, align: 'center', continued: true })
+//             .text('Discount (INR)', 430, doc.y, { width: 100, align: 'center', continued: true })
+//             .text('Coupons Deduction (INR)', 530, doc.y, { width: 100, align: 'center' });
+
+//         doc.moveDown();
+
+//         // Table content (rows)
+//         salesData.forEach(item => {
+//             doc.font('Helvetica')
+//                 .text(item.productName, 30, doc.y, { width: 200, continued: true })
+//                 .text(item.totalQuantity, 230, doc.y, { width: 100, align: 'center', continued: true });
+
+//             const totalRevenue = item.totalRevenue ? item.totalRevenue.toFixed(2) : '0.00';
+//             const totalDiscount = item.totalDiscount ? item.totalDiscount.toFixed(2) : '0.00';
+//             const couponsDeduction = item.couponsDeduction ? item.couponsDeduction.toFixed(2) : '0.00';
+
+//             doc.text(totalRevenue, 330, doc.y, { width: 100, align: 'center', continued: true })
+//                 .text(totalDiscount, 430, doc.y, { width: 100, align: 'center', continued: true })
+//                 .text(couponsDeduction, 530, doc.y, { width: 100, align: 'center' });
+
+//             doc.moveDown(1);  // Move down slightly between rows
+//             doc.lineWidth(0.5).moveTo(30, doc.y).lineTo(630, doc.y).stroke();  // Draw line after each row
+//         });
+
+//         // Close the PDF and finish writing
+//         doc.end();
+
+//         // Download the PDF
+//         stream.on('finish', function () {
+//             res.download(filePath, 'sales_report.pdf', (err) => {
+//                 if (err) {
+//                     console.error('Error downloading PDF file:', err);
+//                     res.status(500).send('Error downloading file');
+//                 }
+//                 // Optionally, delete the file after download
+//                 fs.unlinkSync(filePath);
+//             });
+//         });
+//     } catch (error) {
+//         console.error('Error exporting sales report as PDF:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
 const exportSalesReportPDF = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
@@ -1148,42 +1214,66 @@ const exportSalesReportPDF = async (req, res) => {
         doc.pipe(stream);
 
         // Add Title to PDF
-        doc.fontSize(10).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
+        doc.fontSize(16).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
         doc.moveDown(2);
+
+        // Define column positions and widths
+        const columnPositions = {
+            productName: 30,
+            totalQuantity: 200,
+            totalRevenue: 300,
+            totalDiscount: 400,
+            couponsDeduction: 500
+        };
+
+        const columnWidths = {
+            productName: 170,
+            totalQuantity: 100,
+            totalRevenue: 100,
+            totalDiscount: 100,
+            couponsDeduction: 100
+        };
 
         // Draw table headers
         doc.fontSize(10)
             .font('Helvetica-Bold')
-            .text('Product Name', 30, doc.y, { width: 100, continued: true })
-            .text('Total Quantity', 150, doc.y, { width: 100, align: 'center', continued: true })
-            .text('Total Revenue (INR)', 330, doc.y, { width: 100, align: 'center', continued: true })
-            .text('Discount (INR)', 430, doc.y, { width: 100, align: 'center', continued: true })
-            .text('Coupons Deduction (INR)', 530, doc.y, { width: 100, align: 'center' });
+            .text('Product Name', columnPositions.productName, doc.y, { width: columnWidths.productName })
+            .text('Total Quantity', columnPositions.totalQuantity, doc.y, { width: columnWidths.totalQuantity, align: 'center' })
+            .text('Total Revenue (INR)', columnPositions.totalRevenue, doc.y, { width: columnWidths.totalRevenue, align: 'center' })
+            .text('Discount (INR)', columnPositions.totalDiscount, doc.y, { width: columnWidths.totalDiscount, align: 'center' })
+            .text('Coupons Deduction (INR)', columnPositions.couponsDeduction, doc.y, { width: columnWidths.couponsDeduction, align: 'center' });
 
         doc.moveDown();
 
+        // Draw a line after the headers
+        doc.lineWidth(0.5).moveTo(30, doc.y).lineTo(630, doc.y).stroke();
+
         // Table content (rows)
         salesData.forEach(item => {
-            doc.font('Helvetica')
-                .text(item.productName, 30, doc.y, { width: 200, continued: true })
-                .text(item.totalQuantity, 230, doc.y, { width: 100, align: 'center', continued: true });
-
+            // Prepare data formatting
             const totalRevenue = item.totalRevenue ? item.totalRevenue.toFixed(2) : '0.00';
             const totalDiscount = item.totalDiscount ? item.totalDiscount.toFixed(2) : '0.00';
             const couponsDeduction = item.couponsDeduction ? item.couponsDeduction.toFixed(2) : '0.00';
 
-            doc.text(totalRevenue, 330, doc.y, { width: 100, align: 'center', continued: true })
-                .text(totalDiscount, 430, doc.y, { width: 100, align: 'center', continued: true })
-                .text(couponsDeduction, 530, doc.y, { width: 100, align: 'center' });
+            // Insert row data under the respective headers
+            doc.font('Helvetica')
+                .text(item.productName, columnPositions.productName, doc.y, { width: columnWidths.productName })
+                .text(item.totalQuantity, columnPositions.totalQuantity, doc.y, { width: columnWidths.totalQuantity, align: 'center' })
+                .text(totalRevenue, columnPositions.totalRevenue, doc.y, { width: columnWidths.totalRevenue, align: 'center' })
+                .text(totalDiscount, columnPositions.totalDiscount, doc.y, { width: columnWidths.totalDiscount, align: 'center' })
+                .text(couponsDeduction, columnPositions.couponsDeduction, doc.y, { width: columnWidths.couponsDeduction, align: 'center' });
 
-            doc.moveDown(1);  // Move down slightly between rows
-            doc.lineWidth(0.5).moveTo(30, doc.y).lineTo(630, doc.y).stroke();  // Draw line after each row
+            // Move down slightly between rows
+            doc.moveDown(1);
+
+            // Draw a line after each row for clarity
+            doc.lineWidth(0.5).moveTo(30, doc.y).lineTo(630, doc.y).stroke();
         });
 
         // Close the PDF and finish writing
         doc.end();
 
-        // Download the PDF
+        // Download the PDF once it's written
         stream.on('finish', function () {
             res.download(filePath, 'sales_report.pdf', (err) => {
                 if (err) {
@@ -1199,8 +1289,6 @@ const exportSalesReportPDF = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
-
 
 
 module.exports = {

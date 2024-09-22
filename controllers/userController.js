@@ -1588,7 +1588,7 @@ const applyCoupon = async (req, res) => {
 
         // Calculate the final amount after the discount
         const finalAmount = Math.max(cartTotalAfterOffer - discountAmount, 1); // Ensure minimum final amount is ₹1
-        
+        Math.round(finalAmount)
         console.log("finalamoount in coupen fucntion", finalAmount);
         
         // Respond with the discount amount and the final amount

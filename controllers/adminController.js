@@ -219,10 +219,11 @@ const Admin_addProductPage = async (req, res) => {
     try {
         // Fetch all categories for the dropdown
         const categories = await Category.find();
-
+        const { message, messageType } = req.query;  // Extract query params
+        
         return res.render('productManagement', {
-            message: null,
-            messageType: null,
+            message,
+            messageType,
             categories  // Pass categories to the view
         });
     } catch (error) {
@@ -235,12 +236,17 @@ const Admin_addProduct = async (req, res) => {
     try {
         const { name, description, price, brand, category, stock } = req.body;
         const images = req.body.images || []; // Use processed images from middleware
-
+        
+        //check if product already exist
+        const existingProducts=await Product.findOne({name:name});
+        if(existingProducts){
+            return res.redirect('/admin/productManagement?message=Product already exists&messageType=error');
+        }
         // Find the selected category by its ID
         const selectedCategory = await Category.findById(category);
 
         if (!selectedCategory) {
-            return res.redirect('/admin/addProductPage?message=Category not found&messageType=error');
+            return res.redirect('/admin/productManagement?message=Category not found&messageType=error');
         }
 
         // Create a new product

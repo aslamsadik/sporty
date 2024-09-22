@@ -94,51 +94,114 @@
       border: none;
     }
 
-    /* Coupon section */
-    .coupon-container {
-      margin-bottom: 20px;
-      width: 400px;
-      margin-left: 900px;
-      position: absolute;
-      top: 80%;
-      right: 10%;
-    }
-    .coupon-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 15px;
-      border: 1px solid #ced4da;
-      border-radius: 50px;
-      margin-bottom: 10px;
-    }
-    .apply-coupon-button {
-      border-radius: 50px;
-      font-weight: 600;
-    }
+   /* Container holding both Order Summary and Coupon Section */
+  .checkout-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
 
-    /* Order summary styles */
-    .order-summary {
-      margin-top: 20px;
-    }
-    .order-summary li {
-      padding: 15px;
-    }
-    .order-summary .list-group-item {
-      border: none;
-    }
+  /* Order Summary Section */
+  .order-summary {
+    width: 100%;
+    max-width: 600px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 30px;
+  }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .checkout-row {
-        flex-direction: column;
-      }
-      .content-section,
-      .summary-section {
-        width: 100%;
-        margin-bottom: 20px;
-      }
-    }
+  /* Coupon Section Styles */
+  .coupon-container {
+    width: 100%;
+    max-width: 500px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 0;
+    position: absolute;
+    left: 940px;
+    top: 520px;
+  }
+
+  /* Coupon Header */
+  .coupon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .coupon-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: #007bff;
+  }
+
+  /* Coupon Items */
+  .coupon-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    transition: background-color 0.3s ease;
+    border: 1px solid #e2e2e2;
+  }
+
+  .coupon-item:hover {
+    background-color: #f1f1f1;
+  }
+
+  .coupon-info {
+    flex-grow: 1;
+  }
+
+  .coupon-code {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .coupon-discount {
+    font-size: 14px;
+    color: #28a745;
+  }
+
+  .coupon-expiry {
+    font-size: 12px;
+    color: #6c757d;
+  }
+
+  /* Apply Coupon Button */
+  .apply-coupon-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease;
+  }
+
+  .apply-coupon-button:hover {
+    background-color: #0056b3;
+  }
+
+  /* No Coupons Message */
+  .no-coupons-message {
+    text-align: center;
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 10px;
+  }
   </style>
 </head>
 <body>
@@ -205,26 +268,6 @@
         </div>
     
         <div class="summary-section">
-          <!-- <h4>Order Summary</h4>
-          <% if (cart && cart.products && cart.products.length > 0) { %>
-            <ul class="list-group order-summary mb-3">
-              <% cart.products.forEach((product) => { %>
-                <li class="list-group-item d-flex justify-content-between">
-                  <div>
-                    <h6 class="my-0"><%= product.productId.name %></h6>
-                    <small class="text-muted">Quantity: <%= product.quantity %></small>
-                  </div>
-                  <span class="text-muted">₹<%= (product.productId.price * product.quantity).toFixed(2) %></span>
-                </li>
-              <% }) %>
-              <li class="list-group-item d-flex justify-content-between">
-                <span>Total (INR)</span>
-                <strong id="totalPrice">₹<%= cart.products.reduce((acc, product) => acc + product.productId.price * product.quantity, 0).toFixed(2) %></strong>
-              </li>
-            </ul>
-          <% } else { %>
-            <p>No products found in cart.</p>
-          <% } %> -->
           <div class="checkout-summary">
             <h2>Order Summary</h2>
            <% if(cart && cart.products && cart.products.length>0 ) {  %>
@@ -282,8 +325,10 @@
         </div>
       </div>
     </form>
-
-     <!-- Separate form for applying coupon -->
+    
+    <section id="coupon"></section>
+      <div class="">
+         <!-- Separate form for applying coupon -->
      <form id="applyCouponForm" method="POST" action="/apply-coupon">
       <div class="coupon-container">
         <h5>Apply Coupon</h5>
@@ -306,7 +351,9 @@
         <% } %>
       </div>
     </form>
-    
+      </div>
+    </section>
+
   </div>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>

@@ -310,8 +310,11 @@
             </label>
             <label>
               <input type="radio" name="paymentMethod" value="wallet" <%= walletBalance >= finalAmount ? '' : 'disabled' %>>
-                     <span> Pay with Wallet</span>   (Balance: ₹<%= walletBalance %>)
+                     <span> Pay with Wallet</span>   
             </label>
+            <!-- <label for="">
+              (Balance: ₹<%= walletBalance %>)
+            </label> -->
           </div>
     
           <button type="button" class="btn btn-primary btn-lg btn-block mt-4" id="razorpayButton">Pay with Razorpay</button>
@@ -453,67 +456,6 @@ function applyCoupon(couponCode) {
     });
 }
 
-
-// $('#placeOrderForm').submit(function(e) {
-//     e.preventDefault(); // Prevent default form submission
-
-//     const paymentMethod = $('input[name="paymentMethod"]:checked').val();
-
-//     if (!paymentMethod || typeof paymentMethod !== 'string') {
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Payment Method Required',
-//             text: 'Please select a valid payment method.'
-//         });
-//         return;
-//     }
-
-//     $('#paymentMethod').val(paymentMethod);
-
-//     const couponCode = $('#couponCode').val();  // Coupon code should be updated here
-//     console.log("couponCode in frontend:", couponCode);  // It should log the applied coupon
-    
-//     const discountAmount = parseFloat($('#discountAmount').val()) || 0;
-//     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
-//     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
-
-//     if (!shippingAddressId) {
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Shipping Address Required',
-//             text: 'Please select a shipping address.'
-//         });
-//         return;
-//     }
-
-//     $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
-//         console.log('Response from server:', data); // Log the entire response for debugging
-
-//         if (data.success) {
-//             Swal.fire({
-//                 icon: 'success',
-//                 title: 'Order Placed!',
-//                 text: 'Your order has been placed successfully.'
-//             }).then(() => {
-//                 window.location.href = `/orderConfirm/${data.orderId}`; // Redirect to order confirmation page
-//             });
-//         } else {
-//             Swal.fire({
-//                 icon: 'error',
-//                 title: 'Order Failed!',
-//                 text: 'There was a problem placing your order.'
-//             });
-//         }
-
-//     }).fail(function(response) {
-//         console.error('Failed response:', response);
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Order Failed',
-//             text: response.responseJSON ? response.responseJSON.message : 'Failed to place order. Please try again.'
-//         });
-//     });
-// });
 
 // Store the previously selected payment method
 let lastSelectedPaymentMethod = null;

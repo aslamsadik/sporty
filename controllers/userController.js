@@ -14,7 +14,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { ObjectId } = require('mongodb'); // Import ObjectId
-
+const PDFDocument = require('pdfkit');
 
 // Helper function to generate a numeric OTP
 const generateNumericOtp = (length) => {
@@ -1852,6 +1852,82 @@ const verifyPayment = async (req, res) => {
     }
 };
 
+const downloadInvoice = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+
+        // Fetch order details
+        const order = await Order.findById(orderId)
+            .populate('products.productId')
+            .populate('couponId');
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        // Fetch user details
+        const user = await User.findById(order.userId);
+        const shippingAddress = user.addresses.id(order.shippingAddressId);
+
+        if (!shippingAddress) {
+            return res.status(404).send('Shipping address not found');
+        }
+
+        // Create a PDF document
+        const doc = new PDFDocument();
+
+        // Set the response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice_${order._id}.pdf`);
+
+        // Pipe the PDF document to the response
+        doc.pipe(res);
+
+        // Add order details to the PDF
+        doc.fontSize(20).text('Invoice', { align: 'center' });
+        doc.moveDown();
+
+        // Order Info
+        doc.fontSize(12).text(`Order ID: ${order._id}`);
+        doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`);
+        doc.text(`Payment Method: ${order.paymentMethod}`);
+        doc.text(`Status: ${order.status}`);
+        doc.moveDown();
+
+        // Shipping Address
+        doc.fontSize(14).text('Shipping Address:', { underline: true });
+        doc.fontSize(12).text(`${shippingAddress.address1}`);
+        if (shippingAddress.address2) doc.text(`${shippingAddress.address2}`);
+        doc.text(`${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zip}`);
+        doc.text(`Phone: ${shippingAddress.phone}`);
+        doc.text(`Email: ${shippingAddress.email}`);
+        doc.moveDown();
+
+        // Product Info
+        doc.fontSize(14).text('Products:', { underline: true });
+        order.products.forEach(product => {
+            doc.fontSize(12).text(`Name: ${product.productId.name}`);
+            doc.text(`Quantity: ${product.quantity}`);
+            doc.text(`Price: ₹${product.productId.price.toFixed(2)}`);
+            doc.moveDown();
+        });
+
+        // Order Summary
+        doc.fontSize(14).text('Order Summary:', { underline: true });
+        doc.fontSize(12).text(`Original Amount: ₹${(order.totalPrice + order.totaldiscountAmount).toFixed(2)}`);
+        doc.text(`Total Discount: ₹${order.totaldiscountAmount.toFixed(2)}`);
+        doc.text(`Total Price After Discount: ₹${order.totalPrice.toFixed(2)}`);
+        doc.moveDown();
+
+        // Finalize the PDF and end the stream
+        doc.end();
+
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).send('Server Error');
+    }
+};
+
 module.exports = {
     signUpPage,
     loginPage,
@@ -1894,5 +1970,6 @@ module.exports = {
     addFunds,
     createRazorpayOrder,
     verifyPayment,
-    cancelProduct
+    cancelProduct,
+    downloadInvoice
 };

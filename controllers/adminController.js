@@ -579,7 +579,7 @@ const viewOrderDetails = async (req, res) => {
             .populate('userId') // Populate user details
             .populate({
                 path: 'products.productId', // Populate product details
-                select: 'name image' // Select the fields you need
+                select: 'name images' // Select the fields you need
             })
             .exec();
 
@@ -608,7 +608,9 @@ const viewOrderDetails = async (req, res) => {
                 ...product._doc,
                 productId: {
                     ...product.productId._doc,
-                    image: product.productId.image || 'default-image.jpg' // Fallback image
+                    image: (product.productId.images && product.productId.images.length > 0) 
+                        ? `/user_assets/imgs/shop/${product.productId.images[0]}`  // Ensure the image array is not empty
+                        : '/user_assets/imgs/shop/default-image.jpg'  // Fallback image
                 }
             }))
         };

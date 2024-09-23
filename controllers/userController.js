@@ -1774,88 +1774,13 @@ const createRazorpayOrder = async (req, res) => {
     }
 };
 
-// const verifyPayment = async (req, res) => {
-//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, offersDiscount,couponDeduction,totalDiscountAmount } = req.body;
-//     const userId = req.session.user?.userId;
-
-//     console.log("userid", req.body);
-    
-//     // Log all incoming request data for debugging
-//     console.log("Received data from frontend:", {
-//         razorpay_order_id,
-//         razorpay_payment_id,
-//         razorpay_signature,
-//         shippingAddressId,
-//         finalAmount,
-//         couponCode,
-//         offersDiscount,
-//         couponDeduction,
-//         totalDiscountAmount
-//     });
-//     console.log()
-//     // Verify Razorpay signature
-//     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
-//     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
-//     const generatedSignature = hmac.digest('hex');
-
-//     console.log("Generated Signature:", generatedSignature);
-//     console.log("Razorpay Signature (from frontend):", razorpay_signature);
-
-//     if (generatedSignature === razorpay_signature) {
-//         console.log("Signature verified successfully.");
-
-//         try { 
-//             // Check if the cart and its products exist in the session
-//             if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
-//                 console.error('Cart is empty or undefined.');
-//                 return res.status(400).json({ success: false, message: 'Cart is empty or products are missing.' });
-//             }
-
-//             console.log("Cart Products:", req.session.cart.products);
-//             console.log("final amount in razorpay", finalAmount);
-            
-//             // Create and save the order
-//             const order = new Order({
-//                 userId,
-//                 products:  req.session.cart.products.map((item) => ({
-//                     productId: item.productId._id,
-//                     quantity: item.quantity,
-//                     originalPrice: item.productId.price,
-//                     discountApplied: item.productId.discount || 0 // Assuming discount is stored in product
-//                 })),
-//                 shippingAddressId,
-//                 totalPrice: finalAmount,
-//                 offersDiscount,
-//                 couponDeduction,
-//                 totalDiscountAmount,
-//                 paymentMethod: 'Razorpay',
-//                 couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null
-//             });
-
-//             console.log("Order to be saved:", order);
-
-//             await order.save(); // Save order to the database
-//             console.log("Order placed successfully!");
-
-//             // Clear cart after order placement
-//             await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
-
-//             // Return the orderId in the response
-//             return res.json({ success: true, message: 'Payment verified successfully, and order placed!', orderId: order._id });
-//         } catch (error) {
-//             console.error('Error placing order:', error);
-//             return res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
-//         }
-//     } else {
-//         console.error('Signature verification failed.');
-//         return res.status(400).json({ success: false, message: 'Payment verification failed' });
-//     }
-// };
-
 const verifyPayment = async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, offersDiscount, couponDeduction, totalDiscountAmount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, offersDiscount,couponDeduction,totalDiscountAmount } = req.body;
     const userId = req.session.user?.userId;
 
+    console.log("userid", req.body);
+    
+    // Log all incoming request data for debugging
     console.log("Received data from frontend:", {
         razorpay_order_id,
         razorpay_payment_id,
@@ -1867,7 +1792,7 @@ const verifyPayment = async (req, res) => {
         couponDeduction,
         totalDiscountAmount
     });
-
+    console.log()
     // Verify Razorpay signature
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
@@ -1879,7 +1804,7 @@ const verifyPayment = async (req, res) => {
     if (generatedSignature === razorpay_signature) {
         console.log("Signature verified successfully.");
 
-        try {
+        try { 
             // Check if the cart and its products exist in the session
             if (!req.session.cart || !req.session.cart.products || req.session.cart.products.length === 0) {
                 console.error('Cart is empty or undefined.');
@@ -1887,20 +1812,12 @@ const verifyPayment = async (req, res) => {
             }
 
             console.log("Cart Products:", req.session.cart.products);
-            console.log("Final amount in Razorpay:", finalAmount);
+            console.log("final amount in razorpay", finalAmount);
             
-            // Fetch the couponId if couponCode is provided
-            let couponId = null;
-            if (couponCode) {
-                const coupon = await Coupon.findOne({ code: couponCode });
-                couponId = coupon ? coupon._id : null;
-                console.log("Coupon found:", coupon);
-            }
-
             // Create and save the order
             const order = new Order({
                 userId,
-                products: req.session.cart.products.map((item) => ({
+                products:  req.session.cart.products.map((item) => ({
                     productId: item.productId._id,
                     quantity: item.quantity,
                     originalPrice: item.productId.price,
@@ -1912,18 +1829,16 @@ const verifyPayment = async (req, res) => {
                 couponDeduction,
                 totalDiscountAmount,
                 paymentMethod: 'Razorpay',
-                couponId
+                couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null
             });
 
             console.log("Order to be saved:", order);
 
-            // Try to save the order to the database
-            await order.save();
+            await order.save(); // Save order to the database
             console.log("Order placed successfully!");
 
             // Clear cart after order placement
             await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
-            console.log("Cart cleared after order placement.");
 
             // Return the orderId in the response
             return res.json({ success: true, message: 'Payment verified successfully, and order placed!', orderId: order._id });

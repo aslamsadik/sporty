@@ -174,6 +174,59 @@ const Admin_home = async (req, res) => {
 
         const queryString = new URLSearchParams(filters).toString();
 
+        
+        // Fetching top 10 best-selling products
+        const topProducts = await Order.aggregate([
+            { $match: matchCriteria },
+            { $unwind: "$products" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "products.productId",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+            { $unwind: "$productDetails" },
+            {
+                $group: {
+                    _id: "$products.productId",
+                    name: { $first: "$productDetails.name" },
+                    totalQuantity: { $sum: "$products.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+                }
+            },
+            { $sort: { totalQuantity: -1 } }, // Sort by total quantity sold in descending order
+            { $limit: 10 } // Limit to top 10
+        ]);
+
+         console.log("dashboard top product", topProducts);
+         
+        // Top 10 best-selling categories
+        const topCategories = await Product.aggregate([
+            { $group: { _id: "$category", totalProductsSold: { $sum: 1 } } },
+            { $lookup: { from: "categories", localField: "_id", foreignField: "_id", as: "categoryDetails" } },
+            { $unwind: "$categoryDetails" },
+            { $project: { name: "$categoryDetails.name", totalProductsSold: 1 } },
+            { $sort: { totalProductsSold: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top 10 best-selling brands
+        const topBrands = await Product.aggregate([
+            { $group: { _id: "$brand", totalProductsSold: { $sum: 1 } } },
+            { $lookup: { from: "brands", localField: "_id", foreignField: "_id", as: "brandDetails" } },
+            { $unwind: "$brandDetails" },
+            { $project: { name: "$brandDetails.name", totalProductsSold: 1 } },
+            { $sort: { totalProductsSold: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Generate chart data
+        const chartLabels = salesData.map(sale => sale.productName);
+        const chartData = salesData.map(sale => sale.totalRevenue);
+
+
         // Render the dashboard with sales data and overall stats
         res.render('dashboard', {
             categories,
@@ -183,7 +236,12 @@ const Admin_home = async (req, res) => {
             overallOrderAmount: overallSalesData.overallOrderAmount,
             overallDiscount: overallSalesData.overallDiscount,
             overallCouponsDeduction: overallSalesData.overallCouponsDeduction,
-            queryString
+            queryString,
+            topProducts,
+            topCategories,
+            topBrands,
+            chartLabels,
+            chartData
         });
     } catch (error) {
         console.error(error);
@@ -268,7 +326,6 @@ const Admin_addProduct = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 const Admin_editProductPage = async (req, res) => {
     try {
@@ -478,8 +535,6 @@ const getOrderManagementPage = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
-
 
   // Delete order function
   const deleteOrder = async (req, res) => {
@@ -907,6 +962,7 @@ const editOffer = async (req, res) => {
     }
 };
 
+
 const getSalesReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
@@ -941,7 +997,7 @@ const getSalesReport = async (req, res) => {
                 $group: {
                     _id: "$productDetails._id",
                     productName: { $first: "$productDetails.name" },
-                    categoryName: { $first: "$productDetails.categoryName" }, // Ensure this field exists
+                    categoryName: { $first: "$productDetails.categoryName" },
                     totalQuantity: { $sum: "$products.quantity" },
                     totalRevenue: {
                         $sum: {
@@ -952,6 +1008,88 @@ const getSalesReport = async (req, res) => {
                     couponsDeduction: { $sum: "$couponDeduction" }
                 }
             }
+        ]);
+
+        // Get the top 10 best selling products
+        const topProducts = await Order.aggregate([
+            { $match: matchCriteria },
+            { $unwind: '$products' },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'products.productId',
+                    foreignField: '_id',
+                    as: 'productDetails'
+                }
+            },
+            { $unwind: '$productDetails' },
+            {
+                $group: {
+                    _id: "$productDetails._id",
+                    name: { $first: "$productDetails.name" },
+                    totalQuantity: { $sum: "$products.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+                }
+            },
+            { $sort: { totalQuantity: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Get the top 10 best selling categories
+        const topCategories = await Order.aggregate([
+            { $match: matchCriteria }, // Match any order-related filtering criteria (optional)
+            { $unwind: '$products' }, // Unwind the products array to process each product individually
+            {
+                $lookup: {
+                    from: 'products', // Lookup products from the 'products' collection
+                    localField: 'products.productId',
+                    foreignField: '_id',
+                    as: 'productDetails'
+                }
+            },
+            { $unwind: '$productDetails' }, // Unwind the productDetails array to access individual product info
+            {
+                $lookup: {
+                    from: 'categories', // Lookup categories from the 'categories' collection
+                    localField: 'productDetails.category', // Join by the category field in the product
+                    foreignField: '_id',
+                    as: 'categoryDetails'
+                }
+            },
+            { $unwind: '$categoryDetails' }, // Unwind the categoryDetails array to get category name
+            {
+                $group: {
+                    _id: "$categoryDetails._id", // Group by category ID
+                    name: { $first: "$categoryDetails.name" }, // Get the category name
+                    totalProductsSold: { $sum: "$products.quantity" } // Sum the quantity of products sold in each category
+                }
+            },
+            { $sort: { totalProductsSold: -1 } }, // Sort by the total quantity of products sold in descending order
+            { $limit: 10 } // Limit the results to the top 10 categories
+        ]);
+
+        // Get the top 10 best selling brands
+        const topBrands = await Order.aggregate([
+            { $match: matchCriteria },
+            { $unwind: '$products' },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'products.productId',
+                    foreignField: '_id',
+                    as: 'productDetails'
+                }
+            },
+            { $unwind: '$productDetails' },
+            {
+                $group: {
+                    _id: "$productDetails.brand",
+                    name: { $first: "$productDetails.brand" },
+                    totalProductsSold: { $sum: "$products.quantity" }
+                }
+            },
+            { $sort: { totalProductsSold: -1 } },
+            { $limit: 10 }
         ]);
 
         // Get the overall sales data
@@ -982,6 +1120,9 @@ const getSalesReport = async (req, res) => {
             overallOrderAmount: overallSalesData.overallOrderAmount,
             overallDiscount: overallSalesData.overallDiscount,
             overallCouponsDeduction: overallSalesData.overallCouponsDeduction,
+            topProducts,
+            topCategories,
+            topBrands,
             filters: req.query,
             queryString: new URLSearchParams(req.query).toString()
         });
@@ -990,6 +1131,7 @@ const getSalesReport = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
 
 const exportSalesReportCSV = async (req, res) => {
     try {
@@ -1135,72 +1277,6 @@ const fetchSalesData = async ({ startDate, endDate, category }) => {
         throw err;
     }
 };
-
-// const exportSalesReportPDF = async (req, res) => {
-//     try {
-//         const { startDate, endDate } = req.query;
-//         const salesData = await fetchSalesData({ startDate, endDate });
-
-//         // Create a new PDF document
-//         const doc = new PDFDocument({ margin: 30 });
-
-//         // Pipe the PDF into a writable stream
-//         const filePath = 'sales_report.pdf';
-//         const stream = fs.createWriteStream(filePath);
-//         doc.pipe(stream);
-
-//         // Add Title to PDF
-//         doc.fontSize(10).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
-//         doc.moveDown(2);
-
-//         // Draw table headers
-//         doc.fontSize(10)
-//             .font('Helvetica-Bold')
-//             .text('Product Name', 30, doc.y, { width: 100, continued: true })
-//             .text('Total Quantity', 150, doc.y, { width: 100, align: 'center', continued: true })
-//             .text('Total Revenue (INR)', 330, doc.y, { width: 100, align: 'center', continued: true })
-//             .text('Discount (INR)', 430, doc.y, { width: 100, align: 'center', continued: true })
-//             .text('Coupons Deduction (INR)', 530, doc.y, { width: 100, align: 'center' });
-
-//         doc.moveDown();
-
-//         // Table content (rows)
-//         salesData.forEach(item => {
-//             doc.font('Helvetica')
-//                 .text(item.productName, 30, doc.y, { width: 200, continued: true })
-//                 .text(item.totalQuantity, 230, doc.y, { width: 100, align: 'center', continued: true });
-
-//             const totalRevenue = item.totalRevenue ? item.totalRevenue.toFixed(2) : '0.00';
-//             const totalDiscount = item.totalDiscount ? item.totalDiscount.toFixed(2) : '0.00';
-//             const couponsDeduction = item.couponsDeduction ? item.couponsDeduction.toFixed(2) : '0.00';
-
-//             doc.text(totalRevenue, 330, doc.y, { width: 100, align: 'center', continued: true })
-//                 .text(totalDiscount, 430, doc.y, { width: 100, align: 'center', continued: true })
-//                 .text(couponsDeduction, 530, doc.y, { width: 100, align: 'center' });
-
-//             doc.moveDown(1);  // Move down slightly between rows
-//             doc.lineWidth(0.5).moveTo(30, doc.y).lineTo(630, doc.y).stroke();  // Draw line after each row
-//         });
-
-//         // Close the PDF and finish writing
-//         doc.end();
-
-//         // Download the PDF
-//         stream.on('finish', function () {
-//             res.download(filePath, 'sales_report.pdf', (err) => {
-//                 if (err) {
-//                     console.error('Error downloading PDF file:', err);
-//                     res.status(500).send('Error downloading file');
-//                 }
-//                 // Optionally, delete the file after download
-//                 fs.unlinkSync(filePath);
-//             });
-//         });
-//     } catch (error) {
-//         console.error('Error exporting sales report as PDF:', error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
 
 const exportSalesReportPDF = async (req, res) => {
     try {

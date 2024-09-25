@@ -89,6 +89,67 @@
                 <td><%= overallCouponsDeduction.toFixed(2) %></td>
             </tr>
         </table>
+
+         <!-- Sales Chart -->
+         <canvas id="salesChart" width="400" height="150"></canvas>
+
+         <!-- Top Selling Products, Categories, and Brands -->
+         <h3>Top 10 Best Selling Products</h3>
+         <table class="table table-bordered">
+             <thead>
+                 <tr>
+                     <th>Product Name</th>
+                     <th>Total Quantity Sold</th>
+                     <th>Total Revenue (INR)</th>
+                 </tr>
+             </thead>
+             <tbody>
+                 <% topProducts.forEach(product => { %>
+                 <tr>
+                     <td><%= product.name %></td>
+                     <td><%= product.totalQuantity %></td>
+                     <td><%= product.totalRevenue.toFixed(2) %></td>
+                 </tr>
+                 <% }) %>
+             </tbody>
+         </table>
+ 
+         <h3>Top 10 Best Selling Categories</h3>
+         <table class="table table-bordered">
+             <thead>
+                 <tr>
+                     <th>Category Name</th>
+                     <th>Total Products Sold</th>
+                 </tr>
+             </thead>
+             <tbody>
+                 <% topCategories.forEach(category => { %>
+                 <tr>
+                     <td><%= category.name %></td>
+                     <td><%= category.totalProductsSold %></td>
+                 </tr>
+                 <% }) %>
+             </tbody>
+         </table>
+ 
+         <h3>Top 10 Best Selling Brands</h3>
+         <table class="table table-bordered">
+             <thead>
+                 <tr>
+                     <th>Brand Name</th>
+                     <th>Total Products Sold</th>
+                 </tr>
+             </thead>
+             <tbody>
+                 <% topBrands.forEach(brand => { %>
+                 <tr>
+                     <td><%= brand.name %></td>
+                     <td><%= brand.totalProductsSold %></td>
+                 </tr>
+                 <% }) %>
+             </tbody>
+         </table>
+     </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -99,8 +160,30 @@
             format: 'yyyy-mm-dd',
             autoclose: true
         });
+
+        const salesChartCtx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(salesChartCtx, {
+            type: 'line',
+            data: {
+                labels:  JSON.stringify(chartLabels),
+                datasets: [{
+                    label: 'Sales Revenue',
+                    data:  JSON.stringify(chartData) ,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
 
 <%- include("../layouts/admin_footer.ejs") %>
+

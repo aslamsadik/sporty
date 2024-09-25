@@ -477,7 +477,7 @@ $('#placeOrderForm').submit(function(e) {
     e.preventDefault(); // Prevent default form submission
 
     const paymentMethod = $('input[name="paymentMethod"]:checked').val();
-
+    
     if (!paymentMethod || typeof paymentMethod !== 'string') {
         Swal.fire({
             icon: 'error',
@@ -504,6 +504,15 @@ $('#placeOrderForm').submit(function(e) {
         });
         return;
     }
+
+    // Log all the data before sending to backend
+    console.log('Data to send to /place-order:', {
+        couponCode,
+        discountAmount,
+        finalAmount,
+        paymentMethod,
+        shippingAddressId
+    });
 
     $.post('/place-order', { couponCode, discountAmount, finalAmount, paymentMethod, shippingAddressId }, function(data) {
         console.log('Response from server:', data); // Log the entire response for debugging
@@ -543,7 +552,7 @@ $('#razorpayButton').click(function(e) {
     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
     const couponCode = $('#couponCode').val() || null;
     const offersDiscount = parseFloat($('#offersDiscount').val()) || 0;
-    const couponDeduction = parseFloat($('#couponDeduction').val()) || 0;
+    const couponDeduction = parseFloat($('#discountAmount').val()) || 0;
     const totalDiscountAmount = offersDiscount + couponDeduction; // Total discount
 
     if (!shippingAddressId) {
@@ -551,7 +560,16 @@ $('#razorpayButton').click(function(e) {
         return;
     }
 
-    
+     // Log data being sent to create Razorpay order
+     console.log('Data to send to /create-razorpay-order:', {
+        finalAmount,
+        shippingAddressId,
+        couponCode,
+        offersDiscount,
+        couponDeduction,
+        totalDiscountAmount
+    });
+
     // Fetch the Razorpay order details
     $.post('/create-razorpay-order', { finalAmount, shippingAddressId, couponCode,offersDiscount, couponDeduction, totalDiscountAmount}, function(orderData) {
         console.log("orderData", orderData); // Updated logging
@@ -564,6 +582,20 @@ $('#razorpayButton').click(function(e) {
             description: 'Order Payment',
             order_id: orderData.id, // Order ID returned from Razorpay
             handler: function(response) {
+
+              // Log data being sent to /verify-razorpay-payment
+              console.log('Data to send to /verify-razorpay-payment:', {
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                    shippingAddressId,
+                    finalAmount,
+                    couponCode,
+                    offersDiscount,
+                    couponDeduction,
+                    totalDiscountAmount
+                });
+
                 // After payment completion, post payment details to your server
                 $.post('/verify-razorpay-payment', {
                     razorpay_payment_id: response.razorpay_payment_id,
@@ -576,6 +608,7 @@ $('#razorpayButton').click(function(e) {
                     couponDeduction: couponDeduction,
                     totalDiscountAmount: totalDiscountAmount
                 }, function(paymentResult) {
+                  console.log("Response from server (verify-razorpay-payment):", paymentResult); // Log response
                     if (paymentResult.success) {
                         Swal.fire({
                             icon: 'success',
@@ -617,7 +650,6 @@ $('#razorpayButton').click(function(e) {
         alert('Unable to initiate payment. Please try again.');
     });
 });
-
 
 </script>
 </body>

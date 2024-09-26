@@ -874,118 +874,6 @@ const getCheckoutPage = async (req, res) => {
     }
 };
 
-// const placeOrder = async (req, res) => {
-//     try {
-//         const {
-//             couponCode,
-//             discountAmount = 0,
-//             paymentMethod, 
-//             shippingAddressId
-//         } = req.body;
-
-//         const userId = req.session.user?.userId;
-//         console.log("discount Amount at first", discountAmount)
-//         if (!userId) {
-//             return res.status(400).json({ success: false, message: 'User not logged in' });
-//         }
-
-//         const user = await User.findById(userId);
-//         if (!user) {
-//             return res.status(404).json({ success: false, message: 'User not found' });
-//         }
-
-//         const cart = await Cart.findOne({ userId }).populate('products.productId');
-        
-//         if (!cart?.products?.length) {
-//             return res.status(400).json({ success: false, message: 'Cart is empty' });
-//         }
-        
-
-//         const cartTotal = cart.products.reduce((total, product) => total + product.productId.price * product.quantity, 0);
-
-//         let appliedCoupon = null;
-//         let appliedDiscount = couponCode && !isNaN(discountAmount) ? Number(discountAmount) : 0;
-//         let couponDeduction = 0;
-
-//         if (couponCode) {
-//             appliedCoupon = await Coupon.findOne({ code: couponCode });
-//             if (!appliedCoupon) {
-//                 return res.status(400).json({ success: false, message: 'Invalid coupon' });
-//             }
-//             appliedCoupon.usedCount += 1;
-//             await appliedCoupon.save();
-
-//             // Apply coupon discount
-//             if (appliedCoupon.discountType === 'percentage') {
-//                 couponDeduction = (appliedCoupon.discountValue / 100) * cartTotal;
-//                 if (couponDeduction > cartTotal) couponDeduction = cartTotal;
-//             } else if (appliedCoupon.discountType === 'fixed') {
-//                 couponDeduction = appliedCoupon.discountValue;
-//                 if (couponDeduction > cartTotal) couponDeduction = cartTotal;
-//             }
-//         }
-
-//         // Use the new calculateOfferDiscount function
-//         const { productsWithDiscounts, offerDiscount } = await calculateOfferDiscount(cart);
-
-//         const finalPrice = Math.max(cartTotal - appliedDiscount - offerDiscount, 0);
-//         console.log("final Price", finalPrice);
-//         console.log("offer Discount", offerDiscount);
-//         console.log("applied Discount", appliedDiscount);
-
-//         try {
-//                         if (paymentMethod === 'wallet') {
-//                             const wallet = await Wallet.findOne({ user: userId });
-//                             if (!wallet || wallet.balance < finalPrice) {
-//                                 return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
-//                             }
-            
-//                             wallet.balance -= finalPrice;
-//                             wallet.transactions.push({ type: 'debit', amount: finalPrice, description: 'Order payment' });
-//                             await wallet.save();
-//                         } else if (paymentMethod === 'COD' && finalPrice > 1000) {
-//                             return res.status(400).json({ success: false, message: 'Cash on Delivery is not allowed for orders above ₹1000.' });
-//                         }
-//                     } catch (error) {
-//                         console.error('Error processing payment method:', error);
-//                         return res.status(500).json({ success: false, message: 'Error processing payment method' });
-//                     }
-    
-//         let totalDiscount = Number(offerDiscount) + Number(appliedDiscount);
-//         console.log("total Discount", totalDiscount)
-//         console.log("offer Discount 2nd log", offerDiscount)
-        
-
-//         // Create a new order
-//         const newOrder = new Order({
-//             userId,
-//             products: productsWithDiscounts,  // Include products with discount details
-//             totalPrice: finalPrice,
-//             totaldiscountAmount: totalDiscount,
-//             couponDeduction: appliedDiscount,  // Store coupon deduction in the order
-//             offersDiscount: offerDiscount,  // Store total offer discount
-//             shippingAddressId,
-//             paymentMethod,
-//             status: 'Pending'
-//         });
-
-//         await newOrder.save();
-
-//         // Clear the cart after the order is placed
-//         await Cart.findOneAndUpdate({ userId }, { $set: { products: [] } });
-
-//         return res.json({
-//             success: true,
-//             message: 'Order placed successfully',
-//             orderId: newOrder._id
-//         });
-
-//     } catch (error) {
-//         res.status(500).json({ success: false, message: 'Error placing order' });
-//         console.log(error.message)
-//     }
-// };
-
 const placeOrder = async (req, res) => {
     try {
         const {
@@ -1969,7 +1857,6 @@ const createRazorpayOrder = async (req, res) => {
 };
 
 
-
 const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, couponDeduction, totalDiscountAmount } = req.body;
     const userId = req.session.user?.userId;
@@ -1990,6 +1877,8 @@ const verifyPayment = async (req, res) => {
     
     const cart = await Cart.findOne({ userId }).populate('products.productId');
 
+    let discountFromcoupen=couponCode?couponDeduction:0
+    console.log("discountfromcoupen", discountFromcoupen);
     
     // Verify Razorpay signature
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
@@ -2028,7 +1917,7 @@ const verifyPayment = async (req, res) => {
                 shippingAddressId,
                 totalPrice: finalAmount,
                 offersDiscount:totalOffersDiscount,
-                couponDeduction,
+                couponDeduction:discountFromcoupen,
                 totalDiscountAmount,
                 paymentMethod: 'Razorpay',
                 couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null

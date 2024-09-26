@@ -86,133 +86,258 @@ const Admin_logout = async (req, res) => {
 };
 
 
-const Admin_home = async (req, res) => {
-    try {
-        const filters = {
-            startDate: req.query.startDate || '',
-            endDate: req.query.endDate || '',
-            category: req.query.category || '',
-        };
+// const Admin_home = async (req, res) => {
+//     try {
+//         const filters = {
+//             startDate: req.query.startDate || '',
+//             endDate: req.query.endDate || '',
+//             category: req.query.category || '',
+//         };
 
-        const categories = await Category.find(); // Fetch categories for the dropdown
+//         const categories = await Category.find(); // Fetch categories for the dropdown
 
-        const { startDate, endDate, category } = filters;
-        let matchCriteria = { status: "Delivered" }; // Adjust to match your order statuses
+//         const { startDate, endDate, category } = filters;
+//         let matchCriteria = { status: "Delivered" }; // Adjust to match your order statuses
 
-        if (startDate && endDate) {
-            matchCriteria.createdAt = {
-                $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
-                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
-            };
-        }
+//         if (startDate && endDate) {
+//             matchCriteria.createdAt = {
+//                 $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+//                 $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+//             };
+//         }
 
-        let salesDataPipeline = [
-            { $match: matchCriteria },
-            { $unwind: "$products" },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "products.productId",
-                    foreignField: "_id",
-                    as: "productDetails"
-                }
-            },
-            { $unwind: "$productDetails" },
-            {
-                $lookup: {
-                    from: "categories",
-                    localField: "productDetails.category",
-                    foreignField: "_id",
-                    as: "categoryDetails"
-                }
-            },
-            { $unwind: "$categoryDetails" },
-        ];
+//         let salesDataPipeline = [
+//             { $match: matchCriteria },
+//             { $unwind: "$products" },
+//             {
+//                 $lookup: {
+//                     from: "products",
+//                     localField: "products.productId",
+//                     foreignField: "_id",
+//                     as: "productDetails"
+//                 }
+//             },
+//             { $unwind: "$productDetails" },
+//             {
+//                 $lookup: {
+//                     from: "categories",
+//                     localField: "productDetails.category",
+//                     foreignField: "_id",
+//                     as: "categoryDetails"
+//                 }
+//             },
+//             { $unwind: "$categoryDetails" },
+//         ];
 
-        if (category) {
-            salesDataPipeline.push({
-                $match: { "categoryDetails._id": mongoose.Types.ObjectId(category) }
-            });
-        }
+//         if (category) {
+//             salesDataPipeline.push({
+//                 $match: { "categoryDetails._id": mongoose.Types.ObjectId(category) }
+//             });
+//         }
 
-        salesDataPipeline.push({
-            $group: {
-                _id: "$products.productId",
-                productName: { $first: "$productDetails.name" },
-                category: { $first: "$categoryDetails.name" }, // Get the category name
-                totalQuantity: { $sum: "$products.quantity" },
-                totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } },
-                totalDiscount: { $sum: "$products.discount" }, // Assuming you have discount data
-                couponsDeduction: { $sum: "$products.couponsDeduction" } // Assuming you have coupons deduction data
-            }
-        });
+//         salesDataPipeline.push({
+//             $group: {
+//                 _id: "$products.productId",
+//                 productName: { $first: "$productDetails.name" },
+//                 category: { $first: "$categoryDetails.name" }, // Get the category name
+//                 totalQuantity: { $sum: "$products.quantity" },
+//                 totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } },
+//                 totalDiscount: { $sum: "$products.discount" }, // Assuming you have discount data
+//                 couponsDeduction: { $sum: "$products.couponsDeduction" } // Assuming you have coupons deduction data
+//             }
+//         });
 
-        // Fetching sales data per product
-        const salesData = await Order.aggregate(salesDataPipeline);
+//         // Fetching sales data per product
+//         const salesData = await Order.aggregate(salesDataPipeline);
 
-        // Fetching overall sales data
-        const overallSales = await Order.aggregate([
-            { $match: matchCriteria },
-            {
-                $group: {
-                    _id: null,
-                    overallSalesCount: { $sum: 1 }, // Each order counts as one
-                    overallOrderAmount: { $sum: '$totalPrice' },
-                    overallDiscount: { $sum: '$discountAmount' }, // Assuming you have this field
-                    overallCouponsDeduction: { $sum: { $ifNull: ['$coupon.discountValue', 0] } } // Assuming coupon deduction
-                }
-            }
-        ]);
+//         // Fetching overall sales data
+//         const overallSales = await Order.aggregate([
+//             { $match: matchCriteria },
+//             {
+//                 $group: {
+//                     _id: null,
+//                     overallSalesCount: { $sum: 1 }, // Each order counts as one
+//                     overallOrderAmount: { $sum: '$totalPrice' },
+//                     overallDiscount: { $sum: '$discountAmount' }, // Assuming you have this field
+//                     overallCouponsDeduction: { $sum: { $ifNull: ['$coupon.discountValue', 0] } } // Assuming coupon deduction
+//                 }
+//             }
+//         ]);
 
-        // Default to zero if no data exists
-        const overallSalesData = overallSales[0] || { 
-            overallSalesCount: 0, 
-            overallOrderAmount: 0, 
-            overallDiscount: 0, 
-            overallCouponsDeduction: 0 
-        };
+//         // Default to zero if no data exists
+//         const overallSalesData = overallSales[0] || { 
+//             overallSalesCount: 0, 
+//             overallOrderAmount: 0, 
+//             overallDiscount: 0, 
+//             overallCouponsDeduction: 0 
+//         };
 
-        const queryString = new URLSearchParams(filters).toString();
+//         const queryString = new URLSearchParams(filters).toString();
 
         
-        // Fetching top 10 best-selling products
-        const topProducts = await Order.aggregate([
-            { $match: matchCriteria },
-            { $unwind: "$products" },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "products.productId",
-                    foreignField: "_id",
-                    as: "productDetails"
-                }
-            },
-            { $unwind: "$productDetails" },
-            {
-                $group: {
-                    _id: "$products.productId",
-                    name: { $first: "$productDetails.name" },
-                    totalQuantity: { $sum: "$products.quantity" },
-                    totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
-                }
-            },
-            { $sort: { totalQuantity: -1 } }, // Sort by total quantity sold in descending order
-            { $limit: 10 } // Limit to top 10
-        ]);
+//         // Fetching top 10 best-selling products
+//         const topProducts = await Order.aggregate([
+//             { $match: matchCriteria },
+//             { $unwind: "$products" },
+//             {
+//                 $lookup: {
+//                     from: "products",
+//                     localField: "products.productId",
+//                     foreignField: "_id",
+//                     as: "productDetails"
+//                 }
+//             },
+//             { $unwind: "$productDetails" },
+//             {
+//                 $group: {
+//                     _id: "$products.productId",
+//                     name: { $first: "$productDetails.name" },
+//                     totalQuantity: { $sum: "$products.quantity" },
+//                     totalRevenue: { $sum: { $multiply: ["$products.quantity", "$productDetails.price"] } }
+//                 }
+//             },
+//             { $sort: { totalQuantity: -1 } }, // Sort by total quantity sold in descending order
+//             { $limit: 10 } // Limit to top 10
+//         ]);
 
-         console.log("dashboard top product", topProducts);
+//          console.log("dashboard top product", topProducts);
          
-        // Top 10 best-selling categories
-        const topCategories = await Product.aggregate([
-            { $group: { _id: "$category", totalProductsSold: { $sum: 1 } } },
-            { $lookup: { from: "categories", localField: "_id", foreignField: "_id", as: "categoryDetails" } },
-            { $unwind: "$categoryDetails" },
-            { $project: { name: "$categoryDetails.name", totalProductsSold: 1 } },
-            { $sort: { totalProductsSold: -1 } },
-            { $limit: 10 }
-        ]);
+//         // Top 10 best-selling categories
+//         const topCategories = await Product.aggregate([
+//             { $group: { _id: "$category", totalProductsSold: { $sum: 1 } } },
+//             { $lookup: { from: "categories", localField: "_id", foreignField: "_id", as: "categoryDetails" } },
+//             { $unwind: "$categoryDetails" },
+//             { $project: { name: "$categoryDetails.name", totalProductsSold: 1 } },
+//             { $sort: { totalProductsSold: -1 } },
+//             { $limit: 10 }
+//         ]);
 
-        // Top 10 best-selling brands
+//         // Top 10 best-selling brands
+//         const topBrands = await Product.aggregate([
+//             { $group: { _id: "$brand", totalProductsSold: { $sum: 1 } } },
+//             { $lookup: { from: "brands", localField: "_id", foreignField: "_id", as: "brandDetails" } },
+//             { $unwind: "$brandDetails" },
+//             { $project: { name: "$brandDetails.name", totalProductsSold: 1 } },
+//             { $sort: { totalProductsSold: -1 } },
+//             { $limit: 10 }
+//         ]);
+
+//         // Generate chart data
+//         const chartLabels = salesData.map(sale => sale.productName);
+//         const chartData = salesData.map(sale => sale.totalRevenue);
+
+
+//         // Render the dashboard with sales data and overall stats
+//         res.render('dashboard', {
+//             categories,
+//             filters,
+//             salesData,
+//             overallSalesCount: overallSalesData.overallSalesCount,
+//             overallOrderAmount: overallSalesData.overallOrderAmount,
+//             overallDiscount: overallSalesData.overallDiscount,
+//             overallCouponsDeduction: overallSalesData.overallCouponsDeduction,
+//             queryString,
+//             topProducts,
+//             topCategories,
+//             topBrands,
+//             chartLabels,
+//             chartData
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
+
+const Admin_home = async (req, res) => {
+    try {
+      // Sales data aggregation
+      const salesData = await Order.aggregate([
+        { $unwind: "$products" },
+        {
+          $group: {
+            _id: "$products.productId",
+            totalQuantity: { $sum: "$products.quantity" },
+            totalRevenue: { $sum: "$products.totalPrice" },
+            totalDiscount: { $sum: "$discountAmount" },
+            couponsDeduction: { $sum: "$couponDiscount" }
+          }
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "productDetails"
+          }
+        },
+        { $unwind: "$productDetails" },
+        {
+          $project: {
+            productName: "$productDetails.name",
+            totalQuantity: 1,
+            totalRevenue: 1,
+            totalDiscount: 1,
+            couponsDeduction: 1
+          }
+        }
+      ]);
+  
+      // Overall Sales Summary
+      const overallSalesSummary = await Order.aggregate([
+        {
+          $group: {
+            _id: null,
+            overallSalesCount: { $sum: 1 },
+            overallOrderAmount: { $sum: "$totalPrice" },
+            overallDiscount: { $sum: "$discountAmount" },
+            overallCouponsDeduction: { $sum: "$couponDiscount" }
+          }
+        }
+      ]);
+  
+      // Top 10 Best Selling Products
+      const topProducts = await Product.aggregate([
+        {
+          $lookup: {
+            from: 'orders',
+            localField: '_id',
+            foreignField: 'products.productId',
+            as: 'orderDetails'
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            totalQuantity: { $sum: "$orderDetails.products.quantity" },
+            totalRevenue: { $sum: "$orderDetails.totalPrice" }
+          }
+        },
+        { $sort: { totalQuantity: -1 } },
+        { $limit: 10 }
+      ]);
+  
+      // Top 10 Best Selling Categories
+      const topCategories = await Category.aggregate([
+        {
+          $lookup: {
+            from: 'products',
+            localField: '_id',
+            foreignField: 'categoryId',
+            as: 'categoryProducts'
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            totalProductsSold: { $sum: "$categoryProducts.salesCount" }  // Assuming each product has a `salesCount`
+          }
+        },
+        { $sort: { totalProductsSold: -1 } },
+        { $limit: 10 }
+      ]);
+  
+      // Top 10 Best Selling Brands
         const topBrands = await Product.aggregate([
             { $group: { _id: "$brand", totalProductsSold: { $sum: 1 } } },
             { $lookup: { from: "brands", localField: "_id", foreignField: "_id", as: "brandDetails" } },
@@ -221,33 +346,46 @@ const Admin_home = async (req, res) => {
             { $sort: { totalProductsSold: -1 } },
             { $limit: 10 }
         ]);
-
-        // Generate chart data
-        const chartLabels = salesData.map(sale => sale.productName);
-        const chartData = salesData.map(sale => sale.totalRevenue);
-
-
-        // Render the dashboard with sales data and overall stats
-        res.render('dashboard', {
-            categories,
-            filters,
-            salesData,
-            overallSalesCount: overallSalesData.overallSalesCount,
-            overallOrderAmount: overallSalesData.overallOrderAmount,
-            overallDiscount: overallSalesData.overallDiscount,
-            overallCouponsDeduction: overallSalesData.overallCouponsDeduction,
-            queryString,
-            topProducts,
-            topCategories,
-            topBrands,
-            chartLabels,
-            chartData
-        });
+  
+      // Chart Data: Sales Revenue over Time (or per product/category)
+      const chartDataAggregation = await Order.aggregate([
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Group by date
+            totalRevenue: { $sum: "$totalPrice" }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+  
+      const chartLabels = chartDataAggregation.map(item => item._id);
+      const chartData = chartDataAggregation.map(item => item.totalRevenue);
+  
+      // Prepare the summary data
+      const overallSalesCount = overallSalesSummary[0]?.overallSalesCount || 0;
+      const overallOrderAmount = overallSalesSummary[0]?.overallOrderAmount || 0;
+      const overallDiscount = overallSalesSummary[0]?.overallDiscount || 0;
+      const overallCouponsDeduction = overallSalesSummary[0]?.overallCouponsDeduction || 0;
+  
+      res.render('dashboard', {
+        salesData,
+        topProducts,
+        topCategories,
+        topBrands,
+        overallSalesCount,
+        overallOrderAmount,
+        overallDiscount,
+        overallCouponsDeduction,
+        chartLabels,
+        chartData,
+        filters: req.query,  // Pass filters (like startDate, endDate)
+        queryString: req.url.split("?")[1] || ""
+      });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+      console.error("Error generating admin dashboard:", error);
+      res.status(500).send("Internal Server Error");
     }
-};
+  };
 
 const Admin_productList = async (req, res) => {
     try {

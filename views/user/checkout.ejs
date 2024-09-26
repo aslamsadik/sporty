@@ -267,6 +267,7 @@
       <input type="hidden" name="discountAmount" id="discountAmount" value="<%= discountAmount %>">
       <input type="hidden" name="couponCode" id="couponCode" value="<%= couponCode || '' %>">      
       <input type="hidden" name="finalAmount" id="finalAmount" value="<%= finalAmount %>">
+
       <!-- Razorpay payment method will be dynamically set below -->
     
       <div class="checkout-row">
@@ -360,7 +361,6 @@
          <div class="summary-item">
             <strong>Final Amount:</strong>
             <strong id="totalPrice">₹<%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer : product.productId.price), 0).toFixed(2) %></strong>
-            <!-- <p><strong>Final Amount: ₹<span id="totalAmount"><%= cart.products.reduce((acc, product) => acc + (product.priceAfterOffer ? product.priceAfterOffer- discountAmount :priceAfterOffer), 0).toFixed(2) %></span></strong></p> -->
         </div>
       
           <div class="summary-item">
@@ -543,7 +543,6 @@ $('#placeOrderForm').submit(function(e) {
     });
 });
 
-
 // Razorpay button handler
 $('#razorpayButton').click(function(e) {
     e.preventDefault(); // Prevent the form from submitting
@@ -551,7 +550,7 @@ $('#razorpayButton').click(function(e) {
     const shippingAddressId = $('input[name="shippingAddressId"]:checked').val();
     const finalAmount = parseFloat($('#finalAmount').val()) || 0;
     const couponCode = $('#couponCode').val() || null;
-    const offersDiscount = parseFloat($('#offersDiscount').val()) || 0;
+    const offersDiscount = parseFloat($('#discountAmount').val()) || 0;
     const couponDeduction = parseFloat($('#discountAmount').val()) || 0;
     const totalDiscountAmount = offersDiscount + couponDeduction; // Total discount
 

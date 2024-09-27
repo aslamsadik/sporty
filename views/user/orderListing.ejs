@@ -147,11 +147,11 @@
                                 <p>Coupon Discount: <strong><%= order.couponDeduction ? order.couponDeduction.toFixed(2) : '0.00' %></strong></p>
                                 <p>Total Discount: <strong><%= order.totaldiscountAmount ? order.totaldiscountAmount.toFixed(2) : '0.00' %></strong></p>
                     
-                                <!-- Conditionally display cancel button or "Canceled" text -->
+                                 <!-- Conditionally display cancel button or "Canceled" text -->
                                 <% if (product.cancellationStatus !== 'Cancelled' && order.status !== 'Delivered') { %>
-                                    <button type="button" onclick="cancelProduct('<%= order._id %>', '<%= product._id %>')" class="cancel-button" id="cancelBtn_<%= product._id %>">Cancel Product</button>
+                                 <button type="button" onclick="cancelProduct('<%= order._id %>', '<%= product._id %>')" class="cancel-button" id="cancelBtn_<%= product._id %>">Cancel Product</button>
                                 <% } else { %>
-                                    <span id="cancelStatus_<%= product._id %>">Canceled</span>
+                                  <span id="cancelStatus_<%= product._id %>">Canceled</span>
                                 <% } %>
                             </div>
                         </div>

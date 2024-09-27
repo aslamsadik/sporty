@@ -1016,8 +1016,12 @@ const cancelOrder = async (req, res) => {
     try {
         const orderId = req.params.orderId;
         console.log(`Attempting to cancel order with ID: ${orderId}`);
+        console.log("entred backend cancel orderfucntin backend");
+        
 
         const order = await Order.findById(orderId);
+        console.log("order in calcel order", order);
+        
         if (!order) {
             console.log('Order not found');
             return res.status(404).json({ success: false, message: 'Order not found' });
@@ -1030,12 +1034,14 @@ const cancelOrder = async (req, res) => {
 
         // Update order status and timestamp
         order.status = 'Cancelled';
+        console.log("order status updated");
+        
         order.updatedAt = new Date();
         await order.save();
         console.log('Order status updated to Cancelled');
 
         // Process refund to wallet only for non-COD payments (e.g., wallet, razorpay)
-        if (['wallet', 'razorpay'].includes(order.paymentMethod)) {
+        if (['wallet', 'Razorpay'].includes(order.paymentMethod)) {
             console.log('Processing refund to wallet');
         
             let wallet = await Wallet.findOne({ user: order.userId });
@@ -1330,8 +1336,10 @@ const getOrderListing = async (req, res) => {
                         name: product.productId.name,
                         images: product.productId.images,
                         price: product.productId.price,
-                        quantity: product.quantity
+                        quantity: product.quantity,
+                        cancellationStatus:product.cancellationStatus
                     };
+
                 } else {
                     console.log('Product ID missing for order:', order._id);  // Debug missing productId
                     return {
@@ -1339,7 +1347,8 @@ const getOrderListing = async (req, res) => {
                         name: 'Product Not Found',
                         images: [],  // Empty images array for missing product
                         price: 0,
-                        quantity: product.quantity
+                        quantity: product.quantity,
+                        cancellationStatus:product.cancellationStatus
                     };
                 }
             })
@@ -1858,7 +1867,7 @@ const createRazorpayOrder = async (req, res) => {
 
 
 const verifyPayment = async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, couponDeduction, totalDiscountAmount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, shippingAddressId, finalAmount, couponCode, couponDeduction } = req.body;
     const userId = req.session.user?.userId;
 
     console.log("userid", req.body);
@@ -1872,7 +1881,6 @@ const verifyPayment = async (req, res) => {
         finalAmount,
         couponCode,
         couponDeduction,
-        totalDiscountAmount
     });
     
     const cart = await Cart.findOne({ userId }).populate('products.productId');
@@ -1918,7 +1926,6 @@ const verifyPayment = async (req, res) => {
                 totalPrice: finalAmount,
                 offersDiscount:totalOffersDiscount,
                 couponDeduction:discountFromcoupen,
-                totalDiscountAmount,
                 paymentMethod: 'Razorpay',
                 couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null
             });
@@ -1936,6 +1943,7 @@ const verifyPayment = async (req, res) => {
         } catch (error) {
             console.error('Error placing order:', error);
             return res.status(500).json({ success: false, message: 'Failed to place order. Please try again.' });
+
         }
     } else {
         console.error('Signature verification failed.');

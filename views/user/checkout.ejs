@@ -603,9 +603,7 @@ $('#razorpayButton').click(function(e) {
                     shippingAddressId: shippingAddressId,
                     finalAmount: finalAmount,
                     couponCode: couponCode,
-                    offersDiscount: offersDiscount,
                     couponDeduction: couponDeduction,
-                    totalDiscountAmount: totalDiscountAmount
                 }, function(paymentResult) {
                   console.log("Response from server (verify-razorpay-payment):", paymentResult); // Log response
                     if (paymentResult.success) {

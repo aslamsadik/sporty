@@ -2005,7 +2005,7 @@ const verifyPayment = async (req, res) => {
                 couponDeduction: discountFromcoupen,
                 paymentMethod: 'Razorpay',
                 status:'PaymentFailed',
-                couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null            });
+                couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null });
 
             console.log("Order to be saved in case of failure:", order);
             await order.save();
@@ -2066,7 +2066,7 @@ const retryRazorpayPayment = async (req, res) => {
       await existingOrder.save();
   
       // Step 7: Respond with success
-      res.json({ success: true, message: "Payment verified and order updated successfully." });
+      res.json({ success: true, message: "Payment verified and order updated successfully.",orderId });
     } catch (error) {
       console.error('Error placing order:', error);
       res.status(500).json({ success: false, message: 'Error placing order', error: error.message });

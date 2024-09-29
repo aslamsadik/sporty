@@ -64,7 +64,82 @@
                     </ul>
                 </div>
                 <a href="/orders/<%= order._id %>/invoice" class="btn btn-primary">Download Invoice</a>
+                <div>
+                    <% if (order.status === 'PaymentFailed') { %>
+                        <button onclick="retryPayment('<%= order._id %>')" class="btn btn-warning">Retry Payment</button>
+                        <!-- <button class="btn btn-warning" id="retryPayment">Retry Payment</button> -->
+                    <% } %> 
+                </div>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             </div>
+            <script>
+                function retryPayment(orderId) {
+                    // Fetch the Razorpay order details for retry
+                    $.post('/create-razorpay-order', { orderId: orderId }, function(orderData) {
+                        console.log("Retry order data:", orderData);
+                
+                        const options = {
+                            key: orderData.key, // Your Razorpay Key ID
+                            amount: orderData.amount, // Amount in paise (already multiplied by 100 in backend)
+                            currency: 'INR',
+                            name: 'Sporty',
+                            description: 'Order Payment',
+                            order_id: orderData.id, // Correct order ID from Razorpay
+                            handler: function(response) {
+                                // After successful payment, verify the payment
+                                $.post('/verify-razorpay-payment', {
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    orderId: orderId // Pass the order ID for verification
+                                }, function(paymentResult) {
+                                    if (paymentResult.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Payment successful!',
+                                            text: 'Your payment was successful.'
+                                        }).then(() => {
+                                            window.location.href = `/orderConfirm/${paymentResult.orderId}`; // Redirect to order success page
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Payment Failed!',
+                                            text: paymentResult.message
+                                        });
+                                    }
+                                }).fail(function(response) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Payment Failed',
+                                        text: 'Failed to verify payment. Please try again.'
+                                    });
+                                });
+                            },
+                            prefill: {
+                                name: '<%= user.firstName %> <%= user.lastName %>',
+                                email: '<%= user.email %>',
+                                contact: '<%= user.phone %>',
+                            },
+                            theme: {
+                                color: '#3399cc'
+                            }
+                        };
+            
+                        const razorpay = new Razorpay(options);
+                        razorpay.open();
+                    }).fail(function(response) {
+                        console.error('Failed response:', response);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Failed',
+                            text: 'Unable to initiate payment. Please try again.'
+                        });
+                    });
+                }
+            </script>            
         </div>
     </div>
 </body>

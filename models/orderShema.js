@@ -24,6 +24,7 @@ const orderSchema = new mongoose.Schema({
     returnReason: { type: String }, // New field
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    attemptedpaymentCount:{type:Number,default:1},
     couponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }
 }); 
 

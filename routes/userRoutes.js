@@ -87,10 +87,10 @@ router.get('/wishlist', isAuthenticated, userController.getWishlist);
 router.get('/wallet',isAuthenticated, userController.getWalletDetails);
 router.post('/wallet/add-funds', userController.addFunds);
 
-
-// router.post('/apply-offer',isAuthenticated, userController.applyOffer);
 router.post('/create-razorpay-order',isAuthenticated, userController.createRazorpayOrder);
 router.post('/verify-razorpay-payment',isAuthenticated, userController.verifyPayment);
+router.post('/retry-razorpay-payment/:orderId', isAuthenticated, userController.retryRazorpayPayment);
+
 
 // Route for generating and downloading invoice PDF
 router.get('/orders/:orderId/invoice', userController.downloadInvoice);

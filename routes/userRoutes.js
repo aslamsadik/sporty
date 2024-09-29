@@ -89,7 +89,7 @@ router.post('/wallet/add-funds', userController.addFunds);
 
 router.post('/create-razorpay-order',isAuthenticated, userController.createRazorpayOrder);
 router.post('/verify-razorpay-payment',isAuthenticated, userController.verifyPayment);
-router.post('/retry-razorpay-payment/:orderId', isAuthenticated, userController.retryRazorpayPayment);
+router.post('/retry-razorpay-payment', isAuthenticated, userController.retryRazorpayPayment);
 
 
 // Route for generating and downloading invoice PDF

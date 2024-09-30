@@ -1279,6 +1279,8 @@ const getOrderListing = async (req, res) => {
                         images: product.productId.images,
                         price: product.productId.price,
                         quantity: product.quantity,
+                        originalPrice: product.originalPrice,  // Add originalPrice from Order schema
+                        discountApplied: product.discountApplied,  // Add discountApplied from Order schema
                         cancellationStatus:product.cancellationStatus
                     };
 
@@ -1290,11 +1292,12 @@ const getOrderListing = async (req, res) => {
                         images: [],  // Empty images array for missing product
                         price: 0,
                         quantity: product.quantity,
+                        originalPrice:0,  // Add originalPrice from Order schema
+                        discountApplied: 0,  // Add discountApplied from Order schema
                         cancellationStatus:product.cancellationStatus
                     };
                 }
             }),
-            hasMultipleProducts:order.products.length>1
         }));
 
         const totalPages = Math.ceil(totalOrders / limit);
@@ -1309,7 +1312,6 @@ const getOrderListing = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
 
 const updateProfile = async (req, res) => {
     const { name, mobile, password } = req.body;
@@ -1779,49 +1781,58 @@ const instance = new Razorpay({
   
 const createRazorpayOrder = async (req, res) => {
     const { finalAmount, orderId } = req.body;
-
     let amountToCharge;
-
-    if (orderId) {
-        // Fetch the order by ID to get the original amount
+  
+    try {
+      // If orderId is provided, fetch the order amount
+      if (orderId) {
         const existingOrder = await Order.findById(orderId);
         if (!existingOrder) {
-            return res.status(400).json({ success: false, message: 'Order not found' });
+          return res.status(400).json({ success: false, message: 'Order not found' });
         }
-        amountToCharge = existingOrder.totalPrice; // Get the original amount from the order
-    } else if (finalAmount) {
-        amountToCharge = finalAmount; // Use finalAmount if it's a new order
-    } else {
+        amountToCharge = existingOrder.totalPrice; // Use the original amount
+      } else if (finalAmount) {
+        amountToCharge = parseFloat(finalAmount); // Ensure finalAmount is a number
+      } else {
         return res.status(400).json({ success: false, message: 'Amount is required' });
-    }
-
-    // Check if the amount is valid (greater than ₹1)
-    if (amountToCharge < 1) {
+      }
+  
+      // Check if the amount is valid (greater than ₹1)
+      if (amountToCharge < 1) {
         return res.status(400).json({
-            success: false,
-            message: 'Order amount is less than the minimum allowed amount (₹1).'
+          success: false,
+          message: 'Order amount must be greater than ₹1.',
         });
-    }
-
-    const options = {
-        amount: amountToCharge * 100, // Amount in paise
+      }
+  
+      // Convert the amount to paise (integer)
+      const amountInPaise = Math.round(amountToCharge * 100); // Convert to paise and round off
+  
+      const options = {
+        amount: amountInPaise, // Amount in paise (integer)
         currency: 'INR',
-        receipt: crypto.randomBytes(10).toString('hex'),
-    };
-
-    try {
-        const order = await instance.orders.create(options);
-        res.json({
-            id: order.id,
-            amount: order.amount,
-            key: process.env.RAZORPAY_KEY_ID
-        });
+        receipt: crypto.randomBytes(10).toString('hex'), // Random receipt ID for uniqueness
+      };
+  
+      // Create a Razorpay order
+      const order = await instance.orders.create(options);
+  
+      // Send the Razorpay order details as the response
+      return res.json({
+        success: true,
+        id: order.id,          // Razorpay order ID
+        amount: order.amount,  // Amount in paise
+        key: process.env.RAZORPAY_KEY_ID, // Razorpay key ID
+      });
+  
     } catch (error) {
-        console.error('Error creating Razorpay order:', error);
-        res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+      console.error('Error creating Razorpay order:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create Razorpay order',
+      });
     }
-};
-
+  };
 
 const verifyPayment = async (req, res) => {
     const { 

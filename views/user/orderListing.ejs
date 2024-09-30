@@ -150,7 +150,7 @@
                                 <!-- Conditionally display cancel button or "Canceled" text -->
                                 <% if (product.cancellationStatus !== 'Cancelled' && order.status !== 'Delivered' && order.products.length > 1) { %>
                                     <button type="button" onclick="cancelProduct('<%= order._id %>', '<%= product._id %>')" class="cancel-button" id="cancelBtn_<%= product._id %>">Cancel Product</button>
-                                <% } else { %>
+                                <% } else if(product.cancellationStatus=='Cancelled') { %>
                                     <div> <span style="color: rgb(238, 27, 73);" id="cancelStatus_<%= product._id %>">Canceled</span></div>
                                 <% } %>
                             </div>

@@ -148,16 +148,14 @@
                                 <p>Total Discount: <strong><%= order.totaldiscountAmount ? order.totaldiscountAmount.toFixed(2) : '0.00' %></strong></p>
                     
                                  <!-- Conditionally display cancel button or "Canceled" text -->
-                                <% if (product.cancellationStatus !== 'Cancelled' && order.status !== 'Delivered') { %>
+                                <% if (product.cancellationStatus !== 'Cancelled' && order.status !== 'Delivered'&& order.products.length>1) { %>
                                  <button type="button" onclick="cancelProduct('<%= order._id %>', '<%= product._id %>')" class="cancel-button" id="cancelBtn_<%= product._id %>">Cancel Product</button>
                                 <% } else { %>
-                                  <span id="cancelStatus_<%= product._id %>">Canceled</span>
+                                    <div> <span style="color: rgb(238, 27, 73);" id="cancelStatus_<%= product._id %>">Canceled</span></div>
                                 <% } %>
                             </div>
                         </div>
                     <% }) %>
-                    
-                    
                     <div class="order-summary">
                         <p>Status: <strong><%= order.status %></strong></p>
                         <p>Total Price: <strong>₹<%= order.totalPrice %></strong></p>
@@ -167,7 +165,7 @@
                     <% if (order.status === 'Pending' || order.status === 'Shipped') { %>
                         <button class="cancel-button" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
                     <% } else if (order.status === 'Delivered') { %>
-                        <button class="return-button" onclick="returnProduct('<%= order._id %>')">Return Product</button>
+                        <button class="return-button btn btn-warning" onclick="returnProduct('<%= order._id %>')">Return Product</button>
                     <% } %>
                 </div>
             <% }) %>
@@ -251,7 +249,7 @@
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success',
-                                    text: 'Product returned successfully!',
+                                    text: 'Product return requested successfully!',
                                     confirmButtonText: 'OK'
                                 }).then(() => {
                                     window.location.reload();

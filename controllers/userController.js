@@ -1247,64 +1247,6 @@ const deleteAddress = async (req, res) => {
     }
 };
 
-// const getOrderListing = async (req, res) => {
-//     try {
-//         if (!req.session.user || !req.session.user.userId) {
-//             return res.status(401).send('Unauthorized');
-//         }
-
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = 5;  // Number of orders per page
-//         const skip = (page - 1) * limit;
-
-//         const totalOrders = await Order.countDocuments({ userId: req.session.user.userId });
-
-//         const orders = await Order.find({ userId: req.session.user.userId })
-//             .populate('products.productId')
-//             .sort({ createdAt: -1 })
-//             .limit(limit)
-//             .skip(skip);
-
-//         const ordersWithProductDetails = orders.map(order => ({
-//             ...order.toObject(),
-//             products: order.products.map(product => {
-//                 // Ensure product.productId exists before accessing its properties
-//                 if (product.productId) {
-//                     console.log("product image", product.productId.images);
-                    
-//                     return {
-//                         _id: product.productId._id,
-//                         name: product.productId.name,
-//                         images: product.productId.images,
-//                         price: product.productId.price,
-//                         quantity: product.quantity
-//                     };
-//                 } else {
-//                     // Handle missing product reference (productId is null)
-//                     return {
-//                         _id: null,
-//                         name: 'Product Not Found',
-//                         images: [],
-//                         price: 0,
-//                         quantity: product.quantity
-//                     };
-//                 }
-//             })
-//         }));
-
-//         const totalPages = Math.ceil(totalOrders / limit);
-
-//         res.render('orderListing', {
-//             orders: ordersWithProductDetails,
-//             currentPage: page,
-//             totalPages: totalPages,
-//         });
-//     } catch (error) {
-//         console.error('Error fetching orders:', error);
-//         res.status(500).send('Server Error');
-//     }
-// };
-
 const getOrderListing = async (req, res) => {
     try {
         if (!req.session.user || !req.session.user.userId) {
@@ -1351,7 +1293,8 @@ const getOrderListing = async (req, res) => {
                         cancellationStatus:product.cancellationStatus
                     };
                 }
-            })
+            }),
+            hasMultipleProducts:order.products.length>1
         }));
 
         const totalPages = Math.ceil(totalOrders / limit);
@@ -1834,38 +1777,6 @@ const instance = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
   
-
-// const createRazorpayOrder = async (req, res) => {
-//     const { finalAmount } = req.body;
-//     console.log("final amount in razorpay order function" + finalAmount);
-    
-//     // Check if finalAmount is less than ₹1 (100 paise)
-//     if (finalAmount < 1) {
-//         return res.status(400).json({
-//             success: false,
-//             message: 'Order amount is less than the minimum allowed amount (₹1).'
-//         });
-//     }
-
-//     const options = {
-//         amount: finalAmount * 100, // Amount in paise (multiply by 100 for rupees)
-//         currency: 'INR',
-//         receipt: crypto.randomBytes(10).toString('hex'),
-//     };
-
-//     try {
-//         const order = await instance.orders.create(options);
-//         res.json({
-//             id: order.id,
-//             amount: order.amount,
-//             key: process.env.RAZORPAY_KEY_ID
-//         });
-//     } catch (error) {
-//         console.error('Error creating Razorpay order:', error);
-//         res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
-//     }
-// };
-
 const createRazorpayOrder = async (req, res) => {
     const { finalAmount, orderId } = req.body;
 
@@ -2074,7 +1985,6 @@ const retryRazorpayPayment = async (req, res) => {
   };
   
 
-
 const downloadInvoice = async (req, res) => {
     try {
         const orderId = req.params.orderId;
@@ -2150,58 +2060,6 @@ const downloadInvoice = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
-// const retryRazorpayPayment = async (req, res) => {
-//     const { orderId } = req.params;
-//     console.log("Enter razorpay retrypayment fucntion backend");
-   
-//     // Initialize Razorpay instance
-//     const razorpayInstance = new Razorpay({
-//         key_id: process.env.RAZORPAY_KEY_ID,
-//         key_secret: process.env.RAZORPAY_KEY_SECRET,
-//     });
-
-//     try {
-//         console.log(`Retrying payment for Order ID: ${orderId}`);
-
-//         // Fetch order by ID
-//         let order = await Order.findById(orderId);
-//         if (!order) {
-//             console.error('Order not found for ID:', orderId);
-//             return res.status(404).json({ success: false, message: "Order not found" });
-//         }
-
-//         console.log(`Order found. Current status: ${order.status}, Attempt count: ${order.attemptedpaymentCount}`);
-
-//         // Update order details (attempt count and status)
-//         order.attemptedpaymentCount += 1;
-//         order.status = "Pending";
-//         await order.save();
-//         console.log(`Order updated. New attempt count: ${order.attemptedpaymentCount}, Status: ${order.status}`);
-
-//         // Create new Razorpay order with the same final amount
-//         const razorpayOrder = await razorpayInstance.orders.create({
-//             amount: order.totalPrice * 100, // Razorpay expects the amount in paise
-//             currency: "INR",
-//             receipt: `order_rcptid_${orderId}`,
-//         });
-
-//         console.log(`Razorpay order created. Razorpay Order ID: ${razorpayOrder.id}, Amount: ${razorpayOrder.amount}`);
-
-//         // Send Razorpay order details to the frontend
-//         res.json({
-//             success: true,
-//             razorpayOrderId: razorpayOrder.id,
-//             amount: razorpayOrder.amount,
-//             currency: razorpayOrder.currency,
-//             key: process.env.RAZORPAY_KEY_ID,
-//             orderId: order._id, // Include the order ID to verify it later
-//         });
-//     } catch (error) {
-//         console.error('Error during payment retry:', error);
-//         res.status(500).json({ success: false, message: 'Server error during payment retry' });
-//     }
-// };
 
 module.exports = {
     signUpPage,

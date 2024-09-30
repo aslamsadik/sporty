@@ -360,7 +360,11 @@ const Admin_home = async (req, res) => {
   
       const chartLabels = chartDataAggregation.map(item => item._id);
       const chartData = chartDataAggregation.map(item => item.totalRevenue);
-  
+      
+      console.log("chartLabels",chartLabels);
+      console.log("chartData", chartData);
+      
+      
       // Prepare the summary data
       const overallSalesCount = overallSalesSummary[0]?.overallSalesCount || 0;
       const overallOrderAmount = overallSalesSummary[0]?.overallOrderAmount || 0;
@@ -386,6 +390,7 @@ const Admin_home = async (req, res) => {
       res.status(500).send("Internal Server Error");
     }
   };
+
 
 const Admin_productList = async (req, res) => {
     try {
@@ -1269,7 +1274,6 @@ const getSalesReport = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
 
 const exportSalesReportCSV = async (req, res) => {
     try {

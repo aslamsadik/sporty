@@ -641,14 +641,14 @@ const Admin_toggleBlockUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
-            console.log('User not found:', req.params.id); // Debugging line
+            console.log('User not found:', req.params.id); 
             return res.status(404).send('User not found');
         }
 
-        console.log('User before toggling block status:', user); // Debugging line
+        console.log('User before toggling block status:', user); 
         user.isBlocked = !user.isBlocked;
         await user.save();
-        console.log('User after toggling block status:', user); // Debugging line
+        console.log('User after toggling block status:', user); 
         res.redirect('/admin/userManagement');
     } catch (error) {
         console.log('Error toggling block status:', error.message);

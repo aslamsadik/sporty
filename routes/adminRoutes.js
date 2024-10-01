@@ -14,7 +14,7 @@ Admin_router.get('/logout', isAdminAuthenticated, adminController.Admin_logout);
 Admin_router.get('/admin_home', isAdminAuthenticated, adminController.Admin_home);
 
 // User Management
-Admin_router.get('/userManagement', isAdminAuthenticated, adminController.Admin_userList);
+Admin_router.get('/userManagement',isAdminAuthenticated, adminController.Admin_userList);
 Admin_router.post('/toggleBlockUser/:id', isAdminAuthenticated, adminController.Admin_toggleBlockUser);
 
 // Product Management

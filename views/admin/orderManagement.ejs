@@ -82,7 +82,7 @@
                             N/A
                             <% } %>
                         </td>
-                        <td>₹<%= order.totalPrice %></td>
+                        <td>₹<%= order.totalPrice.toFixed(2) %></td>
                         <td>
                             <select class="status-select form-control" onchange="updateOrderStatus('<%= order._id %>', this.value)">
                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
@@ -102,8 +102,7 @@
                             <% } %>
                             <button class="btn btn-danger btn-sm" onclick="deleteOrder('<%= order._id %>')">Delete</button>
                         </td>
-                        
-                    </tr>
+                        </tr>
                     <% }) %>
                 </tbody>
             </table>

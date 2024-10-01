@@ -6,13 +6,11 @@ const isBlockedMiddleware = async (req, res, next) => {
         try {
             const user = await User.findById(req.session.user.userId);
             if (user && user.isBlocked) {
-                req.session.destroy((err) => {
-                    if (err) {
-                        return next(err);
-                    }
-                    console.log(`Blocked user attempted access: ${user.email}`);
-                    return res.redirect('/');
-                });
+                // Clear only the user session data
+                delete req.session.user;
+
+                console.log(`Blocked user attempted access: ${user.email}`);
+                return res.redirect('/admin/userManagement');  // Redirect to user management page
             } else {
                 next();
             }
@@ -24,6 +22,7 @@ const isBlockedMiddleware = async (req, res, next) => {
         next();
     }
 };
+
 
 // Middleware to add no-cache headers
 const addNoCacheHeaders = (req, res, next) => {

@@ -644,7 +644,7 @@ const updateCart = async (req, res) => {
 
         await cart.save();
 
-        // If you want to redirect after updating the cart
+       
         res.redirect('/cart');  // Simply redirecting to the cart page
 
         // Alternatively, if you want to send a JSON response
@@ -1642,21 +1642,63 @@ const applyCoupon = async (req, res) => {
 };
 
 
+// const addToWishlist = async (req, res) => {
+//     try {
+//         const productId = req.body.productId;
+//         const userId = await User.findById(req.session.user?.userId);
+
+//         let wishlist = await Wishlist.findOne({ user: userId });
+//         if (!wishlist) {
+//             wishlist = new Wishlist({ user: userId, products: [] });
+//         }
+
+//         if (!wishlist.products.includes(productId)) {
+//             wishlist.products.push(productId);
+//             await wishlist.save();
+//             return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+            
+//         } else {
+//             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
+//         }
+//     } catch (err) {
+//         console.error('Error adding product to wishlist:', err);
+//         return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+//     }
+// };
+
 const addToWishlist = async (req, res) => {
     try {
         const productId = req.body.productId;
-        const userId = await User.findById(req.session.user?.userId);
 
+        // Ensure that a valid productId is passed
+        if (!productId) {
+            return res.status(400).json({ success: false, message: 'Product ID is required' });
+        }
+
+        // Retrieve user from session
+        const userId = req.session.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
+
+        // Fetch the user from the database to ensure they exist
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Fetch or create a new wishlist for the user
         let wishlist = await Wishlist.findOne({ user: userId });
         if (!wishlist) {
             wishlist = new Wishlist({ user: userId, products: [] });
         }
 
+        // Check if the product is already in the wishlist
         if (!wishlist.products.includes(productId)) {
             wishlist.products.push(productId);
             await wishlist.save();
+
             return res.status(200).json({ success: true, message: 'Product added to wishlist' });
-            
         } else {
             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
         }
@@ -1665,7 +1707,6 @@ const addToWishlist = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
     }
 };
-
 
   // Remove product from wishlist
 const removeFromWishlist = async (req, res) => {
@@ -1890,6 +1931,7 @@ const verifyPayment = async (req, res) => {
                 totalPrice: finalAmount,
                 offersDiscount:totalOffersDiscount,
                 couponDeduction: discountFromcoupen,
+                totaldiscountAmount:parseInt(totalOffersDiscount)+parseInt(discountFromcoupen),
                 paymentMethod: 'Razorpay',
                 couponId: couponCode ? await Coupon.findOne({ code: couponCode })?._id : null
             });

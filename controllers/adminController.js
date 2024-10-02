@@ -226,7 +226,9 @@ const Admin_home = async (req, res) => {
         const chartLabels = salesData.map(sale => sale.productName);
         const chartData = salesData.map(sale => sale.totalRevenue);
 
-
+       console.log("chartLabels", chartLabels);
+       
+       
         // Render the dashboard with sales data and overall stats
         res.render('dashboard', {
             categories,
@@ -248,149 +250,6 @@ const Admin_home = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
-// const Admin_home = async (req, res) => {
-//     try {
-//       // Sales data aggregation
-//       const salesData = await Order.aggregate([
-//         { $unwind: "$products" },
-//         {
-//           $group: {
-//             _id: "$products.productId",
-//             totalQuantity: { $sum: "$products.quantity" },
-//             totalRevenue: { $sum: "$products.totalPrice" },
-//             totalDiscount: { $sum: "$discountAmount" },
-//             couponsDeduction: { $sum: "$couponDiscount" }
-//           }
-//         },
-//         {
-//           $lookup: {
-//             from: "products",
-//             localField: "_id",
-//             foreignField: "_id",
-//             as: "productDetails"
-//           }
-//         },
-//         { $unwind: "$productDetails" },
-//         {
-//           $project: {
-//             productName: "$productDetails.name",
-//             totalQuantity: 1,
-//             totalRevenue: 1,
-//             totalDiscount: 1,
-//             couponsDeduction: 1
-//           }
-//         }
-//       ]);
-  
-//       // Overall Sales Summary
-//       const overallSalesSummary = await Order.aggregate([
-//         {
-//           $group: {
-//             _id: null,
-//             overallSalesCount: { $sum: 1 },
-//             overallOrderAmount: { $sum: "$totalPrice" },
-//             overallDiscount: { $sum: "$discountAmount" },
-//             overallCouponsDeduction: { $sum: "$couponDiscount" }
-//           }
-//         }
-//       ]);
-  
-//       // Top 10 Best Selling Products
-//       const topProducts = await Product.aggregate([
-//         {
-//           $lookup: {
-//             from: 'orders',
-//             localField: '_id',
-//             foreignField: 'products.productId',
-//             as: 'orderDetails'
-//           }
-//         },
-//         {
-//           $project: {
-//             name: 1,
-//             totalQuantity: { $sum: "$orderDetails.products.quantity" },
-//             totalRevenue: { $sum: "$orderDetails.totalPrice" }
-//           }
-//         },
-//         { $sort: { totalQuantity: -1 } },
-//         { $limit: 10 }
-//       ]);
-  
-//       // Top 10 Best Selling Categories
-//       const topCategories = await Category.aggregate([
-//         {
-//           $lookup: {
-//             from: 'products',
-//             localField: '_id',
-//             foreignField: 'categoryId',
-//             as: 'categoryProducts'
-//           }
-//         },
-//         {
-//           $project: {
-//             name: 1,
-//             totalProductsSold: { $sum: "$categoryProducts.salesCount" }  // Assuming each product has a `salesCount`
-//           }
-//         },
-//         { $sort: { totalProductsSold: -1 } },
-//         { $limit: 10 }
-//       ]);
-  
-//       // Top 10 Best Selling Brands
-//         const topBrands = await Product.aggregate([
-//             { $group: { _id: "$brand", totalProductsSold: { $sum: 1 } } },
-//             { $lookup: { from: "brands", localField: "_id", foreignField: "_id", as: "brandDetails" } },
-//             { $unwind: "$brandDetails" },
-//             { $project: { name: "$brandDetails.name", totalProductsSold: 1 } },
-//             { $sort: { totalProductsSold: -1 } },
-//             { $limit: 10 }
-//         ]);
-  
-//       // Chart Data: Sales Revenue over Time (or per product/category)
-//       const chartDataAggregation = await Order.aggregate([
-//         {
-//           $group: {
-//             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Group by date
-//             totalRevenue: { $sum: "$totalPrice" }
-//           }
-//         },
-//         { $sort: { _id: 1 } }
-//       ]);
-  
-//       const chartLabels = chartDataAggregation.map(item => item._id);
-//       const chartData = chartDataAggregation.map(item => item.totalRevenue);
-      
-//       console.log("chartLabels",chartLabels);
-//       console.log("chartData", chartData);
-      
-      
-//       // Prepare the summary data
-//       const overallSalesCount = overallSalesSummary[0]?.overallSalesCount || 0;
-//       const overallOrderAmount = overallSalesSummary[0]?.overallOrderAmount || 0;
-//       const overallDiscount = overallSalesSummary[0]?.overallDiscount || 0;
-//       const overallCouponsDeduction = overallSalesSummary[0]?.overallCouponsDeduction || 0;
-  
-//       res.render('dashboard', {
-//         salesData,
-//         topProducts,
-//         topCategories,
-//         topBrands,
-//         overallSalesCount,
-//         overallOrderAmount,
-//         overallDiscount,
-//         overallCouponsDeduction,
-//         chartLabels,
-//         chartData,
-//         filters: req.query,  // Pass filters (like startDate, endDate)
-//         queryString: req.url.split("?")[1] || ""
-//       });
-//     } catch (error) {
-//       console.error("Error generating admin dashboard:", error);
-//       res.status(500).send("Internal Server Error");
-//     }
-//   };
-
 
 const Admin_productList = async (req, res) => {
     try {
@@ -1105,7 +964,6 @@ const editOffer = async (req, res) => {
     }
 };
 
-
 const getSalesReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
@@ -1153,7 +1011,11 @@ const getSalesReport = async (req, res) => {
             }
         ]);
 
-        // Get the top 10 best selling products
+        // Create chart data
+        const chartLabels = salesData.map(sale => sale.productName);
+        const chartData = salesData.map(sale => sale.totalRevenue);
+
+        // Get the top 10 best-selling products
         const topProducts = await Order.aggregate([
             { $match: matchCriteria },
             { $unwind: '$products' },
@@ -1178,40 +1040,40 @@ const getSalesReport = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Get the top 10 best selling categories
+        // Get the top 10 best-selling categories
         const topCategories = await Order.aggregate([
-            { $match: matchCriteria }, // Match any order-related filtering criteria (optional)
-            { $unwind: '$products' }, // Unwind the products array to process each product individually
+            { $match: matchCriteria },
+            { $unwind: '$products' },
             {
                 $lookup: {
-                    from: 'products', // Lookup products from the 'products' collection
+                    from: 'products',
                     localField: 'products.productId',
                     foreignField: '_id',
                     as: 'productDetails'
                 }
             },
-            { $unwind: '$productDetails' }, // Unwind the productDetails array to access individual product info
+            { $unwind: '$productDetails' },
             {
                 $lookup: {
-                    from: 'categories', // Lookup categories from the 'categories' collection
-                    localField: 'productDetails.category', // Join by the category field in the product
+                    from: 'categories',
+                    localField: 'productDetails.category',
                     foreignField: '_id',
                     as: 'categoryDetails'
                 }
             },
-            { $unwind: '$categoryDetails' }, // Unwind the categoryDetails array to get category name
+            { $unwind: '$categoryDetails' },
             {
                 $group: {
-                    _id: "$categoryDetails._id", // Group by category ID
-                    name: { $first: "$categoryDetails.name" }, // Get the category name
-                    totalProductsSold: { $sum: "$products.quantity" } // Sum the quantity of products sold in each category
+                    _id: "$categoryDetails._id",
+                    name: { $first: "$categoryDetails.name" },
+                    totalProductsSold: { $sum: "$products.quantity" }
                 }
             },
-            { $sort: { totalProductsSold: -1 } }, // Sort by the total quantity of products sold in descending order
-            { $limit: 10 } // Limit the results to the top 10 categories
+            { $sort: { totalProductsSold: -1 } },
+            { $limit: 10 }
         ]);
 
-        // Get the top 10 best selling brands
+        // Get the top 10 best-selling brands
         const topBrands = await Order.aggregate([
             { $match: matchCriteria },
             { $unwind: '$products' },
@@ -1267,13 +1129,16 @@ const getSalesReport = async (req, res) => {
             topCategories,
             topBrands,
             filters: req.query,
-            queryString: new URLSearchParams(req.query).toString()
+            queryString: new URLSearchParams(req.query).toString(),
+            chartLabels, // Pass chart labels to the template
+            chartData    // Pass chart data to the template
         });
     } catch (err) {
         console.error('Error in getSalesReport:', err);
         res.status(500).send('Server Error');
     }
 };
+
 
 const exportSalesReportCSV = async (req, res) => {
     try {

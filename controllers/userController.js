@@ -1128,7 +1128,7 @@ const cancelProduct = async (req, res) => {
         if (order.paymentMethod === 'wallet') {
             // Refund to wallet
             await refundToWallet(order.userId, totalDeduction);
-        } else if (order.paymentMethod === 'razorpay') {
+        } else if (order.paymentMethod === 'Razorpay') {
             // Refund via Razorpay API
             await refundViaRazorpay(order.razorpayPaymentId, totalDeduction);
         }

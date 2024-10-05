@@ -1082,13 +1082,16 @@ const cancelProduct = async (req, res) => {
     try {
         const { orderId, productId } = req.params;
         console.log(orderId, productId);
-        console.log("Entered cancelProduct function in backend userController");
+        console.log("Entered cancelProduct function in backend userController", orderId, productId);
 
         // Validate the orderId and productId
         if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ success: false, message: "Invalid Order ID or Product ID" });
         }
 
+        const userId = req.session.user?.userId;
+        console.log("userid in cancelproduct fucntion", userId);
+        
         // Find the order by ID
         const order = await Order.findById(orderId);
         if (!order) {
@@ -1121,16 +1124,29 @@ const cancelProduct = async (req, res) => {
         order.totalPrice = Math.max(0, (Number(order.totalPrice) || 0) - totalDeduction); // Ensure totalPrice doesn't go negative
         order.totalDiscountAmount = Math.max(0, (Number(order.totalDiscountAmount) || 0) - discountAmount);
 
+        // Find the user's wallet
+        const wallet = await Wallet.findOne({user:userId});
+        console.log("wallet in cancel product fucntion", wallet);
+        
+        if (!wallet) {
+            return res.status(404).json({ success: false, message: "Wallet not found for the user" });
+        }
+
         console.log(`New Total Price: ${order.totalPrice}`);
         console.log(`New Total Discount Amount: ${order.totalDiscountAmount}`);
 
         // Handle refund based on payment method
-        if (order.paymentMethod === 'wallet') {
+        if (order.paymentMethod === 'wallet' || order.paymentMethod === 'Razorpay') {
             // Refund to wallet
-            await refundToWallet(order.userId, totalDeduction);
-        } else if (order.paymentMethod === 'Razorpay') {
-            // Refund via Razorpay API
-            await refundViaRazorpay(order.razorpayPaymentId, totalDeduction);
+            wallet.balance += totalDeduction; // Refund the price deducted from the order
+            wallet.transactions.push({
+                amount: totalDeduction,
+                type: 'credit',
+                description: 'Order cancelled and refunded',
+            });
+
+            await wallet.save();
+            console.log('Wallet updated successfully. New Balance:', wallet.balance);
         }
 
         // Save the updated order
@@ -1140,10 +1156,11 @@ const cancelProduct = async (req, res) => {
         return res.json({ success: true, message: "Product cancelled successfully", order });
 
     } catch (err) {
-        console.error(err);
+        console.error(err.message);
         return res.status(500).json({ success: false, message: "Failed to cancel product" });
     }
 };
+
 
 const getProfilePage = async (req, res) => {
     try {

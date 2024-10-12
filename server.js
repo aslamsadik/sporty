@@ -1,10 +1,10 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const session = require('express-session');
 const qs = require('qs');
-require('./config/passportConfig');
 require('dotenv').config();
 
 app.use(session({
@@ -12,7 +12,6 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
-
 
 // Middleware to parse URL-encoded bodies using qs
 app.use(express.urlencoded({

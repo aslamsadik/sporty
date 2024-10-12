@@ -1634,31 +1634,6 @@ const applyCoupon = async (req, res) => {
     }
 };
 
-
-// const addToWishlist = async (req, res) => {
-//     try {
-//         const productId = req.body.productId;
-//         const userId = await User.findById(req.session.user?.userId);
-
-//         let wishlist = await Wishlist.findOne({ user: userId });
-//         if (!wishlist) {
-//             wishlist = new Wishlist({ user: userId, products: [] });
-//         }
-
-//         if (!wishlist.products.includes(productId)) {
-//             wishlist.products.push(productId);
-//             await wishlist.save();
-//             return res.status(200).json({ success: true, message: 'Product added to wishlist' });
-            
-//         } else {
-//             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
-//         }
-//     } catch (err) {
-//         console.error('Error adding product to wishlist:', err);
-//         return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
-//     }
-// };
-
 const addToWishlist = async (req, res) => {
     try {
         const productId = req.body.productId;

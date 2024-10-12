@@ -169,33 +169,6 @@
                                                     <th>Remove</th>
                                                 </tr>
                                             </thead>
-                                            <!-- <tbody id="cart-items">
-                                                <% cart.products.forEach(product => { %>
-                                                    <tr data-id="<%= product.productId._id %>">
-                                                        <td class="product-item">
-                                                            <a href="/product/<%= product.productId._id %>">
-                                                                <img src="/user_assets/imgs/shop/<%= product.productId.images[0] %>" alt="<%= product.productId.name %>">
-                                                                <span><%= product.productId.name %></span>
-                                                            </a>
-                                                        </td>
-                                                        <td class="product-price">₹<%= product.productId.price %></td>
-                                                        <td class="product-quantity">
-                                                            <a href="#" class="qty-down" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-down"></i></a>
-                                                            <span id="qty-<%= product.productId._id %>"><%= product.quantity %></span>
-                                                            <a href="#" class="qty-up" data-id="<%= product.productId._id %>"><i class="fi-rs-angle-small-up"></i></a>
-                                                            <input type="hidden" name="productIds[]" value="<%= product.productId._id %>">
-                                                            <input type="hidden" name="quantities[]" id="input-qty-<%= product.productId._id %>" value="<%= product.quantity %>">
-                                                        </td>
-                                                        <td class="product-total" id="item-total-<%= product.productId._id %>" data-price="<%= product.productId.price %>">₹<%= (product.productId.price * product.quantity).toFixed(2) %></td>
-                                                        <td class="product-remove">
-                                                            <form action="/cart/remove" method="post" class="remove-form">
-                                                                <input type="hidden" name="productId" value="<%= product.productId._id %>">
-                                                                <button type="submit" class="btn btn-danger remove-button"><i class="fi-rs-trash"></i></button>
-                                                            </form>
-                                                        </td>
-                                                    </tr>
-                                                <% }) %>
-                                            </tbody> -->
                                             <tbody id="cart-items">
                                                 <% if (cart.products.length === 0) { %>
                                                     <tr>

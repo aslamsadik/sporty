@@ -104,30 +104,6 @@ const searchProducts = async (query) => {
     }
 };
 
-const search = async (req, res) => {
-    try {
-        // Get the search query and category from the request
-        const { search, category } = req.query;
-
-        // Build the query object
-        let query = {};
-        if (search) {
-            query.name = { $regex: search, $options: 'i' }; // Search by product name (case-insensitive)
-        }
-        if (category) {
-            query.category = category; // Filter by category if provided
-        }
-
-        // Fetch the products based on the query
-        const products = await Product.find(query);
-
-        // Render the home.ejs template with the fetched products
-        res.render('home', { products });
-    } catch (error) {
-        console.error('Error fetching search results:', error);
-        res.status(500).send('Internal Server Error');
-    }
-};
 
 const getShopPage = async (req, res) => {
     try {
@@ -2162,7 +2138,6 @@ module.exports = {
     resetPassword,
     updateCart,
     getOrderDetails,
-    search,
     returnOrder,
     cancelOrder,
     applyCoupon,

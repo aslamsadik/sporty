@@ -5,25 +5,6 @@ const userController = require('../controllers/userController');
 const { isBlockedMiddleware, addNoCacheHeaders, isAuthenticated, isNotAuthenticated } = require('../middlewares/middleware');
 const { createRazorpayOrder } = require('../controllers/userController'); // Adjust the path as necessary
 
-// Google OAuth Routes
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.redirect('/home');
-  }
-);
-
-// Facebook OAuth Routes
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
-
-router.get('/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.redirect('/home');
-  }
-);
 
 // Apply isBlockedMiddleware to all routes that require the user to be logged in
 router.use(isBlockedMiddleware);
@@ -39,7 +20,6 @@ router.post('/resend-otp', userController.resendOtp);
 
 // Home and Shop pages accessible to guests
 router.get('/', userController.HomePage);
-router.get('/search', userController.search);
 router.get('/shop', userController.getShopPage);
 router.get('/product/:id', userController.getProductDescriptionPage);
 

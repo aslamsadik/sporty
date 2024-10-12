@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const session = require('express-session');
-const passport = require('passport');
 const qs = require('qs');
 require('./config/passportConfig');
 require('dotenv').config();
@@ -14,8 +13,6 @@ app.use(session({
     saveUninitialized: true
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Middleware to parse URL-encoded bodies using qs
 app.use(express.urlencoded({
@@ -29,8 +26,6 @@ app.use(express.urlencoded({
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
     connectTimeoutMS: 30000, // 30 seconds
 })
     .then(() => console.log('MongoDB connected'))

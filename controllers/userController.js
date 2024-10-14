@@ -679,7 +679,10 @@ const calculateOfferDiscount = async (cart) => {
     return { productsWithDiscounts: cart.products, offerDiscount, cartTotal };
 };
 
-
+const instance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
 
 const getCheckoutPage = async (req, res) => {
     try {
@@ -794,10 +797,16 @@ const getCheckoutPage = async (req, res) => {
         const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal);
         const totalAmountInPaise = Math.max(finalAmount * 100) 
 
-        const razorpay = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID,
-            key_secret: process.env.RAZORPAY_KEY_SECRET,
-        });
+        // const razorpay = new Razorpay({
+        //     key_id: process.env.RAZORPAY_KEY_ID,
+        //     key_secret: process.env.RAZORPAY_KEY_SECRET,
+        // });
+
+        // const instance = new Razorpay({
+        //     key_id: process.env.RAZORPAY_KEY_ID,
+        //     key_secret: process.env.RAZORPAY_KEY_SECRET,
+        // });
+
 
         const options = {
             amount: totalAmountInPaise,
@@ -806,7 +815,8 @@ const getCheckoutPage = async (req, res) => {
         };
 
         try {
-            const order = await razorpay.orders.create(options);
+            // const order = await razorpay.orders.create(options);
+            const order = await instance.orders.create(options);
 
             res.render('checkout', {
                 message: null,
@@ -1784,11 +1794,6 @@ const addFunds = async (req, res) => {
 
 console.log("razorpaykeyand id", process.env.RAZORPAY_KEY_ID,process.env.RAZORPAY_KEY_SECRET);
 
-
-const instance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
   
 const createRazorpayOrder = async (req, res) => {
     const { finalAmount, orderId } = req.body;

@@ -1,11 +1,11 @@
-
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const session = require('express-session');
 const qs = require('qs');
-require('dotenv').config();
+
 
 app.use(session({
     secret: process.env.SESSION_SECRET,

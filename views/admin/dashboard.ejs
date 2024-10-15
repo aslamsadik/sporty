@@ -188,21 +188,21 @@
             const myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: chartLabels.map((_, index) => `Product ${index + 1}`), // Temporary placeholders for X-axis labels
+                    labels: chartLabels.map((_, index) => `Product ${index + 1}`), 
                     datasets: [{
                         label: 'Sales Data',
                         data: chartData,
                         backgroundColor: backgroundColors,
                         borderColor: backgroundColors,
                         borderWidth: 1,
-                        barPercentage: 0.4,  // Adjust the width of the bar (0.0 to 1.0)
+                        barPercentage: 0.4,  
                         categoryPercentage: 0.5
                     }]
                 },
                 options: {
                     scales: {
                         x: {
-                            display: false // Hide X-axis labels
+                            display: false 
                         },
                         y: {
                             beginAtZero: true
@@ -225,7 +225,7 @@
                             callbacks: {
                                 title: function(tooltipItems) {
                                     const index = tooltipItems[0].dataIndex;
-                                    return chartLabels[index]; // Show real product name in tooltip
+                                    return chartLabels[index]; 
                                 }
                             }
                         }

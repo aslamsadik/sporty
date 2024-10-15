@@ -1,5 +1,4 @@
 
-<!-- <link rel="stylesheet" href="user_assets/css/main.css?v=3.4"> -->
 <%- include("../layouts/header.ejs") %>
 
 
@@ -9,7 +8,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop</title>
-    <!-- <link rel="stylesheet" href="/path/to/your/styles.css">  -->
     <style>
         .form-check {
             display: flex;
@@ -101,8 +99,7 @@
                                         <div class="product-action-1">
                                             <form action="/wishlist/add" method="POST" class="d-inline">
                                                 <input type="hidden" name="productId" value="<%= product._id %>">
-                                                    <button type="submit" class=" hover-up add-to-wishlist-btn" aria-label="Add To Wishlist">
-                                                    <!-- <button class="add-to-wishlist" data-product-id="<%= product._id %>">Add to Wishlist</button> -->
+                                                    <button type="submit" class=" hover-up add-to-wishlist" data-product-id="<%= product._id %>"  aria-label="Add To Wishlist">
                                                     <i class="fi-rs-heart"></i>
                                                 </button>
                                             </form>
@@ -281,7 +278,9 @@
 <script src="./user_assets/js/main.js?v=3.4"></script>
 <script src="./user_assets/js/shop.js?v=3.4"></script>
 <script>
-    $('.add-to-wishlist').on('click', function() {
+    $('.add-to-wishlist').on('click', function(e) {
+    e.preventDefault();
+
     const productId = $(this).data('product-id');
     
     if (!productId) {

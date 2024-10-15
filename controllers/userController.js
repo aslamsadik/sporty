@@ -797,16 +797,6 @@ const getCheckoutPage = async (req, res) => {
         const finalAmount = Math.max(cartTotal - totalDiscount, cartTotal);
         const totalAmountInPaise = Math.max(finalAmount * 100) 
 
-        // const razorpay = new Razorpay({
-        //     key_id: process.env.RAZORPAY_KEY_ID,
-        //     key_secret: process.env.RAZORPAY_KEY_SECRET,
-        // });
-
-        // const instance = new Razorpay({
-        //     key_id: process.env.RAZORPAY_KEY_ID,
-        //     key_secret: process.env.RAZORPAY_KEY_SECRET,
-        // });
-
 
         const options = {
             amount: totalAmountInPaise,
@@ -1675,8 +1665,9 @@ const addToWishlist = async (req, res) => {
         if (!wishlist.products.includes(productId)) {
             wishlist.products.push(productId);
             await wishlist.save();
-
+            
             return res.status(200).json({ success: true, message: 'Product added to wishlist' });
+        
         } else {
             return res.status(400).json({ success: false, message: 'Product already in wishlist' });
         }

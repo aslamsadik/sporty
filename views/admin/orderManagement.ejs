@@ -54,7 +54,7 @@
             <table class="table table-bordered table-hover">
                 <thead class="thead-dark">
                     <tr>
-                        <th>Order ID</th>
+                        <th>ID</th>
                         <th>User</th>
                         <th class="address-column">Shipping Address</th>
                         <th>Total Price</th>
@@ -65,7 +65,7 @@
                 <tbody>
                     <% orders.forEach(order => { %>
                     <tr>
-                        <td><%= order._id %></td>
+                        <td><%= order.randomId %></td>
                         <td><%= order.userId ? order.userId.username : 'N/A' %></td>
                         <td class="address-column">
                             <% 

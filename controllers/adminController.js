@@ -11,6 +11,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 const moment = require('moment');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const ExcelJS = require('exceljs');
@@ -520,6 +521,7 @@ const Admin_toggleBlockUser = async (req, res) => {
 
 const getOrderManagementPage = async (req, res) => {
     try {
+        let randomId=uuidv4()
         const orders = await Order.find()
             .populate('userId', 'username addresses') // Fetch both username and addresses
             .populate('products.productId')
@@ -529,7 +531,8 @@ const getOrderManagementPage = async (req, res) => {
             const userAddress = order.userId.addresses.find(addr => addr._id.equals(order.shippingAddressId));
             return {
                 ...order.toObject(),
-                shippingAddress: userAddress ? `${userAddress.address1}, ${userAddress.city}` : 'N/A'
+                shippingAddress: userAddress ? `${userAddress.address1}, ${userAddress.city}` : 'N/A',
+                randomId
             };
         });
 

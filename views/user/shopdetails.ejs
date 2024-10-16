@@ -515,29 +515,7 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- //offer section -->
-                        <!-- <div class="offer-section" style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin-top: 30px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-                            <h3 style="color: #ff4500; font-weight: bold; border-bottom: 2px solid #ff4500; padding-bottom: 10px; margin-bottom: 20px;">Available Offers</h3>
-                            <% if (offers && offers.length > 0) { %>
-                                <ul class="offer-list" style="list-style: none; padding-left: 0;">
-                                    <% offers.forEach(function(offer) { %>
-                                        <li style="background-color: #e0ffe0; color: #008000; padding: 15px; margin-bottom: 15px; border-left: 5px solid #008000; border-radius: 5px; font-size: 16px;">
-                                            <strong><%= offer.offerName %></strong>:
-                                            <%= offer.discountType === 'percentage' ? offer.discountValue + '%' : '₹' + offer.discountValue %> off
-                                            <% if (offer.offerType === 'product') { %>
-                                                on this product.
-                                            <% } else if (offer.offerType === 'category') { %>
-                                                on all products in this category.
-                                            <% } %>
-                                        </li>
-                                    <% }); %>
-                                </ul>
-                            <% } else { %>
-                                <p style="color: #ff6347; font-weight: bold; font-size: 16px;">No offers available for this product at the moment.</p>
-                            <% } %>
-                        </div>  -->
-                        <div class="single-hero-slider single-animation-wrap">
+                        <div class="single-hero-slider single-animation-wrap" style="position: relative; left: 300px;">
                             <div class="container">
                                 <div class="slider-1-height-3 slider-animated-1">
                                     <div class="hero-slider-content-2">
@@ -560,7 +538,7 @@
     </main>
     
     <!-- Modal Structure -->
-    <div class="modal" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal"  id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
